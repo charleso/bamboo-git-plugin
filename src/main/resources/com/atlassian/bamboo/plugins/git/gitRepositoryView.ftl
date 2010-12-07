@@ -1,0 +1,2 @@
+[@ww.label labelKey='repository.git.repositoryUrl' value='${plan.buildDefinition.repository.repositoryUrl}' /]
+[@ww.label labelKey='repository.git.branch' value='${plan.buildDefinition.repository.branch!}' hideOnNull=true /]

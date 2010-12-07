@@ -10,37 +10,52 @@
     <version>1.0-SNAPSHOT</version>
 
     <organization>
-        <name>Example Company</name>
-        <url>http://www.example.com/</url>
+        <name>Atlassian</name>
+        <url>http://www.atlassian.com/</url>
     </organization>
 
-    <name>atlassian-bamboo-plugin-git</name>
-    <description>This is the com.atlassian.bamboo.plugins:atlassian-bamboo-plugin-git plugin for Atlassian Bamboo.</description>
+    <name>Atlassian Bamboo Git Repository Plugin</name>
+    <description>This is the Git SCM plugin for Atlassian Bamboo.</description>
     <packaging>atlassian-plugin</packaging>
 
+    <repositories>
+        <repository>
+            <id>jgit-repository</id>
+            <url>http://download.eclipse.org/jgit/maven</url>
+        </repository>
+    </repositories>
+
     <dependencies>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.4</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>com.atlassian.bamboo</groupId>
             <artifactId>atlassian-bamboo-api</artifactId>
             <version>${bamboo.version}</version>
-            <scope>provided</scope>
         </dependency>
-        
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.6</version>
-            <scope>test</scope>
+            <groupId>com.atlassian.bamboo</groupId>
+            <artifactId>atlassian-bamboo-core</artifactId>
+            <version>${bamboo.version}</version>
+        </dependency>        
+        <dependency>
+            <groupId>com.atlassian.bamboo</groupId>
+            <artifactId>atlassian-bamboo-web</artifactId>
+            <version>${bamboo.version}</version>
+        </dependency>        
+        <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+            <version>0.9.3</version>
         </dependency>
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
         <plugins>
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>
@@ -63,7 +78,7 @@
     </build>
 
     <properties>
-        <bamboo.version>2.6.2</bamboo.version>
+        <bamboo.version>2.7</bamboo.version>
         <bamboo.data.version>2.6.1</bamboo.data.version>
     </properties>
 

@@ -1,11 +1,15 @@
-<atlassian-plugin key="${project.groupId}.${project.artifactId}" name="${project.name}" plugins-version="2">
+<atlassian-plugin key="${project.groupId}.${project.artifactId}" name="${project.name}" plugins-version="1">
     <plugin-info>
         <description>${project.description}</description>
         <version>${project.version}</version>
         <vendor name="${project.organization.name}" url="${project.organization.url}" />
     </plugin-info>
 
-    <servlet name="atlassian-bamboo-plugin-git" class="com.atlassian.bamboo.plugins.ExampleServlet" key="test">
-        <url-pattern>/test</url-pattern>
-    </servlet>
+    <resource type="i18n" name="Git_i18n" location="com.atlassian.bamboo.plugins.git.i18n"/>
+
+    <repository key="git" name="Git Repository" class="com.atlassian.bamboo.plugins.git.GitRepository">
+        <description>A Git Repository</description>
+        <resource type="freemarker" name="edit" location="/com/atlassian/bamboo/plugins/git/gitRepositoryEdit.ftl"/>
+        <resource type="freemarker" name="view" location="/com/atlassian/bamboo/plugins/git/gitRepositoryView.ftl"/>
+    </repository>
 </atlassian-plugin>
