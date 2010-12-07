@@ -11,3 +11,10 @@ Here are the SDK commands you'll use immediately:
 Full documentation is always available at:
 
 http://confluence.atlassian.com/display/DEVNET/Developing+your+Plugin+using+the+Atlassian+Plugin+SDK
+
+----
+
+To avoid "NoClassDefinitionFound" Exception copy JGit library manually to your target directory:
+
+cp /home/pstefaniak/.m2/repository/org/eclipse/jgit/org.eclipse.jgit/0.9.3/org.eclipse.jgit-0.9.3.jar target/bamboo/webapp/WEB-INF/lib/
+
