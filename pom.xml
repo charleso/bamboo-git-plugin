@@ -46,6 +46,25 @@
             <artifactId>org.eclipse.jgit</artifactId>
             <version>0.9.3</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>5.13.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>1.8.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.testtools</groupId>
+            <artifactId>atlassian-testtools</artifactId>
+            <version>1.8</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
