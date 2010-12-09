@@ -7,6 +7,7 @@ import com.atlassian.bamboo.commit.CommitImpl;
 import com.atlassian.bamboo.repository.RepositoryException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
 import org.eclipse.jgit.errors.NotSupportedException;
@@ -43,6 +44,8 @@ import java.util.List;
  */
 public class GitOperationHelper
 {
+    private static final Logger log = Logger.getLogger(GitOperationHelper.class);
+
     @NotNull
     String obtainLatestRevision(@NotNull final String repositoryUrl, @Nullable final String branch, @Nullable final String sshKey,
             @Nullable final String sshPassphrase) throws RepositoryException
@@ -81,15 +84,41 @@ public class GitOperationHelper
         }
     }
 
-    /*
-     * returns previous head revision found in the sourceDirectory
-     */
-    @Nullable String fetch(@NotNull final File sourceDirectory, @NotNull final String repositoryUrl, @Nullable final String branch,
+    @Nullable String getCurrentRevision(@NotNull final File sourceDirectory)
+    {
+        File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);
+        if (!gitDirectory.exists())
+        {
+            log.warn("Source directory `" + sourceDirectory + "' doesn't contain .git directory, returning null...");
+            return null;
+        }
+        FileRepository localRepository = null;
+        try
+        {
+            localRepository = new FileRepository(new File(sourceDirectory, Constants.DOT_GIT));
+            ObjectId objId = localRepository.resolve(Constants.HEAD);
+            return(objId != null ? objId.getName() : null);
+        }
+        catch (IOException e)
+        {
+            log.warn("IOException during retrieving current revision in source directory `" + sourceDirectory + "'. Returning null...", e);
+            return null;
+        }
+    }
+
+    @NotNull String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final String repositoryUrl, @Nullable final String branch,
+            @Nullable final String targetRevision, @Nullable final String sshKey, @Nullable final String sshPassphrase) throws RepositoryException
+    {
+        String previousRevision = getCurrentRevision(sourceDirectory);
+        fetch(sourceDirectory, repositoryUrl, branch, sshKey, sshPassphrase);
+        return checkout(sourceDirectory, targetRevision, previousRevision);
+    }
+
+    void fetch(@NotNull final File sourceDirectory, @NotNull final String repositoryUrl, @Nullable final String branch,
             @Nullable final String sshKey, @Nullable final String sshPassphrase) throws RepositoryException
     {
         Transport transport = null;
         FileRepository localRepository = null;
-        String previousRevision = null;
         try
         {
             File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);
@@ -97,11 +126,6 @@ public class GitOperationHelper
             if (!gitDirectory.exists())
             {
                 localRepository.create();
-            }
-            else
-            {
-                ObjectId objId = localRepository.resolve(Constants.HEAD);
-                previousRevision = objId != null ? objId.getName() : null;
             }
 
             transport = open(localRepository, repositoryUrl, sshKey, sshPassphrase);
@@ -114,8 +138,6 @@ public class GitOperationHelper
                     .setDestination(Constants.R_HEADS + realBranch);
 
             transport.fetch(NullProgressMonitor.INSTANCE, Arrays.asList(refSpec));
-
-            return previousRevision;
         }
         catch (IOException e)
         {
@@ -137,6 +159,7 @@ public class GitOperationHelper
     /*
      * returns revision found after checkout in sourceDirectory
      */
+    @NotNull
     String checkout(@NotNull final File sourceDirectory, @Nullable final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
     {
         File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);

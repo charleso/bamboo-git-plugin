@@ -104,9 +104,7 @@ public class GitRepository extends AbstractRepository
         final File sourceDirectory = getSourceCodeDirectory(planKey);
 
         StringEncrypter encrypter = new StringEncrypter();
-        String previousRevision = new GitOperationHelper().fetch(sourceDirectory, repositoryUrl, branch, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase));
-
-        return new GitOperationHelper().checkout(sourceDirectory, targetRevision, previousRevision);
+        return (new GitOperationHelper().fetchAndCheckout(sourceDirectory, repositoryUrl, branch, targetRevision, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase)));
     }
 
     @NotNull
@@ -118,10 +116,9 @@ public class GitRepository extends AbstractRepository
 
     public void prepareConfigObject(@NotNull BuildConfiguration buildConfiguration)
     {
-        StringEncrypter encrypter = null;
+        StringEncrypter encrypter = new StringEncrypter();
         if (buildConfiguration.getBoolean(TEMPORARY_GIT_SSH_PASSPHRASE_CHANGE))
         {
-            encrypter = new StringEncrypter();
             buildConfiguration.setProperty(REPOSITORY_GIT_SSH_PASSPHRASE, encrypter.encrypt(buildConfiguration.getString(TEMPORARY_GIT_SSH_PASSPHRASE)));
         }
         if (buildConfiguration.getBoolean(TEMPORARY_GIT_SSH_KEY_CHANGE))
@@ -136,10 +133,9 @@ public class GitRepository extends AbstractRepository
                 }
                 catch (IOException e)
                 {
-//                    log.error("Cannot read uploaded ssh key file", e);
+//                    log.error("Cannot read uploaded ssh key file", e); //BAM
                     return;
                 }
-                encrypter = encrypter == null ? new StringEncrypter() : encrypter;
                 buildConfiguration.setProperty(REPOSITORY_GIT_SSH_KEY, encrypter.encrypt(key));
             }
         }
