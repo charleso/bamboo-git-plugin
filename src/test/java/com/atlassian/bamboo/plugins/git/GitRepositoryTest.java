@@ -2,50 +2,38 @@ package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.build.BuildLoggerManager;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
-import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.plan.Plan;
-import com.atlassian.bamboo.plan.PlanKey;
-import com.atlassian.bamboo.plan.PlanResultKey;
 import com.atlassian.bamboo.security.StringEncrypter;
-import com.atlassian.bamboo.util.BambooFileUtils;
 import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.BuildContextImpl;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
-import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import com.atlassian.testtools.ZipResourceDirectory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.testng.Assert.assertFalse;
-import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.Assert.assertEquals;
 
-public class GitRepositoryTest
+public class GitRepositoryTest extends GitAbstractTest
 {
     static final String PLAN_KEY = "PLAN-KEY";
-    private static final Collection<File> filesToCleanUp = Collections.synchronizedCollection(new ArrayList<File>());
-
     GitRepository createGitRepository() throws Exception
     {
-        File workingDirectory = BambooFileUtils.createTempDirectory("bamboo-git-plugin-test");
-        FileUtils.forceDeleteOnExit(workingDirectory);
-        filesToCleanUp.add(workingDirectory);
+        File workingDirectory = createTempDirectory();
 
         final GitRepository gitRepository = new GitRepository();
 
@@ -105,9 +93,7 @@ public class GitRepositoryTest
     @Test(dataProvider = "sourceCodeRetrievalData")
     public void testSourceCodeRetrieval(String targetRevision) throws Exception
     {
-        File testRepository = BambooFileUtils.createTempDirectory("bamboo-git-plugin-test");
-        FileUtils.forceDeleteOnExit(testRepository);
-        filesToCleanUp.add(testRepository);
+        File testRepository = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
 
         GitRepository gitRepository = createGitRepository();
@@ -136,19 +122,12 @@ public class GitRepositoryTest
                 fileCount++;
                 String fileName = zipEntry.getName();
                 final File file = new File(directory, fileName);
-                assertEquals("CRC for " + file, zipEntry.getCrc(), FileUtils.checksumCRC32(file));
+                assertEquals(FileUtils.checksumCRC32(file), zipEntry.getCrc(), "CRC for " + file);
             }
         }
 
         final Collection files = listFiles(directory, FileFilterUtils.trueFileFilter(), FileFilterUtils.notFileFilter(FileFilterUtils.nameFileFilter(".git")));
-        assertEquals("Number of files", fileCount, files.size());
+        assertEquals(files.size(), fileCount, "Number of files");
     }
 
-    @AfterClass
-    static void cleanUpFiles()
-    {
-        for (File file : filesToCleanUp) {
-            FileUtils.deleteQuietly(file);
-        }
-    }
 }

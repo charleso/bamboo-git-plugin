@@ -86,7 +86,7 @@ public class GitRepository extends AbstractRepository
         String targetRevision = new GitOperationHelper().obtainLatestRevision(repositoryUrl, branch, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase));
         changes.setVcsRevisionKey(targetRevision);
 
-        if (targetRevision.equals(lastVcsRevisionKey))
+        if (targetRevision == null || targetRevision.equals(lastVcsRevisionKey))
         {
             return changes;
         }

@@ -46,7 +46,7 @@ public class GitOperationHelper
 {
     private static final Logger log = Logger.getLogger(GitOperationHelper.class);
 
-    @NotNull
+    @Nullable
     String obtainLatestRevision(@NotNull final String repositoryUrl, @Nullable final String branch, @Nullable final String sshKey,
             @Nullable final String sshPassphrase) throws RepositoryException
     {
@@ -57,7 +57,8 @@ public class GitOperationHelper
             transport = open(new FileRepository(""), repositoryUrl, sshKey, sshPassphrase);
             fetchConnection = transport.openFetch();
             Ref headRef = fetchConnection.getRef(Constants.R_HEADS + (StringUtils.isNotBlank(branch) ? branch : Constants.MASTER));
-            return headRef.getObjectId().getName();
+            headRef = (headRef != null) ? headRef : fetchConnection.getRef(StringUtils.isNotBlank(branch) ? branch : Constants.HEAD);
+            return (headRef == null) ? null : headRef.getObjectId().getName();
         }
         catch (NotSupportedException e)
         {
@@ -104,6 +105,13 @@ public class GitOperationHelper
             log.warn("IOException during retrieving current revision in source directory `" + sourceDirectory + "'. Returning null...", e);
             return null;
         }
+        finally
+        {
+            if (localRepository != null)
+            {
+                localRepository.close();
+            }
+        }
     }
 
     @NotNull String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final String repositoryUrl, @Nullable final String branch,
@@ -136,6 +144,8 @@ public class GitOperationHelper
                     .setForceUpdate(true)
                     .setSource(Constants.R_HEADS + realBranch)
                     .setDestination(Constants.R_HEADS + realBranch);
+
+            //todo: what if remote repository doesn't contain branches? i.e. it has only HEAD reference like the ones in resources/obtainLatestRevision/x.zip?
 
             transport.fetch(NullProgressMonitor.INSTANCE, Arrays.asList(refSpec));
         }
