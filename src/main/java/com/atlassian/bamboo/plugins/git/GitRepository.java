@@ -9,6 +9,7 @@ import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildChangesImpl;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
+import com.atlassian.util.concurrent.LazyReference;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -118,11 +119,16 @@ public class GitRepository extends AbstractRepository
 
     public void prepareConfigObject(@NotNull BuildConfiguration buildConfiguration)
     {
-        StringEncrypter encrypter = null;
+        final LazyReference<StringEncrypter> encrypterRef = new LazyReference<StringEncrypter>() {
+            @Override
+            protected StringEncrypter create() throws Exception {
+                return new StringEncrypter();
+            }
+        };
+
         if (buildConfiguration.getBoolean(TEMPORARY_GIT_SSH_PASSPHRASE_CHANGE))
         {
-            encrypter = new StringEncrypter();
-            buildConfiguration.setProperty(REPOSITORY_GIT_SSH_PASSPHRASE, encrypter.encrypt(buildConfiguration.getString(TEMPORARY_GIT_SSH_PASSPHRASE)));
+            buildConfiguration.setProperty(REPOSITORY_GIT_SSH_PASSPHRASE, encrypterRef.get().encrypt(buildConfiguration.getString(TEMPORARY_GIT_SSH_PASSPHRASE)));
         }
         if (buildConfiguration.getBoolean(TEMPORARY_GIT_SSH_KEY_CHANGE))
         {
@@ -139,8 +145,7 @@ public class GitRepository extends AbstractRepository
 //                    log.error("Cannot read uploaded ssh key file", e);
                     return;
                 }
-                encrypter = encrypter == null ? new StringEncrypter() : encrypter;
-                buildConfiguration.setProperty(REPOSITORY_GIT_SSH_KEY, encrypter.encrypt(key));
+                buildConfiguration.setProperty(REPOSITORY_GIT_SSH_KEY, encrypterRef.get().encrypt(key));
             }
         }
     }
