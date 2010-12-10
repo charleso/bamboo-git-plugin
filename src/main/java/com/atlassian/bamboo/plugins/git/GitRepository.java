@@ -15,6 +15,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 //import org.apache.log4j.Logger;
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,7 +39,7 @@ public class GitRepository extends AbstractRepository
 
     // ------------------------------------------------------------------------------------------------- Type Properties
 
-//    private static final Logger log = Logger.getLogger(GitRepository.class);
+    private static final Logger log = Logger.getLogger(GitRepository.class);
 
     private String repositoryUrl;
     private String branch;
@@ -91,10 +92,17 @@ public class GitRepository extends AbstractRepository
             return changes;
         }
 
+        if (lastVcsRevisionKey == null)
+        {
+            log.info("Never checked logs for '" + planKey + "' setting latest revision to " + targetRevision);
+            return changes;
+        }
+
         File cacheDirectory = GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), repositoryUrl);
         new GitOperationHelper().fetch(cacheDirectory, repositoryUrl, branch, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase));
 
         changes.setChanges(new GitOperationHelper().extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision));
+
         return changes;
     }
 

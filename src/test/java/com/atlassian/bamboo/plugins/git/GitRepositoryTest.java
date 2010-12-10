@@ -75,7 +75,6 @@ public class GitRepositoryTest extends GitAbstractTest
         setRepositoryProperties(gitRepository, "git://github.com/cixot/test.git", "master", null, null);
 
         BuildChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
-        assertFalse(changes.getChanges().isEmpty());
 
         gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
     }

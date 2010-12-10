@@ -90,7 +90,6 @@ public class GitOperationHelper
         File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);
         if (!gitDirectory.exists())
         {
-            log.warn("Source directory `" + sourceDirectory + "' doesn't contain .git directory, returning null...");
             return null;
         }
         FileRepository localRepository = null;
@@ -193,7 +192,7 @@ public class GitOperationHelper
                     localRepository.lockDirCache(),
                     targetCommit.getTree());
             dirCacheCheckout.setFailOnConflict(true);
-            dirCacheCheckout.checkout();
+            dirCacheCheckout.checkout(); //todo: BAM-7500 size limit exceeded, idea clone has a large (700mb) pack file
 
             final RefUpdate refUpdate = localRepository.updateRef(Constants.HEAD);
             refUpdate.setNewObjectId(targetCommit);
@@ -244,7 +243,7 @@ public class GitOperationHelper
             }
 
             treeWalk = new TreeWalk(localRepository);
-            for (final RevCommit commit : revWalk)
+            for (final RevCommit commit : revWalk) //todo: limit commits to let's say... 100 top-most
             {
                 CommitImpl curr = new CommitImpl();
                 curr.setComment(commit.getFullMessage());
