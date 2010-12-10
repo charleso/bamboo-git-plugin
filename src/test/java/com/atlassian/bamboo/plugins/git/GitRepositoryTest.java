@@ -9,8 +9,6 @@ import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.BuildContextImpl;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
 import org.testng.annotations.DataProvider;
@@ -18,15 +16,6 @@ import org.testng.annotations.Test;
 import com.atlassian.testtools.ZipResourceDirectory;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
-import static org.apache.commons.io.FileUtils.listFiles;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertEquals;
 
 public class GitRepositoryTest extends GitAbstractTest
 {
@@ -80,17 +69,17 @@ public class GitRepositoryTest extends GitAbstractTest
     }
 
     @DataProvider(parallel = false)
-    Object[][] sourceCodeRetrievalData()
+    Object[][] testSourceCodeRetrievalData()
     {
         return new Object[][]{
-                {"a26ff19c3c63e19d6a57a396c764b140f48c530a"},
-                {"2e20b0733759facbeb0dec6ee345d762dbc8eed8"},
-                {"55676cfa3db13bcf659b2a35e5d61eba478ed54d"},
+                {"a26ff19c3c63e19d6a57a396c764b140f48c530a", "basic-repo-contents-a26ff19c3c63e19d6a57a396c764b140f48c530a.zip"},
+                {"2e20b0733759facbeb0dec6ee345d762dbc8eed8", "basic-repo-contents-2e20b0733759facbeb0dec6ee345d762dbc8eed8.zip"},
+                {"55676cfa3db13bcf659b2a35e5d61eba478ed54d", "basic-repo-contents-55676cfa3db13bcf659b2a35e5d61eba478ed54d.zip"},
         };
     }
 
-    @Test(dataProvider = "sourceCodeRetrievalData")
-    public void testSourceCodeRetrieval(String targetRevision) throws Exception
+    @Test(dataProvider = "testSourceCodeRetrievalData")
+    public void testSourceCodeRetrieval(String targetRevision, String expectedContentsInZip) throws Exception
     {
         File testRepository = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
@@ -99,7 +88,7 @@ public class GitRepositoryTest extends GitAbstractTest
         setRepositoryProperties(gitRepository, testRepository.getAbsolutePath(), "master", null, null);
 
         gitRepository.retrieveSourceCode(mockBuildContext(), targetRevision);
-        verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), "basic-repo-contents-" + targetRevision + ".zip");
+        verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), expectedContentsInZip);
     }
 
     BuildContext mockBuildContext()
@@ -107,26 +96,6 @@ public class GitRepositoryTest extends GitAbstractTest
         Plan plan = Mockito.mock(Plan.class);
         Mockito.when(plan.getKey()).thenReturn(PLAN_KEY);
         return new BuildContextImpl(plan, 1, null, null, null);
-    }
-
-    void verifyContents(File directory, final String expectedZip) throws IOException
-    {
-        final Enumeration<? extends ZipEntry> entries = new ZipFile(getClass().getResource("/" + expectedZip).getFile()).entries();
-        int fileCount = 0;
-        while (entries.hasMoreElements())
-        {
-            ZipEntry zipEntry = entries.nextElement();
-            if (!zipEntry.isDirectory())
-            {
-                fileCount++;
-                String fileName = zipEntry.getName();
-                final File file = new File(directory, fileName);
-                assertEquals(FileUtils.checksumCRC32(file), zipEntry.getCrc(), "CRC for " + file);
-            }
-        }
-
-        final Collection files = listFiles(directory, FileFilterUtils.trueFileFilter(), FileFilterUtils.notFileFilter(FileFilterUtils.nameFileFilter(".git")));
-        assertEquals(files.size(), fileCount, "Number of files");
     }
 
 }
