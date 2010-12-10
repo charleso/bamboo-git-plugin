@@ -9,6 +9,8 @@ import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.BuildContextImpl;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
 import org.testng.annotations.DataProvider;
@@ -16,6 +18,7 @@ import org.testng.annotations.Test;
 import com.atlassian.testtools.ZipResourceDirectory;
 
 import java.io.File;
+import java.net.URL;
 
 public class GitRepositoryTest extends GitAbstractTest
 {
@@ -96,6 +99,26 @@ public class GitRepositoryTest extends GitAbstractTest
         Plan plan = Mockito.mock(Plan.class);
         Mockito.when(plan.getKey()).thenReturn(PLAN_KEY);
         return new BuildContextImpl(plan, 1, null, null, null);
+    }
+
+    @DataProvider(parallel = true)
+    Object[][] testSshConnectionToGitHubData()
+    {
+        return new Object[][]{
+                {"git@github.com:cixot/test.git", "bamboo-git-plugin-tests-passphrased.id_rsa", "passphrase"},
+                {"git@github.com:cixot/test.git", "bamboo-git-plugin-tests-passphraseless.id_rsa", null},
+        };
+    }
+
+    @Test(dataProvider = "testSshConnectionToGitHubData")
+    public void testSshConnectionToGitHub(String repositoryUrl, String sshKeyfile, String sshPassphrase) throws Exception
+    {
+        GitRepository gitRepository = createGitRepository();
+        String sshKey = FileUtils.readFileToString(new File(Thread.currentThread().getContextClassLoader().getResource(sshKeyfile).toURI()));
+        setRepositoryProperties(gitRepository, repositoryUrl, "master", sshKey, sshPassphrase);
+
+        BuildChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
+        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
     }
 
 }

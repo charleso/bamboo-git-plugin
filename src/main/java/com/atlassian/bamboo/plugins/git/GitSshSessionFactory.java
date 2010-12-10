@@ -22,7 +22,7 @@ public class GitSshSessionFactory extends SshConfigSessionFactory
     @Override
     protected void configure(OpenSshConfig.Host hc, Session session)
     {
-        //do nothing
+        session.setConfig("StrictHostKeyChecking", "no");
     }
 
     protected JSch getJSch(final OpenSshConfig.Host hc, FS fs) throws JSchException {
