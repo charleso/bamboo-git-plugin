@@ -4,6 +4,10 @@ import com.atlassian.bamboo.repository.MavenPomAccessor;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.testtools.TempDirectory;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.storage.file.FileRepository;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -21,18 +25,16 @@ public class GitMavenPomAccessorTest extends GitAbstractTest
     private static File repoWithPoms;
 
     @BeforeClass
-    void setUpRepoWithPoms() throws IOException, InterruptedException
+    void setUpRepoWithPoms() throws IOException, GitAPIException
     {
         repoWithPoms = createTempDirectory();
-
         createGitRepoWithFiles(repoWithPoms, Arrays.asList("pom.xml", "pom-other.xml", "relative/path/pom.xml", "relative/path/pom-other.xml"));
-
     }
 
     private static void createGitRepoWithFiles(File localRepository, List<String> files)
-            throws IOException, InterruptedException
+            throws IOException, GitAPIException
     {
-        runGitCommandOnTestRepo(localRepository, "init");
+
         for (String relative : files)
         {
             File file = new File(localRepository, relative);
@@ -40,33 +42,31 @@ public class GitMavenPomAccessorTest extends GitAbstractTest
             Assert.assertTrue(file.createNewFile(), "Preparing repo for tests");
         }
 
-        runGitCommandOnTestRepo(localRepository, "add .");
-        runGitCommandOnTestRepo(localRepository, "config user.name testUser");
-        runGitCommandOnTestRepo(localRepository, "config user.email testUser@testDomain");
+        FileRepository repository = new FileRepository(new File(localRepository, Constants.DOT_GIT));
+        repository.create(false);
 
-        runGitCommandOnTestRepo(localRepository, "commit -m testPoms");
-    }
+        Git git = new Git(repository);
 
-    private static void runGitCommandOnTestRepo(File localRepository, String command) throws IOException, InterruptedException
-    {
-        Assert.assertEquals(Runtime.getRuntime().exec(GIT + " " + command, new String[0], localRepository).waitFor(), 0, "Preparing repo for tests");
+        git.add().addFilepattern(".").call();
+        git.commit().setMessage("testPoms").setCommitter("testUser", "testUser@testDomain").call();
     }
 
     @DataProvider(parallel = true)
-    Object [][] pomPaths()
+    Object[][] pomPaths()
     {
-        return new String[][] {
-                {null,              "pom.xml"},
-                {"",                "pom.xml"},
-                {"pom-other.xml",   "pom-other.xml"},
-                {"relative/path/pom.xml",  "relative/path/pom.xml"},
-                {"relative/path",   "relative/path/pom.xml"},
-                {"/relative/path",   "relative/path/pom.xml"},
-                {"relative/path/",  "relative/path/pom.xml"},
-                {"relative/path/pom-other.xml",     "relative/path/pom-other.xml"},
-                {"/relative/path/pom-other.xml",    "relative/path/pom-other.xml"},
+        return new String[][]{
+                {null, "pom.xml"},
+                {"", "pom.xml"},
+                {"pom-other.xml", "pom-other.xml"},
+                {"relative/path/pom.xml", "relative/path/pom.xml"},
+                {"relative/path", "relative/path/pom.xml"},
+                {"/relative/path", "relative/path/pom.xml"},
+                {"relative/path/", "relative/path/pom.xml"},
+                {"relative/path/pom-other.xml", "relative/path/pom-other.xml"},
+                {"/relative/path/pom-other.xml", "relative/path/pom-other.xml"},
         };
     }
+
     @Test(dataProvider = "pomPaths")
     public void testCheckoutMavenPom(String pathToPom, final String expectedPom) throws Exception
     {
@@ -89,9 +89,9 @@ public class GitMavenPomAccessorTest extends GitAbstractTest
     }
 
     @DataProvider(parallel = true)
-    Object [][] pomWrongPaths()
+    Object[][] pomWrongPaths()
     {
-        return new String[][] {
+        return new String[][]{
                 {null, "pom1.xml"},
                 {"pom-other.xml", "pom.xml"},
                 {"relative/path/pom.xml", "pom.xml"},
@@ -100,11 +100,13 @@ public class GitMavenPomAccessorTest extends GitAbstractTest
     }
 
     @Test(dataProvider = "pomWrongPaths", expectedExceptions = RepositoryException.class)
-    public void testNotCheckingOutTheWrongPom(String pathToPom, final String mockedPath) throws Exception {
+    public void testNotCheckingOutTheWrongPom(String pathToPom, final String mockedPath) throws Exception
+    {
         final File destDir = createTempDirectory();
         final File perTestRepo = createTempDirectory();
 
-        try {
+        try
+        {
             createGitRepoWithFiles(perTestRepo, Collections.singletonList(mockedPath));
 
             GitRepository repository = createGitRepository();
