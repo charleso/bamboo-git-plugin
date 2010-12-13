@@ -21,7 +21,6 @@ import java.util.List;
 
 public class GitMavenPomAccessorTest extends GitAbstractTest
 {
-    private static final String GIT = "git";
     private static File repoWithPoms;
 
     @BeforeClass
