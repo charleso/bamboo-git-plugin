@@ -1,64 +1,20 @@
 package com.atlassian.bamboo.plugins.git;
 
-import com.atlassian.bamboo.build.BuildLoggerManager;
-import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
-import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.plan.Plan;
-import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.BuildContextImpl;
-import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
+import com.atlassian.testtools.ZipResourceDirectory;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
 import org.mockito.Mockito;
-import org.mockito.internal.stubbing.answers.Returns;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import com.atlassian.testtools.ZipResourceDirectory;
 
 import java.io.File;
-import java.net.URL;
 
 public class GitRepositoryTest extends GitAbstractTest
 {
     static final String PLAN_KEY = "PLAN-KEY";
-    GitRepository createGitRepository() throws Exception
-    {
-        File workingDirectory = createTempDirectory();
-
-        final GitRepository gitRepository = new GitRepository();
-
-        BuildLoggerManager buildLoggerManager = Mockito.mock(BuildLoggerManager.class, new Returns(new NullBuildLogger()));
-        gitRepository.setBuildLoggerManager(buildLoggerManager);
-
-        BuildDirectoryManager buildDirectoryManager = Mockito.mock(BuildDirectoryManager.class);
-        Mockito.when(buildDirectoryManager.getBuildWorkingDirectory()).thenReturn(workingDirectory);
-        gitRepository.setBuildDirectoryManager(buildDirectoryManager);
-        return gitRepository;
-    }
-
-    void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, String branch, String sshKey, String sshPassphrase) throws Exception
-    {
-        StringEncrypter encrypter = new StringEncrypter();
-
-        BuildConfiguration buildConfiguration = new BuildConfiguration();
-        buildConfiguration.setProperty("repository.git.repositoryUrl", repositoryUrl);
-        buildConfiguration.setProperty("repository.git.branch", branch);
-        if (sshKey != null)
-        {
-            buildConfiguration.setProperty("repository.git.ssh.key", encrypter.encrypt(sshKey));
-        }
-        if (sshPassphrase != null)
-        {
-            buildConfiguration.setProperty("repository.git.ssh.passphrase", encrypter.encrypt(sshPassphrase));
-        }
-        if (gitRepository.validate(buildConfiguration).hasAnyErrors())
-        {
-            throw new Exception("validation failed");
-        }
-        gitRepository.populateFromConfig(buildConfiguration);
-    }
 
     @Test
     public void testBasicFunctionality() throws Exception

@@ -1,6 +1,8 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.repository.AbstractRepository;
+import com.atlassian.bamboo.repository.MavenPomAccessor;
+import com.atlassian.bamboo.repository.MavenPomAccessorCapableRepository;
 import com.atlassian.bamboo.repository.Repository;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
@@ -14,7 +16,6 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
-//import org.apache.log4j.Logger;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 
-public class GitRepository extends AbstractRepository
+public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -31,6 +32,7 @@ public class GitRepository extends AbstractRepository
     private static final String REPOSITORY_GIT_BRANCH = "repository.git.branch";
     private static final String REPOSITORY_GIT_SSH_KEY = "repository.git.ssh.key";
     private static final String REPOSITORY_GIT_SSH_PASSPHRASE = "repository.git.ssh.passphrase";
+    private static final String REPOSITORY_GIT_MAVEN_PATH = "repository.git.maven.path";
     private static final String REPOSITORY_GIT_ERROR_MISSING_REPOSITORY_URL = "repository.git.error.missingRepositoryUrl";
     private static final String TEMPORARY_GIT_SSH_PASSPHRASE = "temporary.git.ssh.passphrase";
     private static final String TEMPORARY_GIT_SSH_PASSPHRASE_CHANGE = "temporary.git.ssh.passphrase.change";
@@ -45,6 +47,9 @@ public class GitRepository extends AbstractRepository
     private String branch;
     private String sshPassphrase;
     private String sshKey;
+
+    // Maven 2 import
+    private transient String pathToPom;
 
     // ---------------------------------------------------------------------------------------------------- Dependencies
 
@@ -164,6 +169,8 @@ public class GitRepository extends AbstractRepository
         branch = config.getString(REPOSITORY_GIT_BRANCH);
         sshKey = config.getString(REPOSITORY_GIT_SSH_KEY);
         sshPassphrase = config.getString(REPOSITORY_GIT_SSH_PASSPHRASE);
+
+        pathToPom = config.getString(REPOSITORY_GIT_MAVEN_PATH);
     }
 
     @NotNull
@@ -192,6 +199,11 @@ public class GitRepository extends AbstractRepository
         return errorCollection;
     }
 
+    @NotNull
+    public MavenPomAccessor getMavenPomAccessor() {
+        return new GitMavenPomAccessor(this).withPath(pathToPom);
+    }
+
     // -------------------------------------------------------------------------------------------------- Public Methods
 
     // -------------------------------------------------------------------------------------------------- Helper Methods
@@ -203,9 +215,25 @@ public class GitRepository extends AbstractRepository
         return repositoryUrl;
     }
 
+    void setRepositoryUrl(String repositoryUrl)
+    {
+        this.repositoryUrl = repositoryUrl;
+    }
+
     public String getBranch()
     {
         return branch;
     }
 
+    String getSshPassphrase()
+    {
+        StringEncrypter encrypter = new StringEncrypter();
+        return encrypter.decrypt(sshPassphrase);
+    }
+
+    String getSshKey()
+    {
+        StringEncrypter encrypter = new StringEncrypter();
+        return encrypter.decrypt(sshKey);
+    }
 }
