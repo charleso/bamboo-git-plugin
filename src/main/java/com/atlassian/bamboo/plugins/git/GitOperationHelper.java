@@ -243,6 +243,7 @@ public class GitOperationHelper
             }
 
             treeWalk = new TreeWalk(localRepository);
+            treeWalk.setRecursive(true);
             for (final RevCommit commit : revWalk) //todo: limit commits to let's say... 100 top-most
             {
                 CommitImpl curr = new CommitImpl();
@@ -253,18 +254,25 @@ public class GitOperationHelper
 
                 // DiffEntry does not support walks with more than two trees (see egit FileDiff.java)
                 treeWalk.reset();
+                treeWalk.setRecursive(true);
                 if (commit.getParentCount() > 0)
                 {
                     treeWalk.addTree(commit.getParent(0).getTree());
                 }
                 else
+                {
                     treeWalk.addTree(new EmptyTreeIterator());
+                }
                 treeWalk.addTree(commit.getTree());
 
                 for (final DiffEntry entry : DiffEntry.scan(treeWalk))
                 {
+                    if (entry.getOldId().equals(entry.getNewId()))
+                    {
+                        continue;
+                    }
 //                    curr.addFile(new CommitFileImpl(commit.getId().getName(), entry.getNewPath())); <-- since bamboo 3.0
-                    CommitFileImpl commitFile = new CommitFileImpl(entry.getNewPath());
+                    CommitFileImpl commitFile = new CommitFileImpl(entry.getChangeType() == DiffEntry.ChangeType.DELETE ? entry.getOldPath() : entry.getNewPath());
                     commitFile.setRevision(commit.getId().getName());
                     curr.addFile(commitFile);
                 }
