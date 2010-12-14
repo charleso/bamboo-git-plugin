@@ -8,6 +8,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.storage.file.FileRepository;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -124,10 +125,7 @@ public class GitMavenPomAccessorTest extends GitAbstractTest
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testRejectPathWithDots() throws Exception
     {
-        GitRepository repository = createGitRepository();
-
-        GitRepositoryTest.setRepositoryProperties(repository, repoWithPoms.getAbsolutePath(), Collections.singletonMap("repository.git.maven.path", ".."));
-        repository.getMavenPomAccessor();
+        new GitMavenPomAccessor(Mockito.mock(GitRepository.class)).withPath("..");
     }
 
 }

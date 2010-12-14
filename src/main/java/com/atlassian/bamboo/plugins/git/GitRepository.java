@@ -34,6 +34,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     private static final String REPOSITORY_GIT_SSH_PASSPHRASE = "repository.git.ssh.passphrase";
     private static final String REPOSITORY_GIT_MAVEN_PATH = "repository.git.maven.path";
     private static final String REPOSITORY_GIT_ERROR_MISSING_REPOSITORY_URL = "repository.git.error.missingRepositoryUrl";
+    private static final String REPOSITORY_GIT_MAVEN_PATH_DOTS_ERROR = "repository.git.maven.path.dotsError";
     private static final String TEMPORARY_GIT_SSH_PASSPHRASE = "temporary.git.ssh.passphrase";
     private static final String TEMPORARY_GIT_SSH_PASSPHRASE_CHANGE = "temporary.git.ssh.passphrase.change";
     private static final String TEMPORARY_GIT_SSH_KEY_FROM_FILE = "temporary.git.ssh.keyfile";
@@ -196,6 +197,11 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         {
             errorCollection.addError(REPOSITORY_GIT_REPOSITORY_URL, textProvider.getText(REPOSITORY_GIT_ERROR_MISSING_REPOSITORY_URL));
         }
+        if (buildConfiguration.getString(REPOSITORY_GIT_MAVEN_PATH, "").contains(".."))
+        {
+            errorCollection.addError(REPOSITORY_GIT_MAVEN_PATH, textProvider.getText(REPOSITORY_GIT_MAVEN_PATH_DOTS_ERROR));
+        }
+
         return errorCollection;
     }
 

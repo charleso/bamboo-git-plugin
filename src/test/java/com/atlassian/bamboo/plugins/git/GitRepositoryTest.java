@@ -1,12 +1,17 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.plan.Plan;
+import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.BuildContextImpl;
+import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.testtools.ZipResourceDirectory;
+import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
 import org.mockito.Mockito;
+import org.mockito.internal.stubbing.defaultanswers.ReturnsMocks;
+import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -77,4 +82,25 @@ public class GitRepositoryTest extends GitAbstractTest
         gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
     }
 
+    @DataProvider
+    Object[][] invalidMavenPaths()
+    {
+        return new String[][] {
+                {".."},
+                {"../relative/pom.xml"},
+                {"path/../path/pom.xml"},
+        };
+    }
+
+    @Test(dataProvider = "invalidMavenPaths")
+    public void testValidateDots(String mavenPath) throws Exception
+    {
+        BuildConfiguration conf = new BuildConfiguration();
+        conf.setProperty("repository.git.maven.path", mavenPath);
+
+        GitRepository repo = new GitRepository();
+        repo.setTextProvider(Mockito.mock(TextProvider.class, new ReturnsMocks()));
+        ErrorCollection errorCollection = repo.validate(conf);
+        Assert.assertNotNull(errorCollection.getErrors().get("repository.git.maven.path"));
+    }
 }
