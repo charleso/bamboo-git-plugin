@@ -11,5 +11,6 @@
         <description>A Git Repository</description>
         <resource type="freemarker" name="edit" location="/com/atlassian/bamboo/plugins/git/gitRepositoryEdit.ftl"/>
         <resource type="freemarker" name="view" location="/com/atlassian/bamboo/plugins/git/gitRepositoryView.ftl"/>
+        <resource type="freemarker" name="mavenPomCheckoutAccessEdit" location="/com/atlassian/bamboo/plugins/git/mavenImportGitRepositoryEdit.ftl"/>
     </repository>
 </atlassian-plugin>
