@@ -17,6 +17,8 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 
+import static org.testng.Assert.assertTrue;
+
 public class GitRepositoryTest extends GitAbstractTest
 {
     static final String PLAN_KEY = "PLAN-KEY";
@@ -102,5 +104,39 @@ public class GitRepositoryTest extends GitAbstractTest
         repo.setTextProvider(Mockito.mock(TextProvider.class, new ReturnsMocks()));
         ErrorCollection errorCollection = repo.validate(conf);
         Assert.assertNotNull(errorCollection.getErrors().get("repository.git.maven.path"));
+    }
+
+    // todo: pstefaniak: this test is not working correctly actually, I plan to fix it sooner or later
+    @Test
+    public void testRecoveringFromErrorsDuringCodeCheckout() throws Exception
+    {
+        File testRepository = createTempDirectory();
+        ZipResourceDirectory.copyZipResourceToDirectory("bamboo-git-plugin-repo.zip", testRepository);
+
+        GitRepository gitRepository = createGitRepository();
+        gitRepository.setTextProvider(Mockito.mock(TextProvider.class, new ReturnsMocks()));
+        setRepositoryProperties(gitRepository, testRepository.getAbsolutePath(), "master", null, null);
+
+        gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
+
+        BuildChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null); //fetch cache!
+        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
+        verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), "bamboo-git-plugin-repo-contents-7ffea3f46b8cd9c5b5d626528c0bea4e31aec705.zip");
+
+        FileUtils.deleteQuietly(testRepository);
+        assertTrue(testRepository.mkdirs());
+        ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
+
+        changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, changes.getVcsRevisionKey());
+        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
+        verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), "basic-repo-contents-a26ff19c3c63e19d6a57a396c764b140f48c530a.zip");
+
+        File victimOfRandomFailure = new File(gitRepository.getWorkingDirectory(), "sparta.txt");
+        FileUtils.deleteQuietly(victimOfRandomFailure);
+        victimOfRandomFailure = new File(gitRepository.getWorkingDirectory(), "shodan.txt");
+        FileUtils.deleteQuietly(victimOfRandomFailure);
+
+        gitRepository.retrieveSourceCode(mockBuildContext(), "2e20b0733759facbeb0dec6ee345d762dbc8eed8");
+        verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), "basic-repo-contents-2e20b0733759facbeb0dec6ee345d762dbc8eed8.zip");
     }
 }

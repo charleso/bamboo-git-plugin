@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Arrays;
 
 public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository
 {
@@ -45,6 +46,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     private static final String REPOSITORY_GIT_MAVEN_PATH = "repository.git.maven.path";
     private static final String REPOSITORY_GIT_ERROR_MISSING_REPOSITORY_URL = "repository.git.error.missingRepositoryUrl";
     private static final String REPOSITORY_GIT_MAVEN_PATH_DOTS_ERROR = "repository.git.maven.path.dotsError";
+    private static final String REPOSITORY_GIT_MESSAGE_UNKNOWN_CHANGES = "repository.git.message.unknownChanges";
     private static final String TEMPORARY_GIT_SSH_PASSPHRASE = "temporary.git.ssh.passphrase";
     private static final String TEMPORARY_GIT_SSH_PASSPHRASE_CHANGE = "temporary.git.ssh.passphrase.change";
     private static final String TEMPORARY_GIT_SSH_KEY_FROM_FILE = "temporary.git.ssh.keyfile";
@@ -98,12 +100,12 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     @NotNull
     public BuildChanges collectChangesSinceLastBuild(@NotNull String planKey, @Nullable String lastVcsRevisionKey) throws RepositoryException
     {
+        BuildChanges changes = new BuildChangesImpl();
+        final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(PlanKeys.getPlanKey(planKey));
+        StringEncrypter encrypter = new StringEncrypter();
+
         try
         {
-            BuildChanges changes = new BuildChangesImpl();
-            final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(PlanKeys.getPlanKey(planKey));
-
-            StringEncrypter encrypter = new StringEncrypter();
             String targetRevision = new GitOperationHelper(buildLogger).obtainLatestRevision(repositoryUrl, branch, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase));
             changes.setVcsRevisionKey(targetRevision);
 
@@ -119,18 +121,34 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             }
 
             File cacheDirectory = GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), repositoryUrl);
-            new GitOperationHelper(buildLogger).fetch(cacheDirectory, repositoryUrl, branch, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase));
-
-            List<Commit> extractedChanges = new GitOperationHelper(buildLogger).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
-            if (extractedChanges.isEmpty())
+            List<Commit> extractedChanges = null;
+            try
             {
-                CommitImpl unknownCommit = new CommitImpl();
-                unknownCommit.setComment("Repository has changed but Bamboo is unable to extract changes between revision " + lastVcsRevisionKey + " and " + targetRevision);
-                unknownCommit.setAuthor(new AuthorImpl(Author.UNKNOWN_AUTHOR));
-                unknownCommit.setDate(new Date());
-
-                List<Commit> fakeChanges = new ArrayList<Commit>(Collections.singletonList(unknownCommit));
-                changes.setChanges(fakeChanges);
+                new GitOperationHelper(buildLogger).fetch(cacheDirectory, repositoryUrl, branch, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase));
+                extractedChanges = new GitOperationHelper(buildLogger).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
+            }
+            catch (Exception e)
+            {
+                buildLogger.addBuildLogEntry("Warning: failed to collect changesets in cache directory (" + cacheDirectory + "), trying to recover...");
+                FileUtils.deleteQuietly(cacheDirectory);
+                buildLogger.addBuildLogEntry("Cleaned cache directory (" + cacheDirectory + "), trying to fetch it again from scratch...");
+                new GitOperationHelper(buildLogger).fetch(cacheDirectory, repositoryUrl, branch, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase));
+                buildLogger.addBuildLogEntry("Fetched remote repository to cache directory (" + cacheDirectory + "), trying to extract changesets...");
+                try
+                {
+                    extractedChanges = new GitOperationHelper(buildLogger).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
+                    buildLogger.addBuildLogEntry("Extracted changesets, recover successful.");
+                }
+                catch (Exception e2)
+                {
+                    buildLogger.addBuildLogEntry("Failed to extracted changesets, will return a stub changeset.");
+                    extractedChanges = null;
+                }
+            }
+            if (extractedChanges == null || extractedChanges.isEmpty())
+            {
+                changes.setChanges(Collections.singletonList((Commit) new CommitImpl(new AuthorImpl(Author.UNKNOWN_AUTHOR),
+                        textProvider.getText(REPOSITORY_GIT_MESSAGE_UNKNOWN_CHANGES, Arrays.asList(lastVcsRevisionKey, targetRevision)), new Date())));
             }
             else
             {
@@ -155,7 +173,19 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(buildContext.getPlanResultKey());
 
             StringEncrypter encrypter = new StringEncrypter();
-            return (new GitOperationHelper(buildLogger).fetchAndCheckout(sourceDirectory, repositoryUrl, branch, targetRevision, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase)));
+            try
+            {
+                return (new GitOperationHelper(buildLogger).fetchAndCheckout(sourceDirectory, repositoryUrl, branch, targetRevision, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase)));
+            }
+            catch (Exception e)
+            {
+                buildLogger.addBuildLogEntry("Warning: failed to retrieve source code to directory (" + sourceDirectory + "), trying to recover...");
+                FileUtils.deleteQuietly(sourceDirectory);
+                buildLogger.addBuildLogEntry("Cleaned source directory (" + sourceDirectory + "), trying to fetch and checkout code once again...");
+                String returnRevision = new GitOperationHelper(buildLogger).fetchAndCheckout(sourceDirectory, repositoryUrl, branch, targetRevision, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase));
+                buildLogger.addBuildLogEntry("Checkout completed, recover successful.");
+                return returnRevision;
+            }
         }
         catch (RuntimeException e)
         {
