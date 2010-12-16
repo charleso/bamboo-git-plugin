@@ -64,7 +64,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         return textProvider.getText(REPOSITORY_GIT_NAME);
     }
 
-    public String getHost() {
+    public String getHost()
+    {
         return null;
     }
 
@@ -131,9 +132,11 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
     public void prepareConfigObject(@NotNull BuildConfiguration buildConfiguration)
     {
-        final LazyReference<StringEncrypter> encrypterRef = new LazyReference<StringEncrypter>() {
+        final LazyReference<StringEncrypter> encrypterRef = new LazyReference<StringEncrypter>()
+        {
             @Override
-            protected StringEncrypter create() throws Exception {
+            protected StringEncrypter create() throws Exception
+            {
                 return new StringEncrypter();
             }
         };
@@ -206,7 +209,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     }
 
     @NotNull
-    public MavenPomAccessor getMavenPomAccessor() {
+    public MavenPomAccessor getMavenPomAccessor()
+    {
         return new GitMavenPomAccessor(this).withPath(pathToPom);
     }
 
