@@ -1,5 +1,6 @@
 package com.atlassian.bamboo.plugins.git;
 
+import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.repository.MavenPomAccessorAbstract;
 import com.atlassian.bamboo.repository.RepositoryException;
 import org.apache.commons.lang.StringUtils;
@@ -49,7 +50,7 @@ public class GitMavenPomAccessor extends MavenPomAccessorAbstract
     public File checkoutMavenPom(@NotNull File destinationPath) throws RepositoryException
     {
         log.info("checkoutMavenPom to: " + destinationPath);
-        new GitOperationHelper().fetchAndCheckout(destinationPath, repository.getRepositoryUrl(), repository.getBranch(), null, repository.getSshKey(), repository.getSshPassphrase());
+        new GitOperationHelper(new NullBuildLogger()).fetchAndCheckout(destinationPath, repository.getRepositoryUrl(), repository.getBranch(), null, repository.getSshKey(), repository.getSshPassphrase());
         final File pomLocation = new File(destinationPath, pathToPom);
         if (pomLocation.isFile())
         {

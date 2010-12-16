@@ -1,5 +1,7 @@
 package com.atlassian.bamboo.plugins.git;
 
+import com.atlassian.bamboo.build.logger.BuildLogger;
+import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.repository.AbstractRepository;
 import com.atlassian.bamboo.repository.MavenPomAccessor;
 import com.atlassian.bamboo.repository.MavenPomAccessorCapableRepository;
@@ -89,9 +91,10 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     public BuildChanges collectChangesSinceLastBuild(@NotNull String planKey, @Nullable String lastVcsRevisionKey) throws RepositoryException
     {
         BuildChanges changes = new BuildChangesImpl();
+        final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(PlanKeys.getPlanKey(planKey));
 
         StringEncrypter encrypter = new StringEncrypter();
-        String targetRevision = new GitOperationHelper().obtainLatestRevision(repositoryUrl, branch, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase));
+        String targetRevision = new GitOperationHelper(buildLogger).obtainLatestRevision(repositoryUrl, branch, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase));
         changes.setVcsRevisionKey(targetRevision);
 
         if (targetRevision == null || targetRevision.equals(lastVcsRevisionKey))
@@ -106,9 +109,9 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         }
 
         File cacheDirectory = GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), repositoryUrl);
-        new GitOperationHelper().fetch(cacheDirectory, repositoryUrl, branch, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase));
+        new GitOperationHelper(buildLogger).fetch(cacheDirectory, repositoryUrl, branch, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase));
 
-        changes.setChanges(new GitOperationHelper().extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision));
+        changes.setChanges(new GitOperationHelper(buildLogger).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision));
 
         return changes;
     }
@@ -118,9 +121,10 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     {
         final String planKey = buildContext.getPlanKey();
         final File sourceDirectory = getSourceCodeDirectory(planKey);
+        final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(buildContext.getPlanResultKey());
 
         StringEncrypter encrypter = new StringEncrypter();
-        return (new GitOperationHelper().fetchAndCheckout(sourceDirectory, repositoryUrl, branch, targetRevision, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase)));
+        return (new GitOperationHelper(buildLogger).fetchAndCheckout(sourceDirectory, repositoryUrl, branch, targetRevision, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase)));
     }
 
     @NotNull

@@ -1,6 +1,7 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.author.AuthorImpl;
+import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.commit.Commit;
 import com.atlassian.bamboo.commit.CommitFileImpl;
 import com.atlassian.bamboo.commit.CommitImpl;
@@ -13,7 +14,6 @@ import org.eclipse.jgit.dircache.DirCacheCheckout;
 import org.eclipse.jgit.errors.NotSupportedException;
 import org.eclipse.jgit.errors.TransportException;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.NullProgressMonitor;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.RefUpdate;
@@ -45,6 +45,12 @@ import java.util.List;
 public class GitOperationHelper
 {
     private static final Logger log = Logger.getLogger(GitOperationHelper.class);
+    private final BuildLogger buildLogger;
+
+    public GitOperationHelper(BuildLogger buildLogger)
+    {
+        this.buildLogger = buildLogger;
+    }
 
     @Nullable
     String obtainLatestRevision(@NotNull final String repositoryUrl, @Nullable final String branch, @Nullable final String sshKey,
@@ -62,15 +68,20 @@ public class GitOperationHelper
         }
         catch (NotSupportedException e)
         {
-            throw new RepositoryException(repositoryUrl + " is not supported protocol.", e);
+            final String message = repositoryUrl + " is not supported protocol.";
+            buildLogger.addErrorLogEntry(message);
+            throw new RepositoryException(message, e);
         }
         catch (TransportException e)
         {
+            buildLogger.addErrorLogEntry(e.getMessage());
             throw new RepositoryException(e.getMessage(), e);
         }
         catch (IOException e)
         {
-            throw new RepositoryException("Failed to create FileRepository", e);
+            final String message = "Failed to create FileRepository";
+            buildLogger.addErrorLogEntry(message);
+            throw new RepositoryException(message, e);
         }
         finally
         {
@@ -101,6 +112,7 @@ public class GitOperationHelper
         }
         catch (IOException e)
         {
+            buildLogger.addBuildLogEntry("Cannot retrieve current repository version of source directory '" + sourceDirectory + "'");
             log.warn("IOException during retrieving current revision in source directory `" + sourceDirectory + "'. Returning null...", e);
             return null;
         }
@@ -132,12 +144,14 @@ public class GitOperationHelper
             localRepository = new FileRepository(new File(sourceDirectory, Constants.DOT_GIT));
             if (!gitDirectory.exists())
             {
+                buildLogger.addBuildLogEntry("Creating local git repository in " + gitDirectory.getAbsolutePath());
                 localRepository.create();
             }
 
             transport = open(localRepository, repositoryUrl, sshKey, sshPassphrase);
 
             String realBranch = StringUtils.isNotBlank(branch) ? branch : Constants.MASTER;
+            buildLogger.addBuildLogEntry("Fetching branch " + realBranch);
 
             RefSpec refSpec = new RefSpec()
                     .setForceUpdate(true)
@@ -146,11 +160,13 @@ public class GitOperationHelper
 
             //todo: what if remote repository doesn't contain branches? i.e. it has only HEAD reference like the ones in resources/obtainLatestRevision/x.zip?
 
-            transport.fetch(NullProgressMonitor.INSTANCE, Arrays.asList(refSpec));
+            transport.fetch(new BuildLoggerProgressMonitor(buildLogger), Arrays.asList(refSpec));
         }
         catch (IOException e)
         {
-            throw new RepositoryException("Cannot read .git directory under `" + sourceDirectory + "'", e);
+            String message = "Cannot read .git directory under `" + sourceDirectory + "'";
+            buildLogger.addErrorLogEntry(message);
+            throw new RepositoryException(message, e);
         }
         finally
         {
@@ -171,6 +187,8 @@ public class GitOperationHelper
     @NotNull
     String checkout(@NotNull final File sourceDirectory, @Nullable final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
     {
+        buildLogger.addBuildLogEntry("Checking out revision " + targetRevision);
+
         File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);
         FileRepository localRepository = null;
         RevWalk revWalk = null;
@@ -203,7 +221,9 @@ public class GitOperationHelper
         }
         catch (IOException e)
         {
-            throw new RepositoryException("Checkout to `" + targetRevision + "' failed.", e);
+            String message = "Checkout to `" + targetRevision + "' failed.";
+            buildLogger.addErrorLogEntry(message);
+            throw new RepositoryException(message, e);
         }
         finally
         {
@@ -281,8 +301,10 @@ public class GitOperationHelper
         }
         catch (IOException e)
         {
-            throw new RepositoryException("IOException during extracting changes in '" + directory + "', previousRevision is " + previousRevision
-                    + " targetRevision is " + targetRevision, e);
+            String message = "IOException during extracting changes in '" + directory + "', previousRevision is " + previousRevision
+                    + " targetRevision is " + targetRevision;
+            buildLogger.addErrorLogEntry(message + " " + e.getMessage());
+            throw new RepositoryException(message, e);
         }
         finally
         {
@@ -320,11 +342,15 @@ public class GitOperationHelper
         }
         catch (URISyntaxException e)
         {
-            throw new RepositoryException(repositoryUrl + " is not valid URI.", e);
+            String message = repositoryUrl + " is not valid URI.";
+            buildLogger.addErrorLogEntry(message);
+            throw new RepositoryException(message, e);
         }
         catch (IOException e)
         {
-            throw new RepositoryException("Failed to open transport", e);
+            String message = "Failed to open transport for " + repositoryUrl;
+            buildLogger.addErrorLogEntry(message);
+            throw new RepositoryException(message, e);
         }
     }
 }
