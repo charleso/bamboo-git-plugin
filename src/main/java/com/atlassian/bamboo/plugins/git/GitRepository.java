@@ -1,6 +1,10 @@
 package com.atlassian.bamboo.plugins.git;
 
+import com.atlassian.bamboo.author.Author;
+import com.atlassian.bamboo.author.AuthorImpl;
 import com.atlassian.bamboo.build.logger.BuildLogger;
+import com.atlassian.bamboo.commit.Commit;
+import com.atlassian.bamboo.commit.CommitImpl;
 import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.repository.AbstractRepository;
 import com.atlassian.bamboo.repository.MavenPomAccessor;
@@ -24,6 +28,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository
 {
@@ -111,7 +119,21 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         File cacheDirectory = GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), repositoryUrl);
         new GitOperationHelper(buildLogger).fetch(cacheDirectory, repositoryUrl, branch, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase));
 
-        changes.setChanges(new GitOperationHelper(buildLogger).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision));
+        List<Commit> extractedChanges = new GitOperationHelper(buildLogger).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
+        if (extractedChanges.isEmpty())
+        {
+            CommitImpl unknownCommit = new CommitImpl();
+            unknownCommit.setComment("Repository has changed but Bamboo is unable to extract changes between revision " + lastVcsRevisionKey + " and " + targetRevision);
+            unknownCommit.setAuthor(new AuthorImpl(Author.UNKNOWN_AUTHOR));
+            unknownCommit.setDate(new Date());
+
+            List<Commit> fakeChanges = new ArrayList<Commit>(Collections.singletonList(unknownCommit));
+            changes.setChanges(fakeChanges);
+        }
+        else
+        {
+            changes.setChanges(extractedChanges);
+        }
 
         return changes;
     }
