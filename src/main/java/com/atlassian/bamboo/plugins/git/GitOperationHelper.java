@@ -44,6 +44,8 @@ import java.util.List;
  */
 public class GitOperationHelper
 {
+    private static final int CHANGESET_LIMIT = 100;
+
     private static final Logger log = Logger.getLogger(GitOperationHelper.class);
     private final BuildLogger buildLogger;
 
@@ -264,8 +266,16 @@ public class GitOperationHelper
 
             treeWalk = new TreeWalk(localRepository);
             treeWalk.setRecursive(true);
-            for (final RevCommit commit : revWalk) //todo: limit commits to let's say... 100 top-most
+
+            int skippedCommits = 0; //todo: return it :P
+            for (final RevCommit commit : revWalk)
             {
+                if (commits.size() >= CHANGESET_LIMIT)
+                {
+                    skippedCommits++;
+                    continue;
+                }
+
                 CommitImpl curr = new CommitImpl();
                 curr.setComment(commit.getFullMessage());
                 curr.setAuthor(new AuthorImpl(commit.getAuthorIdent().getName()));
@@ -274,7 +284,6 @@ public class GitOperationHelper
 
                 // DiffEntry does not support walks with more than two trees (see egit FileDiff.java)
                 treeWalk.reset();
-                treeWalk.setRecursive(true);
                 if (commit.getParentCount() > 0)
                 {
                     treeWalk.addTree(commit.getParent(0).getTree());
