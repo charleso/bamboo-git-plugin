@@ -28,7 +28,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -63,6 +62,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
     // Maven 2 import
     private transient String pathToPom;
+
+    //todo: Spring-inject StringEncrypter singleton, https://atlaseye.atlassian.com/cru/CR-BAM-2232#c37222
 
     // ---------------------------------------------------------------------------------------------------- Dependencies
 
@@ -227,7 +228,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                 }
                 catch (IOException e)
                 {
-//                    log.error("Cannot read uploaded ssh key file", e); //todo BAM-7430
+                    log.error("Cannot read uploaded ssh key file", e);
                     return;
                 }
                 buildConfiguration.setProperty(REPOSITORY_GIT_SSH_KEY, encrypterRef.get().encrypt(key));
