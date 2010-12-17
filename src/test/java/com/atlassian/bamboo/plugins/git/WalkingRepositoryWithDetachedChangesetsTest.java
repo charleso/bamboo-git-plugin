@@ -86,6 +86,38 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
         Assert.assertEquals(comments, expectedComments);
     }
 
+    @Test(dataProvider = "subsequentChangeDetectionsData", singleThreaded = true)
+    public void testSubsequentChangeDetectionsWithCache(String previousChangeset, String srcRepo, String expectedHead, List<String> expectedComments) throws Exception
+    {
+        File source = new File(sourceRepositoriesBase, srcRepo);
+        File singleSource = new File(sourceRepositoriesBase, "testSubsequentChangeDetectionsWithCache_Repo");
+        FileUtils.deleteQuietly(singleSource);
+        FileUtils.forceMkdir(singleSource);
+        FileUtils.copyDirectory(source, singleSource);
+
+        File workingDir = new File(sourceRepositoriesBase, "testSubsequentChangeDetectionsWithCache_WorkDir");
+        FileUtils.forceMkdir(workingDir);
+
+        GitRepository gitRepository = createGitRepository();
+        gitRepository.setWorkingDir(workingDir);
+        setRepositoryProperties(gitRepository, singleSource.getAbsolutePath(), Collections.<String, String>emptyMap());
+
+        BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
+        String vcsRevisionKey = changes.getVcsRevisionKey();
+        Assert.assertNotNull(vcsRevisionKey);
+        Assert.assertEquals(vcsRevisionKey, expectedHead);
+
+        List<String> comments = new ArrayList<String>();
+        List<Commit> commits = changes.getChanges();
+        for (Commit commit : commits)
+        {
+            comments.add(commit.getComment().trim());
+        }
+
+        Assert.assertEquals(comments, expectedComments);
+
+    }
+
     @Test
     public void testChangeDetectionAfterPreviousChangesetBecameDetached() throws Exception
     {
