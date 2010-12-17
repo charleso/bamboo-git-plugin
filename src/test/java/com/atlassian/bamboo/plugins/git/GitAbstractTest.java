@@ -32,7 +32,8 @@ import java.util.zip.ZipFile;
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.testng.Assert.assertEquals;
 
-public class GitAbstractTest {
+public class GitAbstractTest
+{
     protected final Collection<File> filesToCleanUp = Collections.synchronizedCollection(new ArrayList<File>());
     private static final ResourceBundle resourceBundle = ResourceBundle.getBundle("com.atlassian.bamboo.plugins.git.i18n", Locale.US);
 
@@ -131,7 +132,8 @@ public class GitAbstractTest {
     @AfterClass
     void cleanUpFiles()
     {
-        for (File file : filesToCleanUp) {
+        for (File file : filesToCleanUp)
+        {
             FileUtils.deleteQuietly(file);
         }
     }
