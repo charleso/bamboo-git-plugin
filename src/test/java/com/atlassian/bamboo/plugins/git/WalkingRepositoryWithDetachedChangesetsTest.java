@@ -58,9 +58,6 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
                 {CHG_1, "4", CHG_4, asList(COMMENT_4, COMMENT_2)}, // no chg#3 - detached changeset!
                 {CHG_1, "5", CHG_5, asList(COMMENT_5, COMMENT_4, COMMENT_3, COMMENT_2)}, // order of 3 and 4 arbitrary!
 
-                {CHG_3, "4", CHG_4, asList(COMMENT_4)}, // builds after detached
-                {CHG_4, "3", CHG_3, asList(COMMENT_3)},
-
                 {CHG_5, "4", CHG_4, asList(getTextProvider().getText("repository.git.message.unknownChanges", asList(CHG_5, CHG_4)))} // repository going back
 
 
@@ -77,7 +74,7 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
         BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
         String vcsRevisionKey = changes.getVcsRevisionKey();
         Assert.assertNotNull(vcsRevisionKey);
-        Assert.assertEquals(vcsRevisionKey.substring(0, expectedHead.length()), expectedHead);
+        Assert.assertEquals(vcsRevisionKey, expectedHead);
 
         List<String> comments = new ArrayList<String>();
         List<Commit> commits = changes.getChanges();
@@ -87,6 +84,33 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
         }
 
         Assert.assertEquals(comments, expectedComments);
+    }
+
+    @Test
+    public void testChangeDetectionAfterPreviousChangesetBecameDetached() throws Exception
+    {
+        File detachedSrc = new File(sourceRepositoriesBase, "3");
+        File nextSrc = new File(sourceRepositoriesBase, "4");
+        File singleSource = createTempDirectory();
+
+        GitRepository gitRepository = createGitRepository();
+        setRepositoryProperties(gitRepository, singleSource.getAbsolutePath(), Collections.<String, String>emptyMap());
+
+        // feed the cache or the detached change won't be known
+        FileUtils.copyDirectory(detachedSrc, singleSource);
+        BuildChanges initialChanges = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", CHG_2); // initial build does not fetch to cache - maybe it should?
+        Assert.assertEquals(initialChanges.getVcsRevisionKey(), CHG_3);
+
+        FileUtils.cleanDirectory(singleSource);
+        FileUtils.copyDirectory(nextSrc, singleSource);
+
+        BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", CHG_3);
+
+        Assert.assertEquals(changes.getVcsRevisionKey(), CHG_4);
+        List<Commit> commits = changes.getChanges();
+        Assert.assertEquals(commits.size(), 1);
+        Assert.assertEquals(commits.get(0).getComment().trim(), COMMENT_4);
+
     }
 
     @DataProvider
