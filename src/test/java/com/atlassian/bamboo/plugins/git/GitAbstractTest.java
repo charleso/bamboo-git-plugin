@@ -5,7 +5,11 @@ import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.util.BambooFileUtils;
+import com.atlassian.bamboo.utils.i18n.DefaultI18nBean;
+import com.atlassian.bamboo.ww2.TextProviderAdapter;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
+import com.atlassian.plugin.PluginAccessor;
+import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.mockito.Mockito;
@@ -19,7 +23,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -28,6 +34,7 @@ import static org.testng.Assert.assertEquals;
 
 public class GitAbstractTest {
     protected final Collection<File> filesToCleanUp = Collections.synchronizedCollection(new ArrayList<File>());
+    private static final ResourceBundle resourceBundle = ResourceBundle.getBundle("com.atlassian.bamboo.plugins.git.i18n", Locale.US);
 
     static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, String branch, String sshKey, String sshPassphrase) throws Exception
     {
@@ -81,6 +88,8 @@ public class GitAbstractTest {
         BuildDirectoryManager buildDirectoryManager = Mockito.mock(BuildDirectoryManager.class);
         Mockito.when(buildDirectoryManager.getBuildWorkingDirectory()).thenReturn(workingDirectory);
         gitRepository.setBuildDirectoryManager(buildDirectoryManager);
+        gitRepository.setTextProvider(getTextProvider());
+
         return gitRepository;
     }
 
@@ -112,6 +121,12 @@ public class GitAbstractTest {
         assertEquals(files.size(), fileCount, "Number of files");
     }
 
+    public static TextProvider getTextProvider()
+    {
+        DefaultI18nBean bean = new DefaultI18nBean(Locale.US, Mockito.mock(PluginAccessor.class));
+        bean.getI18nBundles().add(resourceBundle);
+        return new TextProviderAdapter(bean);
+    }
 
     @AfterClass
     void cleanUpFiles()
