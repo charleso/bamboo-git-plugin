@@ -181,6 +181,29 @@ public class GitOperationHelperTest extends GitAbstractTest
                                 }),
                         }
                 },
+                {"repo-with-merges.zip", null, "1cfce5981b1186ed8aba90184cc8a171127dd1fa",
+                        new Commit[] {
+                                createCommitImpl("Piotr Stefaniak", "Merge branch 'master' into slave\n\nConflicts:\n\tshared.txt\n", "2010-12-17 16:20:36 +0100", new CommitFileImpl[] {
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "shared-master\n", "2010-12-17 16:19:25 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("c1e199fec9007b63d8030f3e21bd8c890015829c", "shared.txt"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "shared slave\n", "2010-12-17 16:18:49 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("5d09f997e79d3c3cc88246c79c92c22b700e9f46", "shared.txt"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "Merge branch 'slave'\n", "2010-12-17 16:14:05 +0100", new CommitFileImpl[] {
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "master2\n", "2010-12-17 16:13:55 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("374cee009df728f093bf0866b7c8377b256779ab", "master.txt"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "slave\n", "2010-12-17 16:08:23 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("d277ed76406ca4b7bf4668d6ea627ad1a16544d3", "slave.txt"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "master commit\n", "2010-12-17 16:03:08 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("229b83e21d22b1bafeaabca886d24ad506c9cfc9", "master.txt"),
+                                }),
+                        }
+                },
         };
     }
 
