@@ -37,12 +37,6 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
         ZipResourceDirectory.copyZipResourceToDirectory("detached-git-repos.zip", sourceRepositoriesBase);
     }
 
-    @AfterClass
-    public void tearDownTmpDir() throws Exception
-    {
-        FileUtils.forceDelete(sourceRepositoriesBase);
-    }
-
     @DataProvider
     Object[][] subsequentChangeDetectionsData()
     {
