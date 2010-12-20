@@ -1,20 +1,34 @@
-You have successfully created a plugin using the Bamboo plugin archetype!
+__How to build the Bamboo Git Plugin__
 
-Here are the SDK commands you'll use immediately:
+Impatient way:
+1. `mvn package' (Apache Maven 2.2.1 was used to develop this plugin)
 
-* atlas-run   -- installs this plugin into Bamboo and starts it on http://localhost:6990/bamboo
-* atlas-debug -- same as atlas-run, but allows a debugger to attach at port 5005
-* atlas-cli   -- after atlas-run or atlas-debug, opens a Maven command line window:
-                 - 'pi' reinstalls the plugin into the running Bamboo instance
-* atlas-help  -- prints description for all commands in the SDK
+More patient way:
+1. Download and install the latest JDK:
+   * http://java.sun.com
+2. Download and install the Atlassian Plugin SDK:
+   * http://confluence.atlassian.com/display/DEVNET/Setting+up+your+Plugin+Development+Environment
+3. Run `atlas-package -DskipTests' in the directory containing Bamboo Git Plugin pom.xml.
+4. Grab plugin JAR file from `./target/atlassian-bamboo-plugin-git-<version>.jar'
 
-Full documentation is always available at:
 
-http://confluence.atlassian.com/display/DEVNET/Developing+your+Plugin+using+the+Atlassian+Plugin+SDK
+Full documentation on how to develop Atlassian Plugin is available at:
+* http://confluence.atlassian.com/display/DEVNET/How+to+Build+an+Atlassian+Plugin
 
-----
 
-To avoid "NoClassDefinitionFound" Exception copy JGit library manually to your target directory:
 
-cp /home/pstefaniak/.m2/repository/org/eclipse/jgit/org.eclipse.jgit/0.9.3/org.eclipse.jgit-0.9.3.jar target/bamboo/webapp/WEB-INF/lib/
+__How to deploy Git Plugin into existing Bamboo instance__
+
+1. Copy the plugin JAR file into the appropriate plugins directory:
+    * If you are using the Bamboo Standalone distrubition, copy the plugin into the
+      `(...)/<Bamboo-install>/webapp/WEB-INF/lib/' directory
+    * If you are using the Bamboo EAR-WAR distrubution, copy the plugin into the
+      `(...)/<Bamboo-Deply-Location>/WEB-INF/lib/' directory
+      For example, if you are running Bamboo EAR-WAR on Tomcat, copy the plugin into the
+      `(...)/<Tomcat-Install>/webapps/<Bamboo-Deploy-Location>/WEB-INF/lib/' directory.
+2. Restart Bamboo.
+
+Full documentation on how installing Atlassian Plugins is available at:
+* http://confluence.atlassian.com/display/BAMBOO/Installing+a+new+Plugin
+  (please note that Bamboo Git Plugin is 'Version 1')
 

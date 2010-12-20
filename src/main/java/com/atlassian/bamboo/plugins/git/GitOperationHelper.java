@@ -26,6 +26,7 @@ import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.transport.URIish;
+import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.jetbrains.annotations.NotNull;
@@ -281,17 +282,15 @@ public class GitOperationHelper
                 curr.setAuthor(new AuthorImpl(commit.getAuthorIdent().getName()));
                 curr.setDate(commit.getAuthorIdent().getWhen());
 //                curr.setRevision(commit.getId().getName()); <-- since bamboo 3.0
+                commits.add(curr);
 
-                // DiffEntry does not support walks with more than two trees (see egit FileDiff.java)
+                if (commit.getParentCount() >= 2) //merge commit
+                {
+                    continue;
+                }
+
                 treeWalk.reset();
-                if (commit.getParentCount() > 0)
-                {
-                    treeWalk.addTree(commit.getParent(0).getTree());
-                }
-                else
-                {
-                    treeWalk.addTree(new EmptyTreeIterator());
-                }
+                int treePosition = commit.getParentCount() > 0 ? treeWalk.addTree(commit.getParent(0).getTree()) : treeWalk.addTree(new EmptyTreeIterator());
                 treeWalk.addTree(commit.getTree());
 
                 for (final DiffEntry entry : DiffEntry.scan(treeWalk))
@@ -305,7 +304,6 @@ public class GitOperationHelper
                     commitFile.setRevision(commit.getId().getName());
                     curr.addFile(commitFile);
                 }
-                commits.add(curr);
             }
         }
         catch (IOException e)

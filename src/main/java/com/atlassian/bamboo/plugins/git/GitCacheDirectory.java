@@ -28,7 +28,10 @@ public class GitCacheDirectory {
         long hashCode = repositoryUrl.hashCode();
 
         File cacheDirectory = new File(workingDirectory, GIT_REPOSITORY_CACHE_DIRECTORY);
-        cacheDirectory.mkdirs();
+        if (!(cacheDirectory.exists() && cacheDirectory.isDirectory()) && !cacheDirectory.mkdirs())
+        {
+            throw new RepositoryException("Failed to mkdirs on cacheDirectory(" + cacheDirectory + ").");
+        }
 
         int index = 0;
         while (true)
