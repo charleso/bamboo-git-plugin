@@ -81,7 +81,7 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
     {
         File source = new File(sourceRepositoriesBase, srcRepo);
         GitRepository gitRepository = createGitRepository();
-        setRepositoryProperties(gitRepository, source.getAbsolutePath(), branch, null, null);
+        setRepositoryProperties(gitRepository, source, branch);
 
         BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
         String vcsRevisionKey = changes.getVcsRevisionKey();
@@ -105,7 +105,7 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
 
         GitRepository gitRepository = createGitRepository();
         gitRepository.setWorkingDir(workingDir);
-        setRepositoryProperties(gitRepository, singleSource.getAbsolutePath(), branch, null, null);
+        setRepositoryProperties(gitRepository, singleSource, branch);
 
         BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
         String vcsRevisionKey = changes.getVcsRevisionKey();
@@ -131,13 +131,13 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
         File repoSrc = new File(sourceRepositoriesBase, "5");
 
         GitRepository gitRepository = createGitRepository();
-        setRepositoryProperties(gitRepository, repoSrc.getAbsolutePath(), prevBranch, null, null);
+        setRepositoryProperties(gitRepository, repoSrc, prevBranch);
 
         // feed the cache or the detached change won't be known
         BuildChanges initialChanges = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", CHG_M_1); // initial build does not fetch to cache - maybe it should?
         Assert.assertEquals(initialChanges.getVcsRevisionKey(), prevRev);
 
-        setRepositoryProperties(gitRepository, repoSrc.getAbsolutePath(), newBranch, null, null);
+        setRepositoryProperties(gitRepository, repoSrc, newBranch);
         BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", prevRev);
 
         Assert.assertEquals(changes.getVcsRevisionKey(), expectedRev);
@@ -180,7 +180,7 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
 
         File prev = new File(sourceRepositoriesBase, prevRepo);
-        setRepositoryProperties(gitRepository, prev.getAbsolutePath(), prevBranch, null, null);
+        setRepositoryProperties(gitRepository, prev, prevBranch);
 
         String prevRev = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", null).getVcsRevisionKey();
 
@@ -190,7 +190,7 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
         gitRepository.retrieveSourceCode(buildContext, prevRev);
 
         File next = new File(sourceRepositoriesBase, newRepo);
-        setRepositoryProperties(gitRepository, next.getAbsolutePath(), newBranch, null, null);
+        setRepositoryProperties(gitRepository, next, newBranch);
 
         String newRev = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", null).getVcsRevisionKey();
 
@@ -218,7 +218,7 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
 
         File prev = new File(sourceRepositoriesBase, "5");
-        setRepositoryProperties(gitRepository, prev.getAbsolutePath(), branch, null, null);
+        setRepositoryProperties(gitRepository, prev, branch);
 
         BuildContext buildContext = Mockito.mock(BuildContext.class);
         Mockito.when(buildContext.getPlanKey()).thenReturn("GIT-PLAN");

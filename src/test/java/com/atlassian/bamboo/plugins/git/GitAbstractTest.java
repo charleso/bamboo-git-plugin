@@ -37,6 +37,16 @@ public class GitAbstractTest
     protected final Collection<File> filesToCleanUp = Collections.synchronizedCollection(new ArrayList<File>());
     private static final ResourceBundle resourceBundle = ResourceBundle.getBundle("com.atlassian.bamboo.plugins.git.i18n", Locale.US);
 
+    static void setRepositoryProperties(GitRepository gitRepository, File repositorySourceDir, String branch) throws Exception
+    {
+        setRepositoryProperties(gitRepository, repositorySourceDir.getAbsolutePath(), branch);
+    }
+
+    static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, String branch) throws Exception
+    {
+        setRepositoryProperties(gitRepository, repositoryUrl, branch, null, null);
+    }
+
     static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, String branch, String sshKey, String sshPassphrase) throws Exception
     {
         setRepositoryProperties(gitRepository, repositoryUrl, branch, sshKey, sshPassphrase, Collections.<String, String>emptyMap());

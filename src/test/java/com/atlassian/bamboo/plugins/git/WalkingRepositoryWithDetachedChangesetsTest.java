@@ -65,7 +65,7 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
     {
         File source = new File(sourceRepositoriesBase, srcRepo);
         GitRepository gitRepository = createGitRepository();
-        setRepositoryProperties(gitRepository, source.getAbsolutePath(), Collections.<String, String>emptyMap());
+        setRepositoryProperties(gitRepository, source);
 
         BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
         String vcsRevisionKey = changes.getVcsRevisionKey();
@@ -90,7 +90,7 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
 
         GitRepository gitRepository = createGitRepository();
         gitRepository.setWorkingDir(workingDir);
-        setRepositoryProperties(gitRepository, singleSource.getAbsolutePath(), Collections.<String, String>emptyMap());
+        setRepositoryProperties(gitRepository, singleSource);
 
         BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
         String vcsRevisionKey = changes.getVcsRevisionKey();
@@ -110,7 +110,7 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
         File singleSource = createTempDirectory();
 
         GitRepository gitRepository = createGitRepository();
-        setRepositoryProperties(gitRepository, singleSource.getAbsolutePath(), Collections.<String, String>emptyMap());
+        setRepositoryProperties(gitRepository, singleSource);
 
         // feed the cache or the detached change won't be known
         FileUtils.copyDirectory(detachedSrc, singleSource);
@@ -148,7 +148,7 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
 
         File prev = new File(sourceRepositoriesBase, prevRepo);
-        setRepositoryProperties(gitRepository, prev.getAbsolutePath(), Collections.<String, String>emptyMap());
+        setRepositoryProperties(gitRepository, prev);
 
         String prevRev = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", null).getVcsRevisionKey();
 
@@ -158,7 +158,7 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
         gitRepository.retrieveSourceCode(buildContext, prevRev);
 
         File next = new File(sourceRepositoriesBase, newRepo);
-        setRepositoryProperties(gitRepository, next.getAbsolutePath(), Collections.<String, String>emptyMap());
+        setRepositoryProperties(gitRepository, next);
 
         String newRev = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", null).getVcsRevisionKey();
 
@@ -185,7 +185,7 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
 
         File prev = new File(sourceRepositoriesBase, "5");
-        setRepositoryProperties(gitRepository, prev.getAbsolutePath(), Collections.<String, String>emptyMap());
+        setRepositoryProperties(gitRepository, prev);
 
         BuildContext buildContext = Mockito.mock(BuildContext.class);
         Mockito.when(buildContext.getPlanKey()).thenReturn("GIT-PLAN");

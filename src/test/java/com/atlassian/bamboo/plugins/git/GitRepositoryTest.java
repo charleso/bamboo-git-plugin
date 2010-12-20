@@ -27,7 +27,7 @@ public class GitRepositoryTest extends GitAbstractTest
     public void testBasicFunctionality() throws Exception
     {
         GitRepository gitRepository = createGitRepository();
-        setRepositoryProperties(gitRepository, "git://github.com/cixot/test.git", "master", null, null);
+        setRepositoryProperties(gitRepository, "git://github.com/cixot/test.git", "master");
 
         BuildChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
 
@@ -51,7 +51,7 @@ public class GitRepositoryTest extends GitAbstractTest
         ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
 
         GitRepository gitRepository = createGitRepository();
-        setRepositoryProperties(gitRepository, testRepository.getAbsolutePath(), "master", null, null);
+        setRepositoryProperties(gitRepository, testRepository, "master");
 
         gitRepository.retrieveSourceCode(mockBuildContext(), targetRevision);
         verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), expectedContentsInZip);
@@ -115,7 +115,7 @@ public class GitRepositoryTest extends GitAbstractTest
 
         GitRepository gitRepository = createGitRepository();
         gitRepository.setTextProvider(Mockito.mock(TextProvider.class, new ReturnsMocks()));
-        setRepositoryProperties(gitRepository, testRepository.getAbsolutePath(), "master", null, null);
+        setRepositoryProperties(gitRepository, testRepository, "master");
 
         gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
 
