@@ -222,9 +222,11 @@ public class GitOperationHelperTest extends GitAbstractTest
             Commit expectedCommit = expectedCommits[i];
             assertEquals(actualCommit.getComment(), expectedCommit.getComment());
             String author = actualCommit.getAuthor().getName();
+            String expectedAuthor = expectedCommit.getAuthor().getName();
             for (int j = 0 ; j < author.length() ; j++)
             {
                 System.out.println(j + ":" + (int) author.charAt(j) + ":" + author.charAt(j));
+                System.out.println(j + ":" + (int) expectedAuthor.charAt(j) + ":" + expectedAuthor.charAt(j));
             }
             assertEquals(actualCommit.getAuthor().getName(), expectedCommit.getAuthor().getName());
             assertEquals(actualCommit.getDate(), expectedCommit.getDate());
