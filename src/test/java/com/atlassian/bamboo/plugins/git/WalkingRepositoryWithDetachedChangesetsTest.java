@@ -1,9 +1,10 @@
 package com.atlassian.bamboo.plugins.git;
 
-import com.atlassian.bamboo.commit.Commit;
+import com.atlassian.bamboo.plugins.git.testutils.ExtractComments;
 import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.testtools.ZipResourceDirectory;
+import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.mockito.Mockito;
 import org.testng.Assert;
@@ -11,6 +12,7 @@ import org.testng.annotations.*;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -70,13 +72,7 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
         Assert.assertNotNull(vcsRevisionKey);
         Assert.assertEquals(vcsRevisionKey, expectedHead);
 
-        List<String> comments = new ArrayList<String>();
-        List<Commit> commits = changes.getChanges();
-        for (Commit commit : commits)
-        {
-            comments.add(commit.getComment().trim());
-        }
-
+        List<String> comments = Lists.transform(changes.getChanges(), new ExtractComments());
         Assert.assertEquals(comments, expectedComments);
     }
 
@@ -101,13 +97,7 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
         Assert.assertNotNull(vcsRevisionKey);
         Assert.assertEquals(vcsRevisionKey, expectedHead);
 
-        List<String> comments = new ArrayList<String>();
-        List<Commit> commits = changes.getChanges();
-        for (Commit commit : commits)
-        {
-            comments.add(commit.getComment().trim());
-        }
-
+        List<String> comments = Lists.transform(changes.getChanges(), new ExtractComments());
         Assert.assertEquals(comments, expectedComments);
 
     }
@@ -133,9 +123,8 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
         BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", CHG_3);
 
         Assert.assertEquals(changes.getVcsRevisionKey(), CHG_4);
-        List<Commit> commits = changes.getChanges();
-        Assert.assertEquals(commits.size(), 1);
-        Assert.assertEquals(commits.get(0).getComment().trim(), COMMENT_4);
+        List<String> comments = Lists.transform(changes.getChanges(), new ExtractComments());
+        Assert.assertEquals(comments, Arrays.asList(COMMENT_4));
 
     }
 
