@@ -7,14 +7,10 @@ import com.atlassian.testtools.ZipResourceDirectory;
 import org.apache.commons.io.FileUtils;
 import org.mockito.Mockito;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -209,37 +205,6 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
         Mockito.when(buildContext.getPlanKey()).thenReturn("GIT-PLAN");
 
         gitRepository.retrieveSourceCode(buildContext, prevRev);
-
-        File next = new File(sourceRepositoriesBase, newRepo);
-        setRepositoryProperties(gitRepository, next.getAbsolutePath(), newBranch, null, null);
-
-        String newRev = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", null).getVcsRevisionKey();
-
-        gitRepository.retrieveSourceCode(buildContext, newRev);
-        File retrievedSources = new File(gitRepository.getWorkingDirectory(), "GIT-PLAN");
-        verifyContents(retrievedSources, "multiple-branches-with-conflicts-contents/" + newBranch + "-" + newRepo + ".zip");
-    }
-
-    @Test(dataProvider = "crossSourceCheckoutData")
-    public void testCrossSourceCheckoutWithMessedUpSource(String prevRepo, String prevBranch, String newRepo, String newBranch) throws Exception
-    {
-        GitRepository gitRepository = createGitRepository();
-
-        File prev = new File(sourceRepositoriesBase, prevRepo);
-        setRepositoryProperties(gitRepository, prev.getAbsolutePath(), prevBranch, null, null);
-
-        String prevRev = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", null).getVcsRevisionKey();
-
-        BuildContext buildContext = Mockito.mock(BuildContext.class);
-        Mockito.when(buildContext.getPlanKey()).thenReturn("GIT-PLAN");
-
-        gitRepository.retrieveSourceCode(buildContext, prevRev);
-
-        File addedFile = new File(gitRepository.getSourceCodeDirectory("GIT-PLAN"), "addedFile");
-        FileUtils.writeStringToFile(addedFile, "Added file contents");
-
-        File changedFile = new File(gitRepository.getSourceCodeDirectory("GIT-PLAN"), "file1");
-        FileUtils.writeStringToFile(changedFile, "Modified file contents");
 
         File next = new File(sourceRepositoriesBase, newRepo);
         setRepositoryProperties(gitRepository, next.getAbsolutePath(), newBranch, null, null);
