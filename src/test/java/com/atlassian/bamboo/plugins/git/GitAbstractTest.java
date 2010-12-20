@@ -60,6 +60,11 @@ public class GitAbstractTest
         setRepositoryProperties(gitRepository, repositoryUrl, params);
     }
 
+    static void setRepositoryProperties(GitRepository gitRepository, File repositorySourceDir) throws Exception
+    {
+        setRepositoryProperties(gitRepository, repositorySourceDir.getAbsolutePath(), Collections.<String, String>emptyMap());
+    }
+
     static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, Map<String, String> paramMap) throws Exception
     {
         BuildConfiguration buildConfiguration = new BuildConfiguration();
