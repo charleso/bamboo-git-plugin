@@ -95,7 +95,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         return commitImpl;
     }
 
-    @DataProvider(parallel = false)
+    @DataProvider(parallel = true)
     Object[][] testExtractCommitsData() throws Exception
     {
         return new Object[][]{
@@ -218,10 +218,14 @@ public class GitOperationHelperTest extends GitAbstractTest
         assertEquals(commits.size(), expectedCommits.length);
         for (int i = 0; i < commits.size(); i++)
         {
-            assertEquals(commits.get(i), expectedCommits[i]);
+            Commit actualCommit = commits.get(i);
+            Commit expectedCommit = expectedCommits[i];
+            assertEquals(actualCommit.getComment(), expectedCommit.getComment());
+            assertEquals(actualCommit.getAuthor().getName(), expectedCommit.getAuthor().getName());
+            assertEquals(actualCommit.getDate(), expectedCommit.getDate());
 
-            List<CommitFile> expectedFiles = expectedCommits[i].getFiles();
-            List<CommitFile> files = commits.get(i).getFiles();
+            List<CommitFile> expectedFiles = expectedCommit.getFiles();
+            List<CommitFile> files = actualCommit.getFiles();
 
             assertEquals(files.size(), expectedFiles.size());
             for (int j = 0; j < files.size(); j++)
