@@ -17,14 +17,11 @@
     <name>Atlassian Bamboo Git Repository Plugin</name>
     <description>This is the Git SCM plugin for Atlassian Bamboo.</description>
     <packaging>atlassian-plugin</packaging>
-<!--
-    <repositories>
-        <repository>
-            <id>jgit-repository</id>
-            <url>http://download.eclipse.org/jgit/maven</url>
-        </repository>
-    </repositories>
--->
+    <scm>
+        <connection>scm:git:git://github.com/atlassian/bamboo-git-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:atlassian/bamboo-git-plugin.git</developerConnection>
+    </scm>
+
     <repositories>
         <repository>
             <id>atlassian-3rdparty</id>
