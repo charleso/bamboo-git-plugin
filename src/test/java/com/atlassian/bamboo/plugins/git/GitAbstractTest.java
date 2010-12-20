@@ -112,7 +112,14 @@ public class GitAbstractTest
     File createTempDirectory() throws IOException
     {
         File tmp = BambooFileUtils.createTempDirectory("bamboo-git-plugin-test");
-        FileUtils.forceDeleteOnExit(tmp);
+        try
+        {
+            FileUtils.forceDeleteOnExit(tmp);
+        }
+        catch (IOException e)
+        {
+            // do nothing
+        }
         filesToCleanUp.add(tmp);
         return tmp;
     }
