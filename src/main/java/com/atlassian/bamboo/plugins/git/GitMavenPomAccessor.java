@@ -12,9 +12,9 @@ import java.io.File;
 public class GitMavenPomAccessor extends MavenPomAccessorAbstract
 {
     public static final String POM_XML = "pom.xml";
-        private static final Logger log = Logger.getLogger(GitRepository.class);
-        private final GitRepository repository;
-        private String pathToPom = POM_XML;
+    private static final Logger log = Logger.getLogger(GitMavenPomAccessor.class);
+    private final GitRepository repository;
+    private String pathToPom = POM_XML;
 
     protected GitMavenPomAccessor(GitRepository repository)
     {
