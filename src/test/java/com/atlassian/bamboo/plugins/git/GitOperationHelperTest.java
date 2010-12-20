@@ -18,6 +18,7 @@ import static org.testng.Assert.assertEquals;
 
 public class GitOperationHelperTest extends GitAbstractTest
 {
+    static final String SLAWOMIR_GINTER = new String(new char[] {83, 322, 97, 119, 111, 109, 105, 114, 32, 71, 105, 110, 116, 101, 114}); //"Sławomir Ginter"
 
     @DataProvider(parallel = false)
     Object[][] testObtainLatestRevisionData()
@@ -109,19 +110,19 @@ public class GitOperationHelperTest extends GitAbstractTest
 //                },
                 {"bamboo-git-plugin-repo.zip", "9b66e227a34a8aceef0bed9f567b5391cf975c14", "2e396c5ff8a668df4d224e6e5632d82a5c01e0ba",
                         new Commit[] {
-                                createCommitImpl("Sławomir Ginter", "Clean up working directories after test.\nThe forceDeleteOnExit does not work if the VM does not exit\n", "2010-12-09 16:19:35 +0100", new CommitFileImpl[] {
+                                createCommitImpl(SLAWOMIR_GINTER, "Clean up working directories after test.\nThe forceDeleteOnExit does not work if the VM does not exit\n", "2010-12-09 16:19:35 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("2e396c5ff8a668df4d224e6e5632d82a5c01e0ba", "src/test/java/com/atlassian/bamboo/plugins/git/GitRepositoryTest.java"),
                                 }),
-                                createCommitImpl("Sławomir Ginter", "Merge branch 'master' of https://github.com/sginter/bamboo-git-plugin\n", "2010-12-09 13:58:46 +0100", new CommitFileImpl[] {
+                                createCommitImpl(SLAWOMIR_GINTER, "Merge branch 'master' of https://github.com/sginter/bamboo-git-plugin\n", "2010-12-09 13:58:46 +0100", new CommitFileImpl[] {
                                 }),
-                                createCommitImpl("Sławomir Ginter", "Use LazyReference to lazily initialize encrypter\n", "2010-12-09 13:56:00 +0100", new CommitFileImpl[] {
+                                createCommitImpl(SLAWOMIR_GINTER, "Use LazyReference to lazily initialize encrypter\n", "2010-12-09 13:56:00 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("01860622af59114b301186924fddb2d61ffeb50f", "src/main/java/com/atlassian/bamboo/plugins/git/GitRepository.java"),
                                 }),
-                                createCommitImpl("Sławomir Ginter", "Adding .idea to .gitignore, removing dummy generated Integration test\n", "2010-12-09 20:28:35 +0800", new CommitFileImpl[] {
+                                createCommitImpl(SLAWOMIR_GINTER, "Adding .idea to .gitignore, removing dummy generated Integration test\n", "2010-12-09 20:28:35 +0800", new CommitFileImpl[] {
                                         new CommitFileImpl("69aada2980a9a4484c1c13246ebff5386d8d0655", ".gitignore"),
                                         new CommitFileImpl("69aada2980a9a4484c1c13246ebff5386d8d0655", "src/test/java/it/IntegrationTestMyPlugin.java"),
                                 }),
-                                createCommitImpl("Sławomir Ginter", "Adding .idea to .gitignore, removing dummy generated Integration test\n", "2010-12-09 13:28:35 +0100", new CommitFileImpl[] {
+                                createCommitImpl(SLAWOMIR_GINTER, "Adding .idea to .gitignore, removing dummy generated Integration test\n", "2010-12-09 13:28:35 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("e18295d808ae266bcfd663cb7061457f9eb1b574", ".gitignore"),
                                         new CommitFileImpl("e18295d808ae266bcfd663cb7061457f9eb1b574", "src/test/java/it/IntegrationTestMyPlugin.java"),
                                 }),
