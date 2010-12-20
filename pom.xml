@@ -107,12 +107,6 @@
                     <target>1.5</target>
                 </configuration>
             </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <forkMode>always</forkMode>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 

@@ -95,7 +95,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         return commitImpl;
     }
 
-    @DataProvider(parallel = true)
+    @DataProvider(parallel = false)
     Object[][] testExtractCommitsData() throws Exception
     {
         return new Object[][]{
