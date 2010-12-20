@@ -100,14 +100,14 @@ public class GitOperationHelperTest extends GitAbstractTest
     Object[][] testExtractCommitsData() throws Exception
     {
         return new Object[][]{
-//                {"bamboo-git-plugin-repo.zip", "8c1010ac20da59bde61b16062445727c700ea14f", "56c986bf4aa952590e147023d2bc0dbe835d2633",
-//                        new Commit[] {
-//                                createCommitImpl("Piotr Stefaniak", "readme, license updates\n", "2010-12-07 16:55:13 +0100", new CommitFileImpl[] {
-//                                        new CommitFileImpl("56c986bf4aa952590e147023d2bc0dbe835d2633", "LICENSE.TXT"),
-//                                        new CommitFileImpl("56c986bf4aa952590e147023d2bc0dbe835d2633", "README.TXT"),
-//                                }),
-//                        }
-//                },
+                {"bamboo-git-plugin-repo.zip", "8c1010ac20da59bde61b16062445727c700ea14f", "56c986bf4aa952590e147023d2bc0dbe835d2633",
+                        new Commit[] {
+                                createCommitImpl("Piotr Stefaniak", "readme, license updates\n", "2010-12-07 16:55:13 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("56c986bf4aa952590e147023d2bc0dbe835d2633", "LICENSE.TXT"),
+                                        new CommitFileImpl("56c986bf4aa952590e147023d2bc0dbe835d2633", "README.TXT"),
+                                }),
+                        }
+                },
                 {"bamboo-git-plugin-repo.zip", "9b66e227a34a8aceef0bed9f567b5391cf975c14", "2e396c5ff8a668df4d224e6e5632d82a5c01e0ba",
                         new Commit[] {
                                 createCommitImpl(SLAWOMIR_GINTER, "Clean up working directories after test.\nThe forceDeleteOnExit does not work if the VM does not exit\n", "2010-12-09 16:19:35 +0100", new CommitFileImpl[] {
@@ -128,83 +128,83 @@ public class GitOperationHelperTest extends GitAbstractTest
                                 }),
                         }
                 },
-//                {"bamboo-git-plugin-repo.zip", "8f50a6fb639d3e7500d4180993f9ee083fd339d3", "7ffea3f46b8cd9c5b5d626528c0bea4e31aec705",
-//                        new Commit[] {
-//                                createCommitImpl("Sławomir Ginter", "BAM-7454 - Use jGit insteat of command line git also for tests (remove constant)\n", "2010-12-13 21:12:57 +0100", new CommitFileImpl[] {
-//                                        new CommitFileImpl("7ffea3f46b8cd9c5b5d626528c0bea4e31aec705", "src/test/java/com/atlassian/bamboo/plugins/git/GitMavenPomAccessorTest.java"),
-//                                }),
-//                                createCommitImpl("Sławomir Ginter", "BAM-7454 - Use jGit insteat of command line git also for tests\n", "2010-12-13 21:09:50 +0100", new CommitFileImpl[] {
-//                                        new CommitFileImpl("3b53371d0d178c05b0927a95719ce90e3f60f52d", "src/test/java/com/atlassian/bamboo/plugins/git/GitMavenPomAccessorTest.java"),
-//                                }),
-//                                createCommitImpl("Slawomir Ginter", "BAM-7454- Importing Git Repository from maven\n", "2010-12-13 15:15:39 +0100", new CommitFileImpl[] {
-//                                        new CommitFileImpl("691a59145a2d61c3672c2c90d903fcfd0c95390e", "src/main/java/com/atlassian/bamboo/plugins/git/GitMavenPomAccessor.java"),
-//                                        new CommitFileImpl("691a59145a2d61c3672c2c90d903fcfd0c95390e", "src/main/java/com/atlassian/bamboo/plugins/git/GitRepository.java"),
-//                                        new CommitFileImpl("691a59145a2d61c3672c2c90d903fcfd0c95390e", "src/test/java/com/atlassian/bamboo/plugins/git/GitAbstractTest.java"),
-//                                        new CommitFileImpl("691a59145a2d61c3672c2c90d903fcfd0c95390e", "src/test/java/com/atlassian/bamboo/plugins/git/GitMavenPomAccessorTest.java"),
-//                                        new CommitFileImpl("691a59145a2d61c3672c2c90d903fcfd0c95390e", "src/test/java/com/atlassian/bamboo/plugins/git/GitRepositoryTest.java"),
-//                                }),
-//                                createCommitImpl("Piotr Stefaniak", "BAM-7360 BAM-7397 - tests for Ssh connection to GitHub\nalso StrictHostKeyChecking=no\n", "2010-12-10 20:00:55 +0100", new CommitFileImpl[] {
-//                                        new CommitFileImpl("41640582d7a719fd9c0f29de71f716c17768e3b0", "src/main/java/com/atlassian/bamboo/plugins/git/GitSshSessionFactory.java"),
-//                                        new CommitFileImpl("41640582d7a719fd9c0f29de71f716c17768e3b0", "src/test/java/com/atlassian/bamboo/plugins/git/GitRepositoryTest.java"),
-//                                        new CommitFileImpl("41640582d7a719fd9c0f29de71f716c17768e3b0", "src/test/resources/bamboo-git-plugin-tests-passphrased.id_rsa"),
-//                                        new CommitFileImpl("41640582d7a719fd9c0f29de71f716c17768e3b0", "src/test/resources/bamboo-git-plugin-tests-passphraseless.id_rsa"),
-//                                }),
-//                                createCommitImpl("Piotr Stefaniak", "BAM-7397 Write tests for git plugin\nGitOperationHelper.checkout tests\n", "2010-12-10 19:00:22 +0100", new CommitFileImpl[] {
-//                                        new CommitFileImpl("1de48d29183cfb86352196fc0fc0cd066d079642", "src/test/java/com/atlassian/bamboo/plugins/git/GitAbstractTest.java"),
-//                                        new CommitFileImpl("1de48d29183cfb86352196fc0fc0cd066d079642", "src/test/java/com/atlassian/bamboo/plugins/git/GitOperationHelperTest.java"),
-//                                        new CommitFileImpl("1de48d29183cfb86352196fc0fc0cd066d079642", "src/test/java/com/atlassian/bamboo/plugins/git/GitRepositoryTest.java"),
-//                                }),
-//                        }
-//                },
-//                {"bamboo-git-plugin-repo.zip", null, "8c1010ac20da59bde61b16062445727c700ea14f",
-//                        new Commit[] {
-//                                createCommitImpl("Piotr Stefaniak", "Backporting Git plugin to 2.7 + separating it from bamboo-trunk\n", "2010-12-07 16:50:24 +0100", new CommitFileImpl[] {
-//                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "pom.xml"),
-//                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/java/com/atlassian/bamboo/plugins/ExampleServlet.java"),
-//                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/java/com/atlassian/bamboo/plugins/GitCacheDirectory.java"),
-//                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/java/com/atlassian/bamboo/plugins/GitOperationHelper.java"),
-//                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/java/com/atlassian/bamboo/plugins/GitRepository.java"),
-//                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/java/com/atlassian/bamboo/plugins/GitSshSessionFactory.java"),
-//                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/resources/atlassian-plugin.xml"),
-//                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/resources/com/atlassian/bamboo/plugins/git/gitRepositoryEdit.ftl"),
-//                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/resources/com/atlassian/bamboo/plugins/git/gitRepositoryView.ftl"),
-//                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/resources/com/atlassian/bamboo/plugins/git/i18n.properties"),
-//                                }),
-//                                createCommitImpl("Piotr Stefaniak", "initial plugin skeleton, from SDK 3.2.3\n", "2010-12-07 14:43:25 +0100", new CommitFileImpl[] {
-//                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "LICENSE.TXT"),
-//                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "README.TXT"),
-//                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "pom.xml"),
-//                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "src/main/java/com/atlassian/bamboo/plugins/ExampleServlet.java"),
-//                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "src/main/resources/atlassian-plugin.xml"),
-//                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "src/test/java/com/atlassian/bamboo/plugins/ExampleServletTest.java"),
-//                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "src/test/java/it/IntegrationTestMyPlugin.java"),
-//                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "src/test/resources/TEST_RESOURCES_README.TXT"),
-//                                }),
-//                        }
-//                },
-//                {"repo-with-merges.zip", null, "1cfce5981b1186ed8aba90184cc8a171127dd1fa",
-//                        new Commit[] {
-//                                createCommitImpl("Piotr Stefaniak", "Merge branch 'master' into slave\n\nConflicts:\n\tshared.txt\n", "2010-12-17 16:20:36 +0100", new CommitFileImpl[] {
-//                                }),
-//                                createCommitImpl("Piotr Stefaniak", "shared-master\n", "2010-12-17 16:19:25 +0100", new CommitFileImpl[] {
-//                                        new CommitFileImpl("c1e199fec9007b63d8030f3e21bd8c890015829c", "shared.txt"),
-//                                }),
-//                                createCommitImpl("Piotr Stefaniak", "shared slave\n", "2010-12-17 16:18:49 +0100", new CommitFileImpl[] {
-//                                        new CommitFileImpl("5d09f997e79d3c3cc88246c79c92c22b700e9f46", "shared.txt"),
-//                                }),
-//                                createCommitImpl("Piotr Stefaniak", "Merge branch 'slave'\n", "2010-12-17 16:14:05 +0100", new CommitFileImpl[] {
-//                                }),
-//                                createCommitImpl("Piotr Stefaniak", "master2\n", "2010-12-17 16:13:55 +0100", new CommitFileImpl[] {
-//                                        new CommitFileImpl("374cee009df728f093bf0866b7c8377b256779ab", "master.txt"),
-//                                }),
-//                                createCommitImpl("Piotr Stefaniak", "slave\n", "2010-12-17 16:08:23 +0100", new CommitFileImpl[] {
-//                                        new CommitFileImpl("d277ed76406ca4b7bf4668d6ea627ad1a16544d3", "slave.txt"),
-//                                }),
-//                                createCommitImpl("Piotr Stefaniak", "master commit\n", "2010-12-17 16:03:08 +0100", new CommitFileImpl[] {
-//                                        new CommitFileImpl("229b83e21d22b1bafeaabca886d24ad506c9cfc9", "master.txt"),
-//                                }),
-//                        }
-//                },
+                {"bamboo-git-plugin-repo.zip", "8f50a6fb639d3e7500d4180993f9ee083fd339d3", "7ffea3f46b8cd9c5b5d626528c0bea4e31aec705",
+                        new Commit[] {
+                                createCommitImpl(SLAWOMIR_GINTER, "BAM-7454 - Use jGit insteat of command line git also for tests (remove constant)\n", "2010-12-13 21:12:57 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("7ffea3f46b8cd9c5b5d626528c0bea4e31aec705", "src/test/java/com/atlassian/bamboo/plugins/git/GitMavenPomAccessorTest.java"),
+                                }),
+                                createCommitImpl(SLAWOMIR_GINTER, "BAM-7454 - Use jGit insteat of command line git also for tests\n", "2010-12-13 21:09:50 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("3b53371d0d178c05b0927a95719ce90e3f60f52d", "src/test/java/com/atlassian/bamboo/plugins/git/GitMavenPomAccessorTest.java"),
+                                }),
+                                createCommitImpl("Slawomir Ginter", "BAM-7454- Importing Git Repository from maven\n", "2010-12-13 15:15:39 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("691a59145a2d61c3672c2c90d903fcfd0c95390e", "src/main/java/com/atlassian/bamboo/plugins/git/GitMavenPomAccessor.java"),
+                                        new CommitFileImpl("691a59145a2d61c3672c2c90d903fcfd0c95390e", "src/main/java/com/atlassian/bamboo/plugins/git/GitRepository.java"),
+                                        new CommitFileImpl("691a59145a2d61c3672c2c90d903fcfd0c95390e", "src/test/java/com/atlassian/bamboo/plugins/git/GitAbstractTest.java"),
+                                        new CommitFileImpl("691a59145a2d61c3672c2c90d903fcfd0c95390e", "src/test/java/com/atlassian/bamboo/plugins/git/GitMavenPomAccessorTest.java"),
+                                        new CommitFileImpl("691a59145a2d61c3672c2c90d903fcfd0c95390e", "src/test/java/com/atlassian/bamboo/plugins/git/GitRepositoryTest.java"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "BAM-7360 BAM-7397 - tests for Ssh connection to GitHub\nalso StrictHostKeyChecking=no\n", "2010-12-10 20:00:55 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("41640582d7a719fd9c0f29de71f716c17768e3b0", "src/main/java/com/atlassian/bamboo/plugins/git/GitSshSessionFactory.java"),
+                                        new CommitFileImpl("41640582d7a719fd9c0f29de71f716c17768e3b0", "src/test/java/com/atlassian/bamboo/plugins/git/GitRepositoryTest.java"),
+                                        new CommitFileImpl("41640582d7a719fd9c0f29de71f716c17768e3b0", "src/test/resources/bamboo-git-plugin-tests-passphrased.id_rsa"),
+                                        new CommitFileImpl("41640582d7a719fd9c0f29de71f716c17768e3b0", "src/test/resources/bamboo-git-plugin-tests-passphraseless.id_rsa"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "BAM-7397 Write tests for git plugin\nGitOperationHelper.checkout tests\n", "2010-12-10 19:00:22 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("1de48d29183cfb86352196fc0fc0cd066d079642", "src/test/java/com/atlassian/bamboo/plugins/git/GitAbstractTest.java"),
+                                        new CommitFileImpl("1de48d29183cfb86352196fc0fc0cd066d079642", "src/test/java/com/atlassian/bamboo/plugins/git/GitOperationHelperTest.java"),
+                                        new CommitFileImpl("1de48d29183cfb86352196fc0fc0cd066d079642", "src/test/java/com/atlassian/bamboo/plugins/git/GitRepositoryTest.java"),
+                                }),
+                        }
+                },
+                {"bamboo-git-plugin-repo.zip", null, "8c1010ac20da59bde61b16062445727c700ea14f",
+                        new Commit[] {
+                                createCommitImpl("Piotr Stefaniak", "Backporting Git plugin to 2.7 + separating it from bamboo-trunk\n", "2010-12-07 16:50:24 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "pom.xml"),
+                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/java/com/atlassian/bamboo/plugins/ExampleServlet.java"),
+                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/java/com/atlassian/bamboo/plugins/GitCacheDirectory.java"),
+                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/java/com/atlassian/bamboo/plugins/GitOperationHelper.java"),
+                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/java/com/atlassian/bamboo/plugins/GitRepository.java"),
+                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/java/com/atlassian/bamboo/plugins/GitSshSessionFactory.java"),
+                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/resources/atlassian-plugin.xml"),
+                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/resources/com/atlassian/bamboo/plugins/git/gitRepositoryEdit.ftl"),
+                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/resources/com/atlassian/bamboo/plugins/git/gitRepositoryView.ftl"),
+                                        new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/resources/com/atlassian/bamboo/plugins/git/i18n.properties"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "initial plugin skeleton, from SDK 3.2.3\n", "2010-12-07 14:43:25 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "LICENSE.TXT"),
+                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "README.TXT"),
+                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "pom.xml"),
+                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "src/main/java/com/atlassian/bamboo/plugins/ExampleServlet.java"),
+                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "src/main/resources/atlassian-plugin.xml"),
+                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "src/test/java/com/atlassian/bamboo/plugins/ExampleServletTest.java"),
+                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "src/test/java/it/IntegrationTestMyPlugin.java"),
+                                        new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "src/test/resources/TEST_RESOURCES_README.TXT"),
+                                }),
+                        }
+                },
+                {"repo-with-merges.zip", null, "1cfce5981b1186ed8aba90184cc8a171127dd1fa",
+                        new Commit[] {
+                                createCommitImpl("Piotr Stefaniak", "Merge branch 'master' into slave\n\nConflicts:\n\tshared.txt\n", "2010-12-17 16:20:36 +0100", new CommitFileImpl[] {
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "shared-master\n", "2010-12-17 16:19:25 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("c1e199fec9007b63d8030f3e21bd8c890015829c", "shared.txt"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "shared slave\n", "2010-12-17 16:18:49 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("5d09f997e79d3c3cc88246c79c92c22b700e9f46", "shared.txt"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "Merge branch 'slave'\n", "2010-12-17 16:14:05 +0100", new CommitFileImpl[] {
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "master2\n", "2010-12-17 16:13:55 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("374cee009df728f093bf0866b7c8377b256779ab", "master.txt"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "slave\n", "2010-12-17 16:08:23 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("d277ed76406ca4b7bf4668d6ea627ad1a16544d3", "slave.txt"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "master commit\n", "2010-12-17 16:03:08 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("229b83e21d22b1bafeaabca886d24ad506c9cfc9", "master.txt"),
+                                }),
+                        }
+                },
         };
     }
 
@@ -222,13 +222,6 @@ public class GitOperationHelperTest extends GitAbstractTest
             Commit actualCommit = commits.get(i);
             Commit expectedCommit = expectedCommits[i];
             assertEquals(actualCommit.getComment(), expectedCommit.getComment());
-            String author = actualCommit.getAuthor().getName();
-            String expectedAuthor = expectedCommit.getAuthor().getName();
-            for (int j = 0 ; j < author.length() ; j++)
-            {
-                System.out.println(j + ":" + (int) author.charAt(j) + ":" + author.charAt(j));
-                System.out.println(j + ":" + (int) expectedAuthor.charAt(j) + ":" + expectedAuthor.charAt(j));
-            }
             assertEquals(actualCommit.getAuthor().getName(), expectedCommit.getAuthor().getName());
             assertEquals(actualCommit.getDate(), expectedCommit.getDate());
 
