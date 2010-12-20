@@ -121,7 +121,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                 return changes;
             }
 
-            File cacheDirectory = GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), repositoryUrl);
+            File cacheDirectory = getCacheDirectoryFile();
             List<Commit> extractedChanges = null;
             try
             {
@@ -304,6 +304,27 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     public String getBranch()
     {
         return branch;
+    }
+
+    /**
+     * For use in FTL
+     * @return cache directory for this repository
+     */
+    public String getCacheDirectory()
+    {
+        try
+        {
+            return getCacheDirectoryFile().getAbsolutePath();
+        }
+        catch (RepositoryException e)
+        {
+            return "unknown: " + e.getMessage();
+        }
+    }
+
+    public File getCacheDirectoryFile() throws RepositoryException
+    {
+        return GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), repositoryUrl);
     }
 
     String getSshPassphrase()

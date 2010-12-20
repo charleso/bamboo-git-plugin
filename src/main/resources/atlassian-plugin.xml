@@ -13,4 +13,13 @@
         <resource type="freemarker" name="view" location="/com/atlassian/bamboo/plugins/git/gitRepositoryView.ftl"/>
         <resource type="freemarker" name="mavenPomCheckoutAccessEdit" location="/com/atlassian/bamboo/plugins/git/mavenImportGitRepositoryEdit.ftl"/>
     </repository>
+
+    <xwork key="deleteGitCacheDirectory" name="Delete Git Cache Directory" class="java.lang.Void">
+      <package name="gitPlugin" extends="buildAdmin">
+        <action name="deleteGitCacheDirectory" class="com.atlassian.bamboo.plugins.git.DeleteGitCacheDirectory">
+            <result name="success" type="redirect">/browse/${buildKey}/config</result>
+            <result name="error" type="freemarker">/error.ftl</result>
+          </action>
+      </package>
+    </xwork>
 </atlassian-plugin>
