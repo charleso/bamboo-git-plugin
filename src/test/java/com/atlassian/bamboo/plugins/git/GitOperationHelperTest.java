@@ -65,7 +65,7 @@ public class GitOperationHelperTest extends GitAbstractTest
     }
 
     @Test(dataProvider = "testCheckoutData")
-    public void testCheckout(String repositoryZip, String branch, String[][] targetRevisions) throws Exception
+    public void testCheckout(String repositoryZip, String[][] targetRevisions) throws Exception
     {
         File tmp = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory(repositoryZip, tmp);
