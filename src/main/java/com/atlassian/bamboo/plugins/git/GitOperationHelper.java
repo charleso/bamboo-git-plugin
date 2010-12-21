@@ -139,6 +139,8 @@ public class GitOperationHelper
     void fetch(@NotNull final File sourceDirectory, @NotNull final String repositoryUrl, @Nullable final String branch,
             @Nullable final String sshKey, @Nullable final String sshPassphrase) throws RepositoryException
     {
+        String realBranch = StringUtils.isNotBlank(branch) ? branch : Constants.MASTER;
+
         Transport transport = null;
         FileRepository localRepository = null;
         try
@@ -153,7 +155,6 @@ public class GitOperationHelper
 
             transport = open(localRepository, repositoryUrl, sshKey, sshPassphrase);
 
-            String realBranch = StringUtils.isNotBlank(branch) ? branch : Constants.MASTER;
             buildLogger.addBuildLogEntry("Fetching branch " + realBranch);
 
             RefSpec refSpec = new RefSpec()
@@ -167,7 +168,7 @@ public class GitOperationHelper
         }
         catch (IOException e)
         {
-            String message = "Cannot read .git directory under `" + sourceDirectory + "'";
+            String message = "Cannot fetch `" + repositoryUrl + "', branch `" + realBranch + "' to source directory `" + sourceDirectory + "'. " + e.getMessage();
             buildLogger.addErrorLogEntry(message);
             throw new RepositoryException(message, e);
         }

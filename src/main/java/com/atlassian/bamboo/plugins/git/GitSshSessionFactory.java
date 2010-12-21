@@ -3,6 +3,7 @@ package com.atlassian.bamboo.plugins.git;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.OpenSshConfig;
 import org.eclipse.jgit.transport.SshConfigSessionFactory;
 import org.eclipse.jgit.util.FS;
@@ -27,7 +28,8 @@ public class GitSshSessionFactory extends SshConfigSessionFactory
 
     protected JSch getJSch(final OpenSshConfig.Host hc, FS fs) throws JSchException {
         JSch jsch = super.getJSch(hc, fs);
-        if (key != null && !key.equals(""))
+        jsch.removeAllIdentity();
+        if (StringUtils.isNotEmpty(key))
         {
             jsch.addIdentity("identityName", key.getBytes(), null, passphrase.getBytes());
         }
