@@ -129,9 +129,18 @@ public class GitOperationHelper
     }
 
     @NotNull String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final String repositoryUrl, @Nullable final String branch,
-            @Nullable final String targetRevision, @Nullable final String sshKey, @Nullable final String sshPassphrase) throws RepositoryException
+            @Nullable String targetRevision, @Nullable final String sshKey, @Nullable final String sshPassphrase) throws RepositoryException
     {
         String previousRevision = getCurrentRevision(sourceDirectory);
+        if (targetRevision == null)
+        {
+            buildLogger.addBuildLogEntry("Target revision is null, obtaining the latest one from `" + repositoryUrl + "' on branch `" + branch + "'.");
+            targetRevision = obtainLatestRevision(repositoryUrl, branch, sshKey, sshPassphrase);
+            if (targetRevision == null)
+            {
+                throw new RepositoryException("Cannot determine head revision on `" + repositoryUrl + "' on branch `" + branch + "'.");
+            }
+        }
         fetch(sourceDirectory, repositoryUrl, branch, sshKey, sshPassphrase);
         return checkout(sourceDirectory, targetRevision, previousRevision);
     }
@@ -189,7 +198,7 @@ public class GitOperationHelper
      * returns revision found after checkout in sourceDirectory
      */
     @NotNull
-    String checkout(@NotNull final File sourceDirectory, @Nullable final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
+    String checkout(@NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
     {
         buildLogger.addBuildLogEntry("Checking out revision " + targetRevision);
 
@@ -202,7 +211,7 @@ public class GitOperationHelper
             localRepository = new FileRepository(gitDirectory);
 
             revWalk = new RevWalk(localRepository);
-            final RevCommit targetCommit = revWalk.parseCommit(localRepository.resolve(targetRevision != null ? targetRevision : Constants.HEAD));
+            final RevCommit targetCommit = revWalk.parseCommit(localRepository.resolve(targetRevision));
             final RevCommit previousCommit = previousRevision == null ? null : revWalk.parseCommit(localRepository.resolve(previousRevision));
 
             //clean .git/index.lock file prior to checkout, otherwise checkout would fail with Exception
@@ -214,7 +223,7 @@ public class GitOperationHelper
                     localRepository.lockDirCache(),
                     targetCommit.getTree());
             dirCacheCheckout.setFailOnConflict(true);
-            dirCacheCheckout.checkout(); //todo: BAM-7500 size limit exceeded, idea clone has a large (700mb) pack file
+            dirCacheCheckout.checkout();
 
             final RefUpdate refUpdate = localRepository.updateRef(Constants.HEAD);
             refUpdate.setNewObjectId(targetCommit);

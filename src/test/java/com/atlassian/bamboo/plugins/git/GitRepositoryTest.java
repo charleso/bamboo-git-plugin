@@ -1,5 +1,6 @@
 package com.atlassian.bamboo.plugins.git;
 
+import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.plan.Plan;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildChanges;
@@ -38,20 +39,21 @@ public class GitRepositoryTest extends GitAbstractTest
     Object[][] testSourceCodeRetrievalData()
     {
         return new Object[][]{
-                {"a26ff19c3c63e19d6a57a396c764b140f48c530a", "basic-repo-contents-a26ff19c3c63e19d6a57a396c764b140f48c530a.zip"},
-                {"2e20b0733759facbeb0dec6ee345d762dbc8eed8", "basic-repo-contents-2e20b0733759facbeb0dec6ee345d762dbc8eed8.zip"},
-                {"55676cfa3db13bcf659b2a35e5d61eba478ed54d", "basic-repo-contents-55676cfa3db13bcf659b2a35e5d61eba478ed54d.zip"},
+                {"a26ff19c3c63e19d6a57a396c764b140f48c530a", "master",   "basic-repo-contents-a26ff19c3c63e19d6a57a396c764b140f48c530a.zip"},
+                {"2e20b0733759facbeb0dec6ee345d762dbc8eed8", "master",   "basic-repo-contents-2e20b0733759facbeb0dec6ee345d762dbc8eed8.zip"},
+                {"55676cfa3db13bcf659b2a35e5d61eba478ed54d", "master",   "basic-repo-contents-55676cfa3db13bcf659b2a35e5d61eba478ed54d.zip"},
+                {null,                                       "myBranch", "basic-repo-contents-4367e71d438f091a5e85304618a8f78f9db6738e.zip"},
         };
     }
 
     @Test(dataProvider = "testSourceCodeRetrievalData")
-    public void testSourceCodeRetrieval(String targetRevision, String expectedContentsInZip) throws Exception
+    public void testSourceCodeRetrieval(String targetRevision, String branch, String expectedContentsInZip) throws Exception
     {
         File testRepository = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
 
         GitRepository gitRepository = createGitRepository();
-        setRepositoryProperties(gitRepository, testRepository, "master");
+        setRepositoryProperties(gitRepository, testRepository, branch);
 
         gitRepository.retrieveSourceCode(mockBuildContext(), targetRevision);
         verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), expectedContentsInZip);
@@ -106,37 +108,4 @@ public class GitRepositoryTest extends GitAbstractTest
         Assert.assertNotNull(errorCollection.getErrors().get("repository.git.maven.path"));
     }
 
-    // todo: pstefaniak: this test is not working correctly actually, I plan to fix it sooner or later
-    @Test
-    public void testRecoveringFromErrorsDuringCodeCheckout() throws Exception
-    {
-        File testRepository = createTempDirectory();
-        ZipResourceDirectory.copyZipResourceToDirectory("bamboo-git-plugin-repo.zip", testRepository);
-
-        GitRepository gitRepository = createGitRepository();
-        gitRepository.setTextProvider(Mockito.mock(TextProvider.class, new ReturnsMocks()));
-        setRepositoryProperties(gitRepository, testRepository, "master");
-
-        gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
-
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null); //fetch cache!
-        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
-        verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), "bamboo-git-plugin-repo-contents-7ffea3f46b8cd9c5b5d626528c0bea4e31aec705.zip");
-
-        FileUtils.deleteQuietly(testRepository);
-        assertTrue(testRepository.mkdirs());
-        ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
-
-        changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, changes.getVcsRevisionKey());
-        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
-        verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), "basic-repo-contents-a26ff19c3c63e19d6a57a396c764b140f48c530a.zip");
-
-        File victimOfRandomFailure = new File(gitRepository.getWorkingDirectory(), "sparta.txt");
-        FileUtils.deleteQuietly(victimOfRandomFailure);
-        victimOfRandomFailure = new File(gitRepository.getWorkingDirectory(), "shodan.txt");
-        FileUtils.deleteQuietly(victimOfRandomFailure);
-
-        gitRepository.retrieveSourceCode(mockBuildContext(), "2e20b0733759facbeb0dec6ee345d762dbc8eed8");
-        verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), "basic-repo-contents-2e20b0733759facbeb0dec6ee345d762dbc8eed8.zip");
-    }
 }
