@@ -13,7 +13,7 @@ import java.lang.reflect.Field;
 /**
  * This test class is not intended to be run with other test classes - run it manually when solving timeout-related issues.
  */
-@Test(enabled = true)
+@Test(enabled = false)
 public class TimeoutsTest extends GitAbstractTest
 {
     @BeforeClass
