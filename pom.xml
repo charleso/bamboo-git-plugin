@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.atlassian.bamboo.plugins</groupId>
     <artifactId>atlassian-bamboo-plugin-git</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0-beta1</version>
 
     <organization>
         <name>Atlassian</name>
