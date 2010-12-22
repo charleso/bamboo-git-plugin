@@ -6,6 +6,7 @@ import com.atlassian.bamboo.commit.Commit;
 import com.atlassian.bamboo.commit.CommitFileImpl;
 import com.atlassian.bamboo.commit.CommitImpl;
 import com.atlassian.bamboo.repository.RepositoryException;
+import com.atlassian.bamboo.utils.SystemProperty;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -26,7 +27,6 @@ import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.transport.URIish;
-import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.jetbrains.annotations.NotNull;
@@ -45,7 +45,8 @@ import java.util.List;
  */
 public class GitOperationHelper
 {
-    private static final int CHANGESET_LIMIT = 100;
+    private static int DEFAULT_TRANSFER_TIMEOUT = new SystemProperty(false, "git.timeout", "GIT_TIMEOUT").getValue(10 * 60);
+    private static int CHANGESET_LIMIT = new SystemProperty(false, "git.changeset.limit", "GIT_CHANGESET_LIMIT").getValue(100);
 
     private static final Logger log = Logger.getLogger(GitOperationHelper.class);
     private final BuildLogger buildLogger;
@@ -56,7 +57,7 @@ public class GitOperationHelper
     }
 
     @Nullable
-    String obtainLatestRevision(@NotNull final String repositoryUrl, @Nullable final String branch, @Nullable final String sshKey,
+    public String obtainLatestRevision(@NotNull final String repositoryUrl, @Nullable final String branch, @Nullable final String sshKey,
             @Nullable final String sshPassphrase) throws RepositoryException
     {
         Transport transport = null;
@@ -99,7 +100,8 @@ public class GitOperationHelper
         }
     }
 
-    @Nullable String getCurrentRevision(@NotNull final File sourceDirectory)
+    @Nullable
+    public String getCurrentRevision(@NotNull final File sourceDirectory)
     {
         File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);
         if (!gitDirectory.exists())
@@ -128,7 +130,8 @@ public class GitOperationHelper
         }
     }
 
-    @NotNull String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final String repositoryUrl, @Nullable final String branch,
+    @NotNull
+    public String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final String repositoryUrl, @Nullable final String branch,
             @Nullable String targetRevision, @Nullable final String sshKey, @Nullable final String sshPassphrase) throws RepositoryException
     {
         String previousRevision = getCurrentRevision(sourceDirectory);
@@ -198,7 +201,7 @@ public class GitOperationHelper
      * returns revision found after checkout in sourceDirectory
      */
     @NotNull
-    String checkout(@NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
+    String checkout(@NotNull final File sourceDirectory, @Nullable final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
     {
         buildLogger.addBuildLogEntry("Checking out revision " + targetRevision);
 
@@ -346,10 +349,10 @@ public class GitOperationHelper
     Transport open(@NotNull final FileRepository localRepository, @NotNull final String repositoryUrl,
             @Nullable final String sshKey, @Nullable final String sshPassphrase) throws RepositoryException
     {
-        Transport transport;
         try
         {
-            transport = Transport.open(localRepository, new URIish(repositoryUrl));
+            Transport transport = Transport.open(localRepository, new URIish(repositoryUrl));
+            transport.setTimeout(DEFAULT_TRANSFER_TIMEOUT);
             if (transport instanceof SshTransport)
             {
                 SshSessionFactory factory = new GitSshSessionFactory(sshKey, sshPassphrase);

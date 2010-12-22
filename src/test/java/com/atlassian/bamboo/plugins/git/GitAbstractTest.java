@@ -92,7 +92,7 @@ public class GitAbstractTest
         gitRepository.populateFromConfig(buildConfiguration);
     }
 
-    GitRepository createGitRepository() throws Exception
+    public GitRepository createGitRepository() throws Exception
     {
         File workingDirectory = createTempDirectory();
 
@@ -109,7 +109,7 @@ public class GitAbstractTest
         return gitRepository;
     }
 
-    File createTempDirectory() throws IOException
+    public File createTempDirectory() throws IOException
     {
         File tmp = BambooFileUtils.createTempDirectory("bamboo-git-plugin-test");
         FileUtils.forceDeleteOnExit(tmp);
