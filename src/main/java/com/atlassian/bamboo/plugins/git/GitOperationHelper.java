@@ -358,6 +358,8 @@ public class GitOperationHelper
                 SshSessionFactory factory = new GitSshSessionFactory(sshKey, sshPassphrase);
                 ((SshTransport)transport).setSshSessionFactory(factory);
             }
+            // todo: add username/password when it's available from UI
+            // transport.setCredentialsProvider(new UsernamePasswordCredentialsProvider("username", "password"));
             return transport;
         }
         catch (URISyntaxException e)
