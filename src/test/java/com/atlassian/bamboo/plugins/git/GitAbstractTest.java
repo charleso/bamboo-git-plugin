@@ -29,6 +29,8 @@ import java.util.ResourceBundle;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import com.atlassian.bamboo.plugins.git.GitOperationHelper.GitOperationRepositoryData;
+
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.testng.Assert.assertEquals;
 
@@ -142,6 +144,21 @@ public class GitAbstractTest
         DefaultI18nBean bean = new DefaultI18nBean(Locale.US, Mockito.mock(PluginAccessor.class));
         bean.getI18nBundles().add(resourceBundle);
         return new TextProviderAdapter(bean);
+    }
+
+    protected static GitOperationRepositoryData createRepositoryData(String repositoryUrl)
+    {
+        return createRepositoryData(repositoryUrl, null);
+    }
+
+    protected static GitOperationRepositoryData createRepositoryData(String repositoryUrl, String branch)
+    {
+        return createRepositoryData(repositoryUrl, branch, null, null, null, null);
+    }
+
+    protected static GitOperationRepositoryData createRepositoryData(String repositoryUrl, String branch, String username, String password, String sshKey, String sshPassphrase)
+    {
+        return new GitOperationRepositoryData(repositoryUrl, branch, username, password, sshKey, sshPassphrase);
     }
 
     @AfterClass

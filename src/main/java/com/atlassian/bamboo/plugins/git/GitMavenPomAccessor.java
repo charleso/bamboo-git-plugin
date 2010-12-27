@@ -50,7 +50,7 @@ public class GitMavenPomAccessor extends MavenPomAccessorAbstract
     public File checkoutMavenPom(@NotNull File destinationPath) throws RepositoryException
     {
         log.info("checkoutMavenPom to: " + destinationPath);
-        new GitOperationHelper(new NullBuildLogger()).fetchAndCheckout(destinationPath, repository.getRepositoryUrl(), repository.getBranch(), null, repository.getSshKey(), repository.getSshPassphrase());
+        new GitOperationHelper(new NullBuildLogger()).fetchAndCheckout(destinationPath, repository.getRepositoryData(), null);
         final File pomLocation = new File(destinationPath, pathToPom);
         if (pomLocation.isFile())
         {

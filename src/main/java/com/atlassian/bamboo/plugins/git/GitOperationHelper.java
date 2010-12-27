@@ -27,6 +27,7 @@ import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.transport.URIish;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.jetbrains.annotations.NotNull;
@@ -57,22 +58,21 @@ public class GitOperationHelper
     }
 
     @Nullable
-    public String obtainLatestRevision(@NotNull final String repositoryUrl, @Nullable final String branch, @Nullable final String sshKey,
-            @Nullable final String sshPassphrase) throws RepositoryException
+    public String obtainLatestRevision(@NotNull final GitOperationRepositoryData repositoryData) throws RepositoryException
     {
         Transport transport = null;
         FetchConnection fetchConnection = null;
         try
         {
-            transport = open(new FileRepository(""), repositoryUrl, sshKey, sshPassphrase);
+            transport = open(new FileRepository(""), repositoryData);
             fetchConnection = transport.openFetch();
-            Ref headRef = fetchConnection.getRef(Constants.R_HEADS + (StringUtils.isNotBlank(branch) ? branch : Constants.MASTER));
-            headRef = (headRef != null) ? headRef : fetchConnection.getRef(StringUtils.isNotBlank(branch) ? branch : Constants.HEAD);
+            Ref headRef = fetchConnection.getRef(Constants.R_HEADS + (StringUtils.isNotBlank(repositoryData.branch) ? repositoryData.branch : Constants.MASTER));
+            headRef = (headRef != null) ? headRef : fetchConnection.getRef(StringUtils.isNotBlank(repositoryData.branch) ? repositoryData.branch : Constants.HEAD);
             return (headRef == null) ? null : headRef.getObjectId().getName();
         }
         catch (NotSupportedException e)
         {
-            final String message = repositoryUrl + " is not supported protocol.";
+            final String message = repositoryData.repositoryUrl + " is not supported protocol.";
             buildLogger.addErrorLogEntry(message);
             throw new RepositoryException(message, e);
         }
@@ -131,27 +131,26 @@ public class GitOperationHelper
     }
 
     @NotNull
-    public String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final String repositoryUrl, @Nullable final String branch,
-            @Nullable String targetRevision, @Nullable final String sshKey, @Nullable final String sshPassphrase) throws RepositoryException
+    public String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final GitOperationRepositoryData repositoryData,
+            @Nullable String targetRevision) throws RepositoryException
     {
         String previousRevision = getCurrentRevision(sourceDirectory);
         if (targetRevision == null)
         {
-            buildLogger.addBuildLogEntry("Target revision is null, obtaining the latest one from `" + repositoryUrl + "' on branch `" + branch + "'.");
-            targetRevision = obtainLatestRevision(repositoryUrl, branch, sshKey, sshPassphrase);
+            buildLogger.addBuildLogEntry("Target revision is null, obtaining the latest one from `" + repositoryData.repositoryUrl + "' on branch `" + repositoryData.branch + "'.");
+            targetRevision = obtainLatestRevision(repositoryData);
             if (targetRevision == null)
             {
-                throw new RepositoryException("Cannot determine head revision on `" + repositoryUrl + "' on branch `" + branch + "'.");
+                throw new RepositoryException("Cannot determine head revision on `" + repositoryData.repositoryUrl + "' on branch `" + repositoryData.branch + "'.");
             }
         }
-        fetch(sourceDirectory, repositoryUrl, branch, sshKey, sshPassphrase);
+        fetch(sourceDirectory, repositoryData);
         return checkout(sourceDirectory, targetRevision, previousRevision);
     }
 
-    void fetch(@NotNull final File sourceDirectory, @NotNull final String repositoryUrl, @Nullable final String branch,
-            @Nullable final String sshKey, @Nullable final String sshPassphrase) throws RepositoryException
+    void fetch(@NotNull final File sourceDirectory, @NotNull final GitOperationRepositoryData repositoryData) throws RepositoryException
     {
-        String realBranch = StringUtils.isNotBlank(branch) ? branch : Constants.MASTER;
+        String realBranch = StringUtils.isNotBlank(repositoryData.branch) ? repositoryData.branch : Constants.MASTER;
 
         Transport transport = null;
         FileRepository localRepository = null;
@@ -165,7 +164,7 @@ public class GitOperationHelper
                 localRepository.create();
             }
 
-            transport = open(localRepository, repositoryUrl, sshKey, sshPassphrase);
+            transport = open(localRepository, repositoryData);
 
             buildLogger.addBuildLogEntry("Fetching branch " + realBranch);
 
@@ -180,7 +179,7 @@ public class GitOperationHelper
         }
         catch (IOException e)
         {
-            String message = "Cannot fetch `" + repositoryUrl + "', branch `" + realBranch + "' to source directory `" + sourceDirectory + "'. " + e.getMessage();
+            String message = "Cannot fetch `" + repositoryData.repositoryUrl + "', branch `" + realBranch + "' to source directory `" + sourceDirectory + "'. " + e.getMessage();
             buildLogger.addErrorLogEntry(message);
             throw new RepositoryException(message, e);
         }
@@ -294,7 +293,6 @@ public class GitOperationHelper
                 curr.setComment(commit.getFullMessage());
                 curr.setAuthor(new AuthorImpl(commit.getAuthorIdent().getName()));
                 curr.setDate(commit.getAuthorIdent().getWhen());
-//                curr.setRevision(commit.getId().getName()); <-- since bamboo 3.0
                 commits.add(curr);
 
                 if (commit.getParentCount() >= 2) //merge commit
@@ -346,33 +344,51 @@ public class GitOperationHelper
 
     //wrapper that add ssh keyfile support
     //user of this method has responsibility to finally .close() returned Transport!
-    Transport open(@NotNull final FileRepository localRepository, @NotNull final String repositoryUrl,
-            @Nullable final String sshKey, @Nullable final String sshPassphrase) throws RepositoryException
+    Transport open(@NotNull final FileRepository localRepository, @NotNull final GitOperationRepositoryData repositoryData) throws RepositoryException
     {
         try
         {
-            Transport transport = Transport.open(localRepository, new URIish(repositoryUrl));
+            Transport transport = Transport.open(localRepository, new URIish(repositoryData.repositoryUrl));
             transport.setTimeout(DEFAULT_TRANSFER_TIMEOUT);
             if (transport instanceof SshTransport)
             {
-                SshSessionFactory factory = new GitSshSessionFactory(sshKey, sshPassphrase);
+                SshSessionFactory factory = new GitSshSessionFactory(repositoryData.sshKey, repositoryData.sshPassphrase);
                 ((SshTransport)transport).setSshSessionFactory(factory);
             }
-            // todo: add username/password when it's available from UI
-            // transport.setCredentialsProvider(new UsernamePasswordCredentialsProvider("username", "password"));
+            transport.setCredentialsProvider(new UsernamePasswordCredentialsProvider(repositoryData.username, repositoryData.password != null ? repositoryData.password : ""));
             return transport;
         }
         catch (URISyntaxException e)
         {
-            String message = repositoryUrl + " is not valid URI.";
+            String message = repositoryData.repositoryUrl + " is not valid URI.";
             buildLogger.addErrorLogEntry(message);
             throw new RepositoryException(message, e);
         }
         catch (IOException e)
         {
-            String message = "Failed to open transport for " + repositoryUrl;
+            String message = "Failed to open transport for " + repositoryData.repositoryUrl;
             buildLogger.addErrorLogEntry(message);
             throw new RepositoryException(message, e);
+        }
+    }
+
+    public static class GitOperationRepositoryData
+    {
+        final String repositoryUrl;
+        final String branch;
+        final String username;
+        final String password;
+        final String sshKey;
+        final String sshPassphrase;
+
+        GitOperationRepositoryData(@NotNull String repositoryUrl, String branch, String username, String password, String sshKey, String sshPassphrase)
+        {
+            this.repositoryUrl = repositoryUrl;
+            this.branch = branch;
+            this.username = username;
+            this.password = password;
+            this.sshKey = sshKey;
+            this.sshPassphrase = sshPassphrase;
         }
     }
 }

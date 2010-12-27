@@ -81,10 +81,10 @@ public class TimeoutsTest extends GitAbstractTest
             }
         };
         GitOperationHelper helper = new GitOperationHelper(bl);
-        String s = helper.obtainLatestRevision("git://git.jetbrains.org/idea/community.git", null, null, null);
+        String s = helper.obtainLatestRevision(createRepositoryData("git://git.jetbrains.org/idea/community.git"));
         File directory = createTempDirectory();
         System.out.println(directory);
-        helper.fetchAndCheckout(directory, "git://git.jetbrains.org/idea/community.git", null, s, null, null);
+        helper.fetchAndCheckout(directory, createRepositoryData("git://git.jetbrains.org/idea/community.git"), s);
     }
 
     @DataProvider
@@ -110,7 +110,7 @@ public class TimeoutsTest extends GitAbstractTest
             }
         };
         GitOperationHelper helper = new GitOperationHelper(bl);
-        String rev = helper.obtainLatestRevision(url, null, null, null);
+        String rev = helper.obtainLatestRevision(createRepositoryData(url));
     }
 
     @Test(dataProvider = "urlsToHang", expectedExceptions = RepositoryException.class, timeOut = 5000)
@@ -127,7 +127,7 @@ public class TimeoutsTest extends GitAbstractTest
         };
         GitOperationHelper helper = new GitOperationHelper(bl);
         File directory = createTempDirectory();
-        String rev = helper.fetchAndCheckout(directory, url, null, null, null, null);
+        String rev = helper.fetchAndCheckout(directory, createRepositoryData(url), null);
     }
 
 }

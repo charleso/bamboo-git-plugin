@@ -1,6 +1,19 @@
 [@ui.bambooSection]
     [@ww.textfield labelKey='repository.git.repositoryUrl' name='repository.git.repositoryUrl' required='true' helpKey='git.fields' /]
+
     [@ww.textfield labelKey='repository.git.branch' name='repository.git.branch' /]
+
+    [@ww.textfield labelKey='repository.git.username' name='repository.git.username' /]
+
+    [#if buildConfiguration.getString('repository.git.password')?has_content]
+        [@ww.checkbox labelKey='repository.password.change' toggle='true' name='temporary.git.password.change' /]
+        [@ui.bambooSection dependsOn='temporary.git.password.change' showOn='true']
+            [@ww.password labelKey='repository.git.password' name='temporary.git.password' required='false' /]
+        [/@ui.bambooSection]
+    [#else]
+        [@ww.hidden name='temporary.git.password.change' value='true' /]
+        [@ww.password labelKey='repository.git.password' name='temporary.git.password' /]
+    [/#if]
 
     [#if buildConfiguration.getString('repository.git.ssh.key')?has_content]
         [@ww.checkbox labelKey='repository.git.ssh.key.change' toggle='true' name='temporary.git.ssh.key.change' /]
