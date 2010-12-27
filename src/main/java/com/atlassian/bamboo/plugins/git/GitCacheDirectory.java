@@ -5,7 +5,9 @@ import com.atlassian.util.concurrent.Function;
 import com.atlassian.util.concurrent.ManagedLock;
 import com.atlassian.util.concurrent.ManagedLocks;
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,15 +24,19 @@ public class GitCacheDirectory {
 
     static final Function<File, ManagedLock> cacheLockFactory = ManagedLocks.weakManagedLockFactory();
 
+    private static final Logger log = Logger.getLogger(GitCacheDirectory.class);
+
     @SuppressWarnings({"ResultOfMethodCallIgnored"})
-    static File getCacheDirectory(@NotNull final File workingDirectory, @NotNull final String repositoryUrl) throws RepositoryException
+    @Nullable
+    static File getCacheDirectory(@NotNull final File workingDirectory, @NotNull final String repositoryUrl)
     {
         long hashCode = repositoryUrl.hashCode();
 
         File cacheDirectory = new File(workingDirectory, GIT_REPOSITORY_CACHE_DIRECTORY);
         if (!cacheDirectory.isDirectory() && !cacheDirectory.mkdirs())
         {
-            throw new RepositoryException("Failed to mkdirs on cacheDirectory(" + cacheDirectory + ").");
+            log.error("Failed to mkdirs on cacheDirectory(" + cacheDirectory + ").");
+            return null;
         }
 
         int index = 0;
@@ -63,11 +69,13 @@ public class GitCacheDirectory {
             }
             catch (IOException e)
             {
-                throw new RepositoryException("Failed to get git cache repository '" + cacheDescription + "'", e);
+                log.error("Failed to get git cache repository '" + cacheDescription + "'", e);
+                return null;
             }
             catch (Exception e)
             {
-                throw new RepositoryException("Exception during locking git cache repository '" + cacheDescription + "'", e);
+                log.error("Exception during locking git cache repository '" + cacheDescription + "'", e);
+                return null;
             }
         }
     }

@@ -39,7 +39,14 @@ public class DeleteGitCacheDirectory extends PlanActionSupport implements PlanEd
         final GitRepository gitRepository = (GitRepository) repository;
         try
         {
-            final File cacheDirectoryFile = gitRepository.getCacheDirectoryFile();
+            final File cacheDirectoryFile = gitRepository.getCacheDirectory();
+            if (cacheDirectoryFile == null)
+            {
+                String message = getText("repository.git.cache.cleanFailed", Arrays.asList(buildKey));
+                addActionError(message);
+                return ERROR;
+            }
+            
             if (cacheDirectoryFile.exists())
             {
                 String message = getText("repository.git.cache.cleaning", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath()));

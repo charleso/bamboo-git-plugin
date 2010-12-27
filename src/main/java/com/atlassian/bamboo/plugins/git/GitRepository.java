@@ -121,8 +121,13 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                 return changes;
             }
 
-            File cacheDirectory = getCacheDirectoryFile();
-            List<Commit> extractedChanges = null;
+            File cacheDirectory = getCacheDirectory();
+            if (cacheDirectory == null)
+            {
+                throw new RepositoryException("Cache directory is null, can't proceed with collecting changesets. Check bamboo logs for details.");
+            }
+            
+            List<Commit> extractedChanges;
             try
             {
                 new GitOperationHelper(buildLogger).fetch(cacheDirectory, repositoryUrl, branch, encrypter.decrypt(sshKey), encrypter.decrypt(sshPassphrase));
@@ -306,23 +311,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         return branch;
     }
 
-    /**
-     * For use in FTL
-     * @return cache directory for this repository
-     */
-    public String getCacheDirectory()
-    {
-        try
-        {
-            return getCacheDirectoryFile().getAbsolutePath();
-        }
-        catch (RepositoryException e)
-        {
-            return "unknown: " + e.getMessage();
-        }
-    }
-
-    public File getCacheDirectoryFile() throws RepositoryException
+    public File getCacheDirectory()
     {
         return GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), repositoryUrl);
     }
