@@ -200,7 +200,7 @@ public class GitOperationHelper
      * returns revision found after checkout in sourceDirectory
      */
     @NotNull
-    String checkout(@NotNull final File sourceDirectory, @Nullable final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
+    String checkout(@NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
     {
         buildLogger.addBuildLogEntry("Checking out revision " + targetRevision);
 
