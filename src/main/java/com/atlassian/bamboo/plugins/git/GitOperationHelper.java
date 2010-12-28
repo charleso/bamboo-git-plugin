@@ -135,8 +135,12 @@ public class GitOperationHelper
             final @Nullable String targetRevision) throws RepositoryException
     {
         String previousRevision = getCurrentRevision(sourceDirectory);
-        String notNullTargetRevision = targetRevision;
-        if (notNullTargetRevision == null)
+        final String notNullTargetRevision;
+        if (targetRevision != null)
+        {
+            notNullTargetRevision = targetRevision;
+        }
+        else
         {
             buildLogger.addBuildLogEntry("Target revision is null, obtaining the latest one from `" + repositoryData.repositoryUrl + "' on branch `" + repositoryData.branch + "'.");
             notNullTargetRevision = obtainLatestRevision(repositoryData);
