@@ -205,6 +205,42 @@ public class GitOperationHelperTest extends GitAbstractTest
                                 }),
                         }
                 },
+                {"octopus.zip", null, "a85ff76e781c7013eebe89dad233e993ad0d1095",
+                        new Commit[] {
+                                createCommitImpl("Piotr Stefaniak", "Merge branches 'head' and 'leg' into HEAD\n", "2010-12-28 17:24:10 +0100", new CommitFileImpl[] {
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "severed arm\n", "2010-12-28 17:24:04 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("eb20aade10d2fa90e60d0bbd2fdd85595b249e7b", "arm.txt"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "second arm commit\n", "2010-12-28 17:23:08 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("399ae6fbaaa10cd12c060431c5b0ed32104b4467", "arm.txt"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "second commit\n", "2010-12-28 17:22:30 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("8fd04f111f0a8739e4d0ae8475ab76d924bf2061", "readme.txt"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "this is a leg commit\n", "2010-12-28 17:20:47 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("cb5640907bee5ef66c9684d8abd733e5d3aa2616", "leg.txt"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "this is head commit\n", "2010-12-28 17:20:24 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("030259bf27a48d9a947d12e1cc2acf9d8949b081", "head.txt"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "initial commit\n", "2010-12-28 17:17:39 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("8ea8cb1b8b89af27390e98f38c1ffef0ae8fbf97", "readme.txt"),
+                                }),
+                        }
+                },
+                {"octopus.zip", "030259bf27a48d9a947d12e1cc2acf9d8949b081", "adebaf56be9673aec1d75ba9e11553da23f41a8a",
+                        new Commit[] {
+                                createCommitImpl("Piotr Stefaniak", "Merge branches 'arm', 'leg' and 'head'\n", "2010-12-28 17:20:59 +0100", new CommitFileImpl[] {
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "this is a leg commit\n", "2010-12-28 17:20:47 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("cb5640907bee5ef66c9684d8abd733e5d3aa2616", "leg.txt"),
+                                }),
+                                createCommitImpl("Piotr Stefaniak", "arm commit\n", "2010-12-28 17:19:046 +0100", new CommitFileImpl[] {
+                                        new CommitFileImpl("20ab8c6d2f3f49929f7e328dcc446e75f9f458ec", "arm.txt"),
+                                }),
+                        }
+                },
         };
     }
 
