@@ -132,20 +132,21 @@ public class GitOperationHelper
 
     @NotNull
     public String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final GitOperationRepositoryData repositoryData,
-            @Nullable String targetRevision) throws RepositoryException
+            final @Nullable String targetRevision) throws RepositoryException
     {
         String previousRevision = getCurrentRevision(sourceDirectory);
-        if (targetRevision == null)
+        String notNullTargetRevision = targetRevision;
+        if (notNullTargetRevision == null)
         {
             buildLogger.addBuildLogEntry("Target revision is null, obtaining the latest one from `" + repositoryData.repositoryUrl + "' on branch `" + repositoryData.branch + "'.");
-            targetRevision = obtainLatestRevision(repositoryData);
-            if (targetRevision == null)
+            notNullTargetRevision = obtainLatestRevision(repositoryData);
+            if (notNullTargetRevision == null)
             {
                 throw new RepositoryException("Cannot determine head revision on `" + repositoryData.repositoryUrl + "' on branch `" + repositoryData.branch + "'.");
             }
         }
         fetch(sourceDirectory, repositoryData);
-        return checkout(sourceDirectory, targetRevision, previousRevision);
+        return checkout(sourceDirectory, notNullTargetRevision, previousRevision);
     }
 
     void fetch(@NotNull final File sourceDirectory, @NotNull final GitOperationRepositoryData repositoryData) throws RepositoryException
