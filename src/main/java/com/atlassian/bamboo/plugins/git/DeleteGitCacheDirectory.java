@@ -22,7 +22,7 @@ public class DeleteGitCacheDirectory extends PlanActionSupport implements PlanEd
         Plan plan = planManager.getPlanByKey(buildKey);
         if (plan == null)
         {
-            String message = getText("repository.git.cache.cleanFailedNoPlan", Arrays.asList(buildKey));
+            String message = getText("repository.git.messages.cache.cleanFailedNoPlan", Arrays.asList(buildKey));
             log.error(message);
             addActionError(message);
             return ERROR;
@@ -30,7 +30,7 @@ public class DeleteGitCacheDirectory extends PlanActionSupport implements PlanEd
         RepositoryV2 repository = plan.getBuildDefinition().getRepositoryV2();
         if (!(repository instanceof GitRepository))
         {
-            String message = getText("repository.git.cache.notGit", Arrays.asList(buildKey));
+            String message = getText("repository.git.messages.cache.notGit", Arrays.asList(buildKey));
             log.error(message);
             addActionError(message);
             return ERROR;
@@ -42,27 +42,27 @@ public class DeleteGitCacheDirectory extends PlanActionSupport implements PlanEd
             final File cacheDirectoryFile = gitRepository.getCacheDirectory();
             if (cacheDirectoryFile == null)
             {
-                String message = getText("repository.git.cache.cleanFailed", Arrays.asList(buildKey));
+                String message = getText("repository.git.messages.cache.cleanFailed", Arrays.asList(buildKey));
                 addActionError(message);
                 return ERROR;
             }
             
             if (cacheDirectoryFile.exists())
             {
-                String message = getText("repository.git.cache.cleaning", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath()));
+                String message = getText("repository.git.messages.cache.cleaning", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath()));
                 log.info(message);
                 FileUtils.forceDelete(cacheDirectoryFile);
             }
             else
             {
-                String message = getText("repository.git.cache.notExist", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath()));
+                String message = getText("repository.git.messages.cache.notExist", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath()));
                 log.info(message);
             }
             return SUCCESS;
         }
         catch (Exception e)
         {
-            String message = getText("repository.git.cache.cleanFailed", Arrays.asList(buildKey));
+            String message = getText("repository.git.messages.cache.cleanFailed", Arrays.asList(buildKey));
             log.error(message, e);
             addActionError(message);
             return ERROR;

@@ -47,9 +47,6 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     private static final String REPOSITORY_GIT_SSH_KEY = "repository.git.ssh.key";
     private static final String REPOSITORY_GIT_SSH_PASSPHRASE = "repository.git.ssh.passphrase";
     private static final String REPOSITORY_GIT_MAVEN_PATH = "repository.git.maven.path";
-    private static final String REPOSITORY_GIT_ERROR_MISSING_REPOSITORY_URL = "repository.git.error.missingRepositoryUrl";
-    private static final String REPOSITORY_GIT_MAVEN_PATH_DOTS_ERROR = "repository.git.maven.path.dotsError";
-    private static final String REPOSITORY_GIT_MESSAGE_UNKNOWN_CHANGES = "repository.git.message.unknownChanges";
     private static final String TEMPORARY_GIT_PASSWORD = "temporary.git.password";
     private static final String TEMPORARY_GIT_PASSWORD_CHANGE = "temporary.git.password.change";
     private static final String TEMPORARY_GIT_SSH_PASSPHRASE = "temporary.git.ssh.passphrase";
@@ -98,7 +95,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             return !new EqualsBuilder()
                     .append(this.repositoryUrl, gitRepo.getRepositoryUrl())
                     .append(this.branch, gitRepo.getBranch())
-                    //.append(this.username, gitRepo.getUsername()) //todo: ask Slawek if this makes sense
+                    //.append(this.username, gitRepo.getUsername()) //todo: ask Slawek if this makes sense    //todo: this makes sense
                     .isEquals();
         }
         else
@@ -115,7 +112,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         try
         {
             GitOperationRepositoryData repositoryData = getRepositoryData();
-            String targetRevision = new GitOperationHelper(buildLogger).obtainLatestRevision(repositoryData);
+            String targetRevision = new GitOperationHelper(buildLogger, textProvider).obtainLatestRevision(repositoryData);
             changes.setVcsRevisionKey(targetRevision);
 
             if (targetRevision == null || targetRevision.equals(lastVcsRevisionKey))
@@ -132,37 +129,37 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             File cacheDirectory = getCacheDirectory();
             if (cacheDirectory == null)
             {
-                throw new RepositoryException("Cache directory is null, can't proceed with collecting changesets. Check bamboo logs for details.");
+                throw new RepositoryException(textProvider.getText("repository.git.messages.cacheIsNull"));
             }
             
             List<Commit> extractedChanges;
             try
             {
-                new GitOperationHelper(buildLogger).fetch(cacheDirectory, repositoryData);
-                extractedChanges = new GitOperationHelper(buildLogger).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
+                new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, repositoryData);
+                extractedChanges = new GitOperationHelper(buildLogger, textProvider).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
             }
             catch (Exception e)
             {
-                buildLogger.addBuildLogEntry("Warning: failed to collect changesets in cache directory (" + cacheDirectory + "), trying to recover...");
+                buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.failedToCollectChangesets", Arrays.asList(cacheDirectory)));
                 FileUtils.deleteQuietly(cacheDirectory);
-                buildLogger.addBuildLogEntry("Cleaned cache directory (" + cacheDirectory + "), trying to fetch it again from scratch...");
-                new GitOperationHelper(buildLogger).fetch(cacheDirectory, repositoryData);
-                buildLogger.addBuildLogEntry("Fetched remote repository to cache directory (" + cacheDirectory + "), trying to extract changesets...");
+                buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.cleanedCacheDirectory", Arrays.asList(cacheDirectory)));
+                new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, repositoryData);
+                buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.fetchedRemoteRepository", Arrays.asList(cacheDirectory)));
                 try
                 {
-                    extractedChanges = new GitOperationHelper(buildLogger).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
-                    buildLogger.addBuildLogEntry("Extracted changesets, recover successful.");
+                    extractedChanges = new GitOperationHelper(buildLogger, textProvider).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
+                    buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.completed"));
                 }
                 catch (Exception e2)
                 {
-                    buildLogger.addBuildLogEntry("Failed to extracted changesets, will return a stub changeset.");
+                    log.error(buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.failedToExtractChangesets")), e2);
                     extractedChanges = null;
                 }
             }
             if (extractedChanges == null || extractedChanges.isEmpty())
             {
                 changes.setChanges(Collections.singletonList((Commit) new CommitImpl(new AuthorImpl(Author.UNKNOWN_AUTHOR),
-                        textProvider.getText(REPOSITORY_GIT_MESSAGE_UNKNOWN_CHANGES, Arrays.asList(lastVcsRevisionKey, targetRevision)), new Date())));
+                        textProvider.getText("repository.git.messages.unknownChanges", Arrays.asList(lastVcsRevisionKey, targetRevision)), new Date())));
             }
             else
             {
@@ -173,7 +170,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         }
         catch (RuntimeException e)
         {
-            throw new RepositoryException("Runtime exception during collecting changes", e);
+            throw new RepositoryException(textProvider.getText("repository.git.messages.runtimeException"), e);
         }
     }
 
@@ -189,21 +186,21 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             GitOperationRepositoryData repositoryData = getRepositoryData();
             try
             {
-                return (new GitOperationHelper(buildLogger).fetchAndCheckout(sourceDirectory, repositoryData, targetRevision));
+                return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(sourceDirectory, repositoryData, targetRevision));
             }
             catch (Exception e)
             {
-                buildLogger.addBuildLogEntry("Warning: failed to retrieve source code to directory (" + sourceDirectory + "), trying to recover...");
+                buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.failedToRetrieveSource", Arrays.asList(sourceDirectory)));
                 FileUtils.deleteQuietly(sourceDirectory);
-                buildLogger.addBuildLogEntry("Cleaned source directory (" + sourceDirectory + "), trying to fetch and checkout code once again...");
-                String returnRevision = new GitOperationHelper(buildLogger).fetchAndCheckout(sourceDirectory, repositoryData, targetRevision);
-                buildLogger.addBuildLogEntry("Checkout completed, recover successful.");
+                buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(sourceDirectory)));
+                String returnRevision = new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(sourceDirectory, repositoryData, targetRevision);
+                buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.completed"));
                 return returnRevision;
             }
         }
         catch (RuntimeException e)
         {
-            throw new RepositoryException("Runtime exception during retrieving source code", e);
+            throw new RepositoryException(textProvider.getText("repository.git.messages.runtimeException"), e);
         }
     }
 
@@ -290,11 +287,11 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         String repoUrl = buildConfiguration.getString(REPOSITORY_GIT_REPOSITORY_URL);
         if (StringUtils.isBlank(repoUrl))
         {
-            errorCollection.addError(REPOSITORY_GIT_REPOSITORY_URL, textProvider.getText(REPOSITORY_GIT_ERROR_MISSING_REPOSITORY_URL));
+            errorCollection.addError(REPOSITORY_GIT_REPOSITORY_URL, textProvider.getText("repository.git.messages.missingRepositoryUrl"));
         }
         if (buildConfiguration.getString(REPOSITORY_GIT_MAVEN_PATH, "").contains(".."))
         {
-            errorCollection.addError(REPOSITORY_GIT_MAVEN_PATH, textProvider.getText(REPOSITORY_GIT_MAVEN_PATH_DOTS_ERROR));
+            errorCollection.addError(REPOSITORY_GIT_MAVEN_PATH, textProvider.getText("repository.git.messages.invalidPomPath"));
         }
 
         return errorCollection;
@@ -303,7 +300,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     @NotNull
     public MavenPomAccessor getMavenPomAccessor()
     {
-        return new GitMavenPomAccessor(this).withPath(pathToPom);
+        return new GitMavenPomAccessor(this, textProvider).withPath(pathToPom);
     }
 
     // -------------------------------------------------------------------------------------------------- Public Methods

@@ -6,6 +6,8 @@ import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.plugins.git.GitAbstractTest;
 import com.atlassian.bamboo.plugins.git.GitOperationHelper;
 import com.atlassian.bamboo.repository.RepositoryException;
+import com.opensymphony.xwork.TextProvider;
+import org.mockito.Mockito;
 import org.testng.annotations.*;
 
 import java.io.File;
@@ -68,19 +70,20 @@ public class TimeoutsTest extends GitAbstractTest
         }
     }
 
+    private final GitOperationHelper helper = new GitOperationHelper(
+            new NullBuildLogger()
+            {
+                @Override
+                public String addBuildLogEntry(String logString)
+                {
+                    System.out.println(logString);
+                    return null;
+                }
+            }, Mockito.mock(TextProvider.class));
+
     @Test
     public void testTimeoutIsSufficientToCheckOutBigRepo() throws Exception
     {
-        BuildLogger bl = new NullBuildLogger()
-        {
-            @Override
-            public String addBuildLogEntry(String logString)
-            {
-                System.out.println(logString);
-                return null;
-            }
-        };
-        GitOperationHelper helper = new GitOperationHelper(bl);
         String s = helper.obtainLatestRevision(createRepositoryData("git://git.jetbrains.org/idea/community.git"));
         File directory = createTempDirectory();
         System.out.println(directory);
@@ -100,32 +103,12 @@ public class TimeoutsTest extends GitAbstractTest
     @Test(dataProvider = "urlsToHang", expectedExceptions = RepositoryException.class, timeOut = 5000)
     public void testTimeoutOnObtainingLatestRevision(String url) throws Exception
     {
-        BuildLogger bl = new NullBuildLogger()
-        {
-            @Override
-            public String addBuildLogEntry(String logString)
-            {
-                System.out.println(logString);
-                return null;
-            }
-        };
-        GitOperationHelper helper = new GitOperationHelper(bl);
         String rev = helper.obtainLatestRevision(createRepositoryData(url));
     }
 
     @Test(dataProvider = "urlsToHang", expectedExceptions = RepositoryException.class, timeOut = 5000)
     public void testTimeoutOnFetch(String url) throws Exception
     {
-        BuildLogger bl = new NullBuildLogger()
-        {
-            @Override
-            public String addBuildLogEntry(String logString)
-            {
-                System.out.println(logString);
-                return null;
-            }
-        };
-        GitOperationHelper helper = new GitOperationHelper(bl);
         File directory = createTempDirectory();
         String rev = helper.fetchAndCheckout(directory, createRepositoryData(url), null);
     }

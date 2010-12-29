@@ -94,6 +94,12 @@ public class GitAbstractTest
         gitRepository.populateFromConfig(buildConfiguration);
     }
 
+    public GitOperationHelper createGitOperationHelper()
+    {
+        TextProvider textProvider = Mockito.mock(TextProvider.class);
+        return new GitOperationHelper(new NullBuildLogger(), textProvider);
+    }
+
     public GitRepository createGitRepository() throws Exception
     {
         File workingDirectory = createTempDirectory();

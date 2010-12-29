@@ -7,6 +7,7 @@ import com.atlassian.bamboo.commit.CommitFileImpl;
 import com.atlassian.bamboo.commit.CommitImpl;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.utils.SystemProperty;
+import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -51,10 +52,12 @@ public class GitOperationHelper
 
     private static final Logger log = Logger.getLogger(GitOperationHelper.class);
     private final BuildLogger buildLogger;
+    private final TextProvider textProvider;
 
-    public GitOperationHelper(BuildLogger buildLogger)
+    public GitOperationHelper(final @NotNull BuildLogger buildLogger, final @NotNull TextProvider textProvider)
     {
         this.buildLogger = buildLogger;
+        this.textProvider = textProvider;
     }
 
     @Nullable
@@ -72,20 +75,15 @@ public class GitOperationHelper
         }
         catch (NotSupportedException e)
         {
-            final String message = repositoryData.repositoryUrl + " is not supported protocol.";
-            buildLogger.addErrorLogEntry(message);
-            throw new RepositoryException(message, e);
+            throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.protocolUnsupported", Arrays.asList(repositoryData.repositoryUrl))), e);
         }
         catch (TransportException e)
         {
-            buildLogger.addErrorLogEntry(e.getMessage());
-            throw new RepositoryException(e.getMessage(), e);
+            throw new RepositoryException(buildLogger.addErrorLogEntry(e.getMessage()), e);
         }
         catch (IOException e)
         {
-            final String message = "Failed to create FileRepository";
-            buildLogger.addErrorLogEntry(message);
-            throw new RepositoryException(message, e);
+            throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.failedToCreateFileRepository")), e);
         }
         finally
         {
@@ -117,8 +115,7 @@ public class GitOperationHelper
         }
         catch (IOException e)
         {
-            buildLogger.addBuildLogEntry("Cannot retrieve current repository version of source directory '" + sourceDirectory + "'");
-            log.warn("IOException during retrieving current revision in source directory `" + sourceDirectory + "'. Returning null...", e);
+            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.cannotDetermineRevision", Arrays.asList(sourceDirectory)));
             return null;
         }
         finally
@@ -142,11 +139,11 @@ public class GitOperationHelper
         }
         else
         {
-            buildLogger.addBuildLogEntry("Target revision is null, obtaining the latest one from `" + repositoryData.repositoryUrl + "' on branch `" + repositoryData.branch + "'.");
+            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.targetRevisionIsNull", Arrays.asList(repositoryData.repositoryUrl, repositoryData.branch)));
             notNullTargetRevision = obtainLatestRevision(repositoryData);
             if (notNullTargetRevision == null)
             {
-                throw new RepositoryException("Cannot determine head revision on `" + repositoryData.repositoryUrl + "' on branch `" + repositoryData.branch + "'.");
+                throw new RepositoryException(textProvider.getText("repository.git.messages.cannotDetermineRemoteHead", Arrays.asList(repositoryData.repositoryUrl, repositoryData.branch)));
             }
         }
         fetch(sourceDirectory, repositoryData);
@@ -165,13 +162,13 @@ public class GitOperationHelper
             localRepository = new FileRepository(new File(sourceDirectory, Constants.DOT_GIT));
             if (!gitDirectory.exists())
             {
-                buildLogger.addBuildLogEntry("Creating local git repository in " + gitDirectory.getAbsolutePath());
+                buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.creatingGitRepository", Arrays.asList(gitDirectory)));
                 localRepository.create();
             }
 
             transport = open(localRepository, repositoryData);
 
-            buildLogger.addBuildLogEntry("Fetching branch " + realBranch);
+            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.fetchingBranch", Arrays.asList(realBranch)));
 
             RefSpec refSpec = new RefSpec()
                     .setForceUpdate(true)
@@ -184,9 +181,8 @@ public class GitOperationHelper
         }
         catch (IOException e)
         {
-            String message = "Cannot fetch `" + repositoryData.repositoryUrl + "', branch `" + realBranch + "' to source directory `" + sourceDirectory + "'. " + e.getMessage();
-            buildLogger.addErrorLogEntry(message);
-            throw new RepositoryException(message, e);
+            String message = textProvider.getText("repository.git.messages.fetchingFailed", Arrays.asList(repositoryData.repositoryUrl, realBranch, sourceDirectory));
+            throw new RepositoryException(buildLogger.addErrorLogEntry(message + " " + e.getMessage()), e);
         }
         finally
         {
@@ -207,7 +203,7 @@ public class GitOperationHelper
     @NotNull
     String checkout(@NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
     {
-        buildLogger.addBuildLogEntry("Checking out revision " + targetRevision);
+        buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.checkingOutRevision", Arrays.asList(targetRevision)));
 
         File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);
         FileRepository localRepository = null;
@@ -241,9 +237,7 @@ public class GitOperationHelper
         }
         catch (IOException e)
         {
-            String message = "Checkout to `" + targetRevision + "' failed.";
-            buildLogger.addErrorLogEntry(message);
-            throw new RepositoryException(message, e);
+            throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.checkoutFailed", Arrays.asList(targetRevision))), e);
         }
         finally
         {
@@ -324,10 +318,8 @@ public class GitOperationHelper
         }
         catch (IOException e)
         {
-            String message = "IOException during extracting changes in '" + directory + "', previousRevision is " + previousRevision
-                    + " targetRevision is " + targetRevision;
-            buildLogger.addErrorLogEntry(message + " " + e.getMessage());
-            throw new RepositoryException(message, e);
+            String message = textProvider.getText("repository.git.messages.extractingChangesetsException", Arrays.asList(directory, previousRevision, targetRevision));
+            throw new RepositoryException(buildLogger.addErrorLogEntry(message + " " + e.getMessage()), e);
         }
         finally
         {
@@ -365,15 +357,11 @@ public class GitOperationHelper
         }
         catch (URISyntaxException e)
         {
-            String message = repositoryData.repositoryUrl + " is not valid URI.";
-            buildLogger.addErrorLogEntry(message);
-            throw new RepositoryException(message, e);
+            throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.invalidURI", Arrays.asList(repositoryData.repositoryUrl))), e);
         }
         catch (IOException e)
         {
-            String message = "Failed to open transport for " + repositoryData.repositoryUrl;
-            buildLogger.addErrorLogEntry(message);
-            throw new RepositoryException(message, e);
+            throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.failedToOpenTransport", Arrays.asList(repositoryData.repositoryUrl))), e);
         }
     }
 

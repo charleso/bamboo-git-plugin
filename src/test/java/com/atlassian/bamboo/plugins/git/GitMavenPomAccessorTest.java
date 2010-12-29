@@ -3,6 +3,7 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.repository.MavenPomAccessor;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.testtools.TempDirectory;
+import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -125,7 +126,7 @@ public class GitMavenPomAccessorTest extends GitAbstractTest
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testRejectPathWithDots() throws Exception
     {
-        new GitMavenPomAccessor(Mockito.mock(GitRepository.class)).withPath("..");
+        new GitMavenPomAccessor(Mockito.mock(GitRepository.class), Mockito.mock(TextProvider.class)).withPath("..");
     }
 
 }

@@ -3,11 +3,13 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.repository.MavenPomAccessorAbstract;
 import com.atlassian.bamboo.repository.RepositoryException;
+import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.util.Arrays;
 
 public class GitMavenPomAccessor extends MavenPomAccessorAbstract
 {
@@ -15,11 +17,13 @@ public class GitMavenPomAccessor extends MavenPomAccessorAbstract
     private static final Logger log = Logger.getLogger(GitMavenPomAccessor.class);
     private final GitRepository repository;
     private String pathToPom = POM_XML;
+    private final TextProvider textProvider;
 
-    protected GitMavenPomAccessor(GitRepository repository)
+    protected GitMavenPomAccessor(GitRepository repository, @NotNull final TextProvider textProvider)
     {
         super(repository);
         this.repository = repository;
+        this.textProvider = textProvider;
     }
 
     GitMavenPomAccessor withPath(String pathToProjectRoot)
@@ -28,7 +32,7 @@ public class GitMavenPomAccessor extends MavenPomAccessorAbstract
         {
             if (pathToProjectRoot.contains(".."))
             {
-                throw new IllegalArgumentException("Path to project cannot contain '..' sequence");
+                throw new IllegalArgumentException(textProvider.getText("repository.git.messages.invalidPomPath"));
             }
             this.pathToPom = pathToProjectRoot;
         }
@@ -50,7 +54,7 @@ public class GitMavenPomAccessor extends MavenPomAccessorAbstract
     public File checkoutMavenPom(@NotNull File destinationPath) throws RepositoryException
     {
         log.info("checkoutMavenPom to: " + destinationPath);
-        new GitOperationHelper(new NullBuildLogger()).fetchAndCheckout(destinationPath, repository.getRepositoryData(), null);
+        new GitOperationHelper(new NullBuildLogger(), textProvider).fetchAndCheckout(destinationPath, repository.getRepositoryData(), null);
         final File pomLocation = new File(destinationPath, pathToPom);
         if (pomLocation.isFile())
         {
@@ -66,6 +70,6 @@ public class GitMavenPomAccessor extends MavenPomAccessorAbstract
             }
         }
 
-        throw new RepositoryException("Cannot find pom file in the specified location (" + pathToPom + ")");
+        throw new RepositoryException(textProvider.getText("repository.git.messages.cannotFindPom", Arrays.asList(pathToPom)));
     }
 }

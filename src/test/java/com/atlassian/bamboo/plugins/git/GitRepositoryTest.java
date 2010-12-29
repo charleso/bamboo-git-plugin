@@ -1,6 +1,5 @@
 package com.atlassian.bamboo.plugins.git;
 
-import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.plan.Plan;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildChanges;
@@ -17,8 +16,6 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
-
-import static org.testng.Assert.assertTrue;
 
 public class GitRepositoryTest extends GitAbstractTest
 {

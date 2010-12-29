@@ -1,7 +1,6 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.author.AuthorImpl;
-import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.commit.Commit;
 import com.atlassian.bamboo.commit.CommitFile;
 import com.atlassian.bamboo.commit.CommitFileImpl;
@@ -41,7 +40,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         File repository = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory(zipFile, repository);
 
-        String result = new GitOperationHelper(new NullBuildLogger()).obtainLatestRevision(createRepositoryData(repository.getAbsolutePath(), branch));
+        String result = createGitOperationHelper().obtainLatestRevision(createRepositoryData(repository.getAbsolutePath(), branch));
         assertEquals(result, expectedRevision);
     }
 
@@ -75,7 +74,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         {
             String targetRevision = testCase[0];
             String expectedContentsInZip = testCase[1];
-            String result = new GitOperationHelper(new NullBuildLogger()).checkout(tmp, targetRevision, previousRevision);
+            String result = createGitOperationHelper().checkout(tmp, targetRevision, previousRevision);
 
             assertEquals(result, targetRevision);
             verifyContents(tmp, expectedContentsInZip);
@@ -250,7 +249,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         File tmp = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory(repositoryZip, tmp);
 
-        List<Commit> commits = new GitOperationHelper(new NullBuildLogger()).extractCommits(tmp, previousRevision, targetRevision);
+        List<Commit> commits = createGitOperationHelper().extractCommits(tmp, previousRevision, targetRevision);
 
         assertEquals(commits.size(), expectedCommits.length);
         for (int i = 0; i < commits.size(); i++)
