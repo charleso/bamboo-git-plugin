@@ -136,11 +136,11 @@ public class GitOperationHelper
 
     @NotNull
     public String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final GitOperationRepositoryData repositoryData,
-            final @NotNull String targetRevision) throws RepositoryException
+            final @Nullable String targetRevision) throws RepositoryException
     {
         String previousRevision = getCurrentRevision(sourceDirectory);
         fetch(sourceDirectory, repositoryData);
-        return checkout(sourceDirectory, targetRevision, previousRevision);
+        return checkout(sourceDirectory, targetRevision != null ? targetRevision : obtainLatestRevision(repositoryData), previousRevision);
     }
 
     void fetch(@NotNull final File sourceDirectory, @NotNull final GitOperationRepositoryData repositoryData) throws RepositoryException

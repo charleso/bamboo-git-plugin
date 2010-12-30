@@ -176,7 +176,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     }
 
     @NotNull
-    public String retrieveSourceCode(@NotNull BuildContext buildContext, @Nullable final String vcsRevision) throws RepositoryException
+    public String retrieveSourceCode(@NotNull BuildContext buildContext, @Nullable final String targetRevision) throws RepositoryException
     {
         try
         {
@@ -184,7 +184,6 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(buildContext.getPlanResultKey());
             final String planKey = buildContext.getPlanKey();
             final File sourceDirectory = getSourceCodeDirectory(planKey);
-            final String targetRevision = vcsRevision != null ? vcsRevision : new GitOperationHelper(buildLogger, textProvider).obtainLatestRevision(repositoryData);
 
             try
             {
