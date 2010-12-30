@@ -11,6 +11,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.Arrays;
 
+import com.atlassian.bamboo.plugins.git.GitOperationHelper.GitOperationRepositoryData;
+
 public class GitMavenPomAccessor extends MavenPomAccessorAbstract
 {
     public static final String POM_XML = "pom.xml";
@@ -54,7 +56,10 @@ public class GitMavenPomAccessor extends MavenPomAccessorAbstract
     public File checkoutMavenPom(@NotNull File destinationPath) throws RepositoryException
     {
         log.info("checkoutMavenPom to: " + destinationPath);
-        new GitOperationHelper(new NullBuildLogger(), textProvider).fetchAndCheckout(destinationPath, repository.getRepositoryData(), null);
+        final GitOperationRepositoryData repositoryData = repository.getRepositoryData();
+        final GitOperationHelper helper = new GitOperationHelper(new NullBuildLogger(), textProvider);
+        final String headRevision = helper.obtainLatestRevision(repositoryData);
+        helper.fetchAndCheckout(destinationPath, repositoryData, headRevision);
         final File pomLocation = new File(destinationPath, pathToPom);
         if (pomLocation.isFile())
         {

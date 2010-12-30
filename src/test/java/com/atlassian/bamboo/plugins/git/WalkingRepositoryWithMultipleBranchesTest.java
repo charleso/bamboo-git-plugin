@@ -1,6 +1,7 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.plugins.git.testutils.ExtractComments;
+import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.testtools.ZipResourceDirectory;
@@ -83,7 +84,22 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, source, branch);
 
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
+        BuildChanges changes;
+        try
+        {
+            changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
+        }
+        catch (RepositoryException e)
+        {
+            if (expectedHead == null)
+            {
+                return;
+            }
+            else
+            {
+                throw e;
+            }
+        }
         String vcsRevisionKey = changes.getVcsRevisionKey();
         Assert.assertEquals(vcsRevisionKey, expectedHead);
 
@@ -107,7 +123,22 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
         gitRepository.setWorkingDir(workingDir);
         setRepositoryProperties(gitRepository, singleSource, branch);
 
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
+        BuildChanges changes;
+        try
+        {
+            changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
+        }
+        catch (RepositoryException e)
+        {
+            if (expectedHead == null)
+            {
+                return;
+            }
+            else
+            {
+                throw e;
+            }
+        }
         String vcsRevisionKey = changes.getVcsRevisionKey();
         Assert.assertEquals(vcsRevisionKey, expectedHead);
 

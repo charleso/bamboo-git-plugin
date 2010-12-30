@@ -60,7 +60,7 @@ public class GitOperationHelper
         this.textProvider = textProvider;
     }
 
-    @Nullable
+    @NotNull
     public String obtainLatestRevision(@NotNull final GitOperationRepositoryData repositoryData) throws RepositoryException
     {
         Transport transport = null;
@@ -71,7 +71,14 @@ public class GitOperationHelper
             fetchConnection = transport.openFetch();
             Ref headRef = fetchConnection.getRef(Constants.R_HEADS + (StringUtils.isNotBlank(repositoryData.branch) ? repositoryData.branch : Constants.MASTER));
             headRef = (headRef != null) ? headRef : fetchConnection.getRef(StringUtils.isNotBlank(repositoryData.branch) ? repositoryData.branch : Constants.HEAD);
-            return (headRef == null) ? null : headRef.getObjectId().getName();
+            if (headRef == null)
+            {
+                throw new RepositoryException(textProvider.getText("repository.git.messages.cannotDetermineHead", Arrays.asList(repositoryData.repositoryUrl, repositoryData.branch)));
+            }
+            else
+            {
+                return headRef.getObjectId().getName();
+            }
         }
         catch (NotSupportedException e)
         {
@@ -115,7 +122,7 @@ public class GitOperationHelper
         }
         catch (IOException e)
         {
-            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.cannotDetermineRevision", Arrays.asList(sourceDirectory)));
+            log.warn(buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.cannotDetermineRevision", Arrays.asList(sourceDirectory)) + " " + e.getMessage()), e);
             return null;
         }
         finally
@@ -129,25 +136,11 @@ public class GitOperationHelper
 
     @NotNull
     public String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final GitOperationRepositoryData repositoryData,
-            final @Nullable String targetRevision) throws RepositoryException
+            final @NotNull String targetRevision) throws RepositoryException
     {
         String previousRevision = getCurrentRevision(sourceDirectory);
-        final String notNullTargetRevision;
-        if (targetRevision != null)
-        {
-            notNullTargetRevision = targetRevision;
-        }
-        else
-        {
-            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.targetRevisionIsNull", Arrays.asList(repositoryData.repositoryUrl, repositoryData.branch)));
-            notNullTargetRevision = obtainLatestRevision(repositoryData);
-            if (notNullTargetRevision == null)
-            {
-                throw new RepositoryException(textProvider.getText("repository.git.messages.cannotDetermineRemoteHead", Arrays.asList(repositoryData.repositoryUrl, repositoryData.branch)));
-            }
-        }
         fetch(sourceDirectory, repositoryData);
-        return checkout(sourceDirectory, notNullTargetRevision, previousRevision);
+        return checkout(sourceDirectory, targetRevision, previousRevision);
     }
 
     void fetch(@NotNull final File sourceDirectory, @NotNull final GitOperationRepositoryData repositoryData) throws RepositoryException
@@ -204,15 +197,12 @@ public class GitOperationHelper
     String checkout(@NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
     {
         buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.checkingOutRevision", Arrays.asList(targetRevision)));
-
         File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);
         FileRepository localRepository = null;
         RevWalk revWalk = null;
-
         try
         {
             localRepository = new FileRepository(gitDirectory);
-
             revWalk = new RevWalk(localRepository);
             final RevCommit targetCommit = revWalk.parseCommit(localRepository.resolve(targetRevision));
             final RevCommit previousCommit = previousRevision == null ? null : revWalk.parseCommit(localRepository.resolve(previousRevision));

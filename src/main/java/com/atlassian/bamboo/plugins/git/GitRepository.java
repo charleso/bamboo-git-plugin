@@ -107,15 +107,16 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     @NotNull
     public BuildChanges collectChangesSinceLastBuild(@NotNull String planKey, @Nullable String lastVcsRevisionKey) throws RepositoryException
     {
-        BuildChanges changes = new BuildChangesImpl();
-        final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(PlanKeys.getPlanKey(planKey));
         try
         {
-            GitOperationRepositoryData repositoryData = getRepositoryData();
-            String targetRevision = new GitOperationHelper(buildLogger, textProvider).obtainLatestRevision(repositoryData);
+            final GitOperationRepositoryData repositoryData = getRepositoryData();
+            final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(PlanKeys.getPlanKey(planKey));
+            final BuildChanges changes = new BuildChangesImpl();
+            
+            final String targetRevision = new GitOperationHelper(buildLogger, textProvider).obtainLatestRevision(repositoryData);
             changes.setVcsRevisionKey(targetRevision);
 
-            if (targetRevision == null || targetRevision.equals(lastVcsRevisionKey))
+            if (targetRevision.equals(lastVcsRevisionKey))
             {
                 return changes;
             }
@@ -126,7 +127,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                 return changes;
             }
 
-            File cacheDirectory = getCacheDirectory();
+            final File cacheDirectory = getCacheDirectory();
             if (cacheDirectory == null)
             {
                 throw new RepositoryException(textProvider.getText("repository.git.messages.cacheIsNull"));
@@ -175,15 +176,16 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     }
 
     @NotNull
-    public String retrieveSourceCode(@NotNull BuildContext buildContext, @Nullable final String targetRevision) throws RepositoryException
+    public String retrieveSourceCode(@NotNull BuildContext buildContext, @Nullable final String vcsRevision) throws RepositoryException
     {
         try
         {
+            final GitOperationRepositoryData repositoryData = getRepositoryData();
+            final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(buildContext.getPlanResultKey());
             final String planKey = buildContext.getPlanKey();
             final File sourceDirectory = getSourceCodeDirectory(planKey);
-            final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(buildContext.getPlanResultKey());
+            final String targetRevision = vcsRevision != null ? vcsRevision : new GitOperationHelper(buildLogger, textProvider).obtainLatestRevision(repositoryData);
 
-            GitOperationRepositoryData repositoryData = getRepositoryData();
             try
             {
                 return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(sourceDirectory, repositoryData, targetRevision));

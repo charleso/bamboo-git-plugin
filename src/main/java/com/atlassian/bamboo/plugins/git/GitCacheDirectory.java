@@ -1,6 +1,5 @@
 package com.atlassian.bamboo.plugins.git;
 
-import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.util.concurrent.Function;
 import com.atlassian.util.concurrent.ManagedLock;
 import com.atlassian.util.concurrent.ManagedLocks;
