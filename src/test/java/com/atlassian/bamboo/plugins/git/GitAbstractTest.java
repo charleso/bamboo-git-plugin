@@ -152,6 +152,11 @@ public class GitAbstractTest
         return new TextProviderAdapter(bean);
     }
 
+    protected static GitRepositoryAccessData createAccessData(String repositoryUrl)
+    {
+        return createAccessData(repositoryUrl, null);
+    }
+
     protected static GitRepositoryAccessData createAccessData(File repositoryFile, String branch)
     {
         return createAccessData(repositoryFile.getAbsolutePath(), branch);

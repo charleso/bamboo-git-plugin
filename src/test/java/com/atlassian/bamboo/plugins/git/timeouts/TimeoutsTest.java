@@ -84,10 +84,10 @@ public class TimeoutsTest extends GitAbstractTest
     @Test
     public void testTimeoutIsSufficientToCheckOutBigRepo() throws Exception
     {
-        String s = helper.obtainLatestRevision(createRepositoryData("git://git.jetbrains.org/idea/community.git"));
+        String s = helper.obtainLatestRevision(createAccessData("git://git.jetbrains.org/idea/community.git"));
         File directory = createTempDirectory();
         System.out.println(directory);
-        helper.fetchAndCheckout(directory, createRepositoryData("git://git.jetbrains.org/idea/community.git"), s);
+        helper.fetchAndCheckout(directory, createAccessData("git://git.jetbrains.org/idea/community.git"), s);
     }
 
     @DataProvider
@@ -103,14 +103,14 @@ public class TimeoutsTest extends GitAbstractTest
     @Test(dataProvider = "urlsToHang", expectedExceptions = RepositoryException.class, timeOut = 5000)
     public void testTimeoutOnObtainingLatestRevision(String url) throws Exception
     {
-        String rev = helper.obtainLatestRevision(createRepositoryData(url));
+        String rev = helper.obtainLatestRevision(createAccessData(url));
     }
 
     @Test(dataProvider = "urlsToHang", expectedExceptions = RepositoryException.class, timeOut = 5000)
     public void testTimeoutOnFetch(String url) throws Exception
     {
         File directory = createTempDirectory();
-        String rev = helper.fetchAndCheckout(directory, createRepositoryData(url), null);
+        String rev = helper.fetchAndCheckout(directory, createAccessData(url), null);
     }
 
 }
