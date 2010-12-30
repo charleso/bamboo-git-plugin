@@ -33,8 +33,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Arrays;
 
-import com.atlassian.bamboo.plugins.git.GitOperationHelper.GitOperationRepositoryData;
-
 public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
@@ -58,12 +56,17 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
     private static final Logger log = Logger.getLogger(GitRepository.class);
 
-    private String repositoryUrl;
-    private String username;
-    private String password;
-    private String branch;
-    private String sshPassphrase;
-    private String sshKey;
+    static class GitRepositoryAccessData
+    {
+        String repositoryUrl;
+        String branch;
+        String username;
+        String password;
+        String sshKey;
+        String sshPassphrase;
+    }
+
+    final GitRepositoryAccessData accessData = new GitRepositoryAccessData();
 
     // Maven 2 import
     private transient String pathToPom;
@@ -93,9 +96,10 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         {
             GitRepository gitRepo = (GitRepository) repository;
             return !new EqualsBuilder()
-                    .append(this.repositoryUrl, gitRepo.getRepositoryUrl())
-                    .append(this.branch, gitRepo.getBranch())
-                    //.append(this.username, gitRepo.getUsername()) //todo: ask Slawek if this makes sense    //todo: this makes sense
+                    .append(accessData.repositoryUrl, gitRepo.accessData.repositoryUrl)
+                    .append(accessData.branch, gitRepo.accessData.branch)
+                    .append(accessData.username, gitRepo.accessData.username)
+                    .append(accessData.sshKey, gitRepo.accessData.sshKey)
                     .isEquals();
         }
         else
@@ -109,11 +113,10 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     {
         try
         {
-            final GitOperationRepositoryData repositoryData = getRepositoryData();
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(PlanKeys.getPlanKey(planKey));
             final BuildChanges changes = new BuildChangesImpl();
             
-            final String targetRevision = new GitOperationHelper(buildLogger, textProvider).obtainLatestRevision(repositoryData);
+            final String targetRevision = new GitOperationHelper(buildLogger, textProvider).obtainLatestRevision(accessData);
             changes.setVcsRevisionKey(targetRevision);
 
             if (targetRevision.equals(lastVcsRevisionKey))
@@ -136,7 +139,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             List<Commit> extractedChanges;
             try
             {
-                new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, repositoryData);
+                new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData);
                 extractedChanges = new GitOperationHelper(buildLogger, textProvider).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
             }
             catch (Exception e)
@@ -144,7 +147,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                 buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.failedToCollectChangesets", Arrays.asList(cacheDirectory)));
                 FileUtils.deleteQuietly(cacheDirectory);
                 buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.cleanedCacheDirectory", Arrays.asList(cacheDirectory)));
-                new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, repositoryData);
+                new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData);
                 buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.fetchedRemoteRepository", Arrays.asList(cacheDirectory)));
                 try
                 {
@@ -180,21 +183,20 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     {
         try
         {
-            final GitOperationRepositoryData repositoryData = getRepositoryData();
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(buildContext.getPlanResultKey());
             final String planKey = buildContext.getPlanKey();
             final File sourceDirectory = getSourceCodeDirectory(planKey);
 
             try
             {
-                return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(sourceDirectory, repositoryData, targetRevision));
+                return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(sourceDirectory, accessData, targetRevision));
             }
             catch (Exception e)
             {
                 buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.failedToRetrieveSource", Arrays.asList(sourceDirectory)));
                 FileUtils.deleteQuietly(sourceDirectory);
                 buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(sourceDirectory)));
-                String returnRevision = new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(sourceDirectory, repositoryData, targetRevision);
+                String returnRevision = new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(sourceDirectory, accessData, targetRevision);
                 buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.completed"));
                 return returnRevision;
             }
@@ -255,12 +257,12 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     public void populateFromConfig(@NotNull HierarchicalConfiguration config)
     {
         super.populateFromConfig(config);
-        repositoryUrl = config.getString(REPOSITORY_GIT_REPOSITORY_URL);
-        username = config.getString(REPOSITORY_GIT_USERNAME);
-        password = config.getString(REPOSITORY_GIT_PASSWORD);
-        branch = config.getString(REPOSITORY_GIT_BRANCH);
-        sshKey = config.getString(REPOSITORY_GIT_SSH_KEY);
-        sshPassphrase = config.getString(REPOSITORY_GIT_SSH_PASSPHRASE);
+        accessData.repositoryUrl = config.getString(REPOSITORY_GIT_REPOSITORY_URL);
+        accessData.username = config.getString(REPOSITORY_GIT_USERNAME);
+        accessData.password = config.getString(REPOSITORY_GIT_PASSWORD);
+        accessData.branch = config.getString(REPOSITORY_GIT_BRANCH);
+        accessData.sshKey = config.getString(REPOSITORY_GIT_SSH_KEY);
+        accessData.sshPassphrase = config.getString(REPOSITORY_GIT_SSH_PASSPHRASE);
 
         pathToPom = config.getString(REPOSITORY_GIT_MAVEN_PATH);
     }
@@ -270,12 +272,12 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     public HierarchicalConfiguration toConfiguration()
     {
         HierarchicalConfiguration configuration = super.toConfiguration();
-        configuration.setProperty(REPOSITORY_GIT_REPOSITORY_URL, repositoryUrl);
-        configuration.setProperty(REPOSITORY_GIT_USERNAME, username);
-        configuration.setProperty(REPOSITORY_GIT_PASSWORD, password);
-        configuration.setProperty(REPOSITORY_GIT_BRANCH, branch);
-        configuration.setProperty(REPOSITORY_GIT_SSH_KEY, sshKey);
-        configuration.setProperty(REPOSITORY_GIT_SSH_PASSPHRASE, sshPassphrase);
+        configuration.setProperty(REPOSITORY_GIT_REPOSITORY_URL, accessData.repositoryUrl);
+        configuration.setProperty(REPOSITORY_GIT_USERNAME, accessData.username);
+        configuration.setProperty(REPOSITORY_GIT_PASSWORD, accessData.password);
+        configuration.setProperty(REPOSITORY_GIT_BRANCH, accessData.branch);
+        configuration.setProperty(REPOSITORY_GIT_SSH_KEY, accessData.sshKey);
+        configuration.setProperty(REPOSITORY_GIT_SSH_PASSPHRASE, accessData.sshPassphrase);
         return configuration;
     }
 
@@ -308,38 +310,20 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
     // -------------------------------------------------------------------------------------------------- Helper Methods
 
-    GitOperationRepositoryData getRepositoryData()
-    {
-        StringEncrypter encrypter = new StringEncrypter();
-        return new GitOperationRepositoryData(
-                repositoryUrl,
-                branch,
-                username,
-                encrypter.decrypt(password),
-                encrypter.decrypt(sshKey),
-                encrypter.decrypt(sshPassphrase)
-        );
-    }
-
     // -------------------------------------------------------------------------------------- Basic Accessors / Mutators
 
     public String getRepositoryUrl()
     {
-        return repositoryUrl;
-    }
-
-    void setRepositoryUrl(String repositoryUrl)
-    {
-        this.repositoryUrl = repositoryUrl;
+        return accessData.repositoryUrl;
     }
 
     public String getBranch()
     {
-        return branch;
+        return accessData.branch;
     }
 
     public File getCacheDirectory()
     {
-        return GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), repositoryUrl);
+        return GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), accessData.repositoryUrl);
     }
 }

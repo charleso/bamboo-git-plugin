@@ -11,8 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.Arrays;
 
-import com.atlassian.bamboo.plugins.git.GitOperationHelper.GitOperationRepositoryData;
-
 public class GitMavenPomAccessor extends MavenPomAccessorAbstract
 {
     public static final String POM_XML = "pom.xml";
@@ -49,14 +47,14 @@ public class GitMavenPomAccessor extends MavenPomAccessorAbstract
 
     public void parseMavenScmUrl(@NotNull String mavenScmUrl) throws IllegalArgumentException
     {
-        repository.setRepositoryUrl(mavenScmUrl);
+        repository.accessData.repositoryUrl = mavenScmUrl;
     }
 
     @NotNull
     public File checkoutMavenPom(@NotNull File destinationPath) throws RepositoryException
     {
         log.info("checkoutMavenPom to: " + destinationPath);
-        new GitOperationHelper(new NullBuildLogger(), textProvider).fetchAndCheckout(destinationPath, repository.getRepositoryData(), null);
+        new GitOperationHelper(new NullBuildLogger(), textProvider).fetchAndCheckout(destinationPath, repository.accessData, null);
         final File pomLocation = new File(destinationPath, pathToPom);
         if (pomLocation.isFile())
         {

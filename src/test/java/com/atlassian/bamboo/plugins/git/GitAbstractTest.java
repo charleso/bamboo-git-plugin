@@ -29,7 +29,7 @@ import java.util.ResourceBundle;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import com.atlassian.bamboo.plugins.git.GitOperationHelper.GitOperationRepositoryData;
+import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
 
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.testng.Assert.assertEquals;
@@ -152,19 +152,26 @@ public class GitAbstractTest
         return new TextProviderAdapter(bean);
     }
 
-    protected static GitOperationRepositoryData createRepositoryData(String repositoryUrl)
+    protected static GitRepositoryAccessData createAccessData(File repositoryFile, String branch)
     {
-        return createRepositoryData(repositoryUrl, null);
+        return createAccessData(repositoryFile.getAbsolutePath(), branch);
     }
 
-    protected static GitOperationRepositoryData createRepositoryData(String repositoryUrl, String branch)
+    protected static GitRepositoryAccessData createAccessData(String repositoryUrl, String branch)
     {
-        return createRepositoryData(repositoryUrl, branch, null, null, null, null);
+        return createAccessData(repositoryUrl, branch, null, null, null, null);
     }
 
-    protected static GitOperationRepositoryData createRepositoryData(String repositoryUrl, String branch, String username, String password, String sshKey, String sshPassphrase)
+    protected static GitRepositoryAccessData createAccessData(String repositoryUrl, String branch, String username, String password, String sshKey, String sshPassphrase)
     {
-        return new GitOperationRepositoryData(repositoryUrl, branch, username, password, sshKey, sshPassphrase);
+        GitRepositoryAccessData accessData = new GitRepositoryAccessData();
+        accessData.repositoryUrl = repositoryUrl;
+        accessData.branch = branch;
+        accessData.username = username;
+        accessData.password = password;
+        accessData.sshKey = sshKey;
+        accessData.sshPassphrase = sshPassphrase;
+        return accessData;
     }
 
     @AfterClass

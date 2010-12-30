@@ -40,7 +40,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         File repository = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory(zipFile, repository);
 
-        String result = createGitOperationHelper().obtainLatestRevision(createRepositoryData(repository.getAbsolutePath(), branch));
+        String result = createGitOperationHelper().obtainLatestRevision(createAccessData(repository, branch));
         assertEquals(result, expectedRevision);
     }
 
