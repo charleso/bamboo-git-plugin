@@ -28,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -56,7 +57,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
     private static final Logger log = Logger.getLogger(GitRepository.class);
 
-    static class GitRepositoryAccessData
+    static class GitRepositoryAccessData implements Serializable
     {
         String repositoryUrl;
         String branch;

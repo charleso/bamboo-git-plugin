@@ -24,8 +24,8 @@
 
     <repositories>
         <repository>
-            <id>atlassian-3rdparty</id>
-            <url>https://maven.atlassian.com/content/repositories/atlassian-3rdparty/</url>
+            <id>jgit-repository</id>
+            <url>http://download.eclipse.org/jgit/maven</url>
         </repository>
     </repositories>
 
@@ -51,7 +51,7 @@
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
-            <version>0.10.0-ATLASSIAN-gc6ca443</version>
+            <version>0.10.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.jcraft</groupId>
