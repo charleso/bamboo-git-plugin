@@ -57,8 +57,6 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
                 {"master", null, "3", CHG_M_2, Collections.<String>emptyList()},
                 {"master", null, "4", CHG_M_4, Collections.<String>emptyList()},
                 {"master", null, "5", CHG_M_4, Collections.<String>emptyList()},
-                {"second", null, "1", null, Collections.<String>emptyList()}, // null retrieved revision - is this correct?
-                {"second", null, "2", null, Collections.<String>emptyList()},
                 {"second", null, "3", CHG_S_3, Collections.<String>emptyList()},
                 {"second", null, "4", CHG_S_3, Collections.<String>emptyList()},
                 {"second", null, "5", CHG_S_5, Collections.<String>emptyList()},
@@ -84,27 +82,27 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, source, branch);
 
-        BuildChanges changes;
-        try
-        {
-            changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
-        }
-        catch (RepositoryException e)
-        {
-            if (expectedHead == null)
-            {
-                return;
-            }
-            else
-            {
-                throw e;
-            }
-        }
+        BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
         String vcsRevisionKey = changes.getVcsRevisionKey();
         Assert.assertEquals(vcsRevisionKey, expectedHead);
 
         List<String> comments = Lists.transform(changes.getChanges(), new ExtractComments());
         Assert.assertEquals(comments, expectedComments);
+    }
+
+    @DataProvider
+    Object[][] subsequentChangeDetectionsDataFailing()
+    {
+        return new Object[][]{
+                {"second", null, "1", Collections.<String>emptyList()},
+                {"second", null, "2", Collections.<String>emptyList()},
+        };
+    }
+
+    @Test(dataProvider = "subsequentChangeDetectionsDataFailing", expectedExceptions = RepositoryException.class, expectedExceptionsMessageRegExp = "Cannot determine head revision.*")
+    public void testSubsequentChangeDetectionsFailing(String branch, String previousChangeset, String srcRepo, List<String> expectedComments) throws Exception
+    {
+        testSubsequentChangeDetections(branch, previousChangeset, srcRepo, null, expectedComments);
     }
 
     @Test(dataProvider = "subsequentChangeDetectionsData", singleThreaded = true)
@@ -123,28 +121,20 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
         gitRepository.setWorkingDir(workingDir);
         setRepositoryProperties(gitRepository, singleSource, branch);
 
-        BuildChanges changes;
-        try
-        {
-            changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
-        }
-        catch (RepositoryException e)
-        {
-            if (expectedHead == null)
-            {
-                return;
-            }
-            else
-            {
-                throw e;
-            }
-        }
+        BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
         String vcsRevisionKey = changes.getVcsRevisionKey();
         Assert.assertEquals(vcsRevisionKey, expectedHead);
 
         List<String> comments = Lists.transform(changes.getChanges(), new ExtractComments());
         Assert.assertEquals(comments, expectedComments);
 
+    }
+
+    @Test(dataProvider = "subsequentChangeDetectionsDataFailing", singleThreaded = true,
+            expectedExceptions = RepositoryException.class, expectedExceptionsMessageRegExp = "Cannot determine head revision.*")
+    public void testSubsequentChangeDetectionsWithCacheFailing(String branch, String previousChangeset, String srcRepo, List<String> expectedComments) throws Exception
+    {
+        testSubsequentChangeDetectionsWithCache(branch, previousChangeset, srcRepo, null, expectedComments);
     }
 
     @DataProvider
