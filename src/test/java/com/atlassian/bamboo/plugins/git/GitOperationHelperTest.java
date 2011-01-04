@@ -271,4 +271,20 @@ public class GitOperationHelperTest extends GitAbstractTest
         }
     }
 
+    //skasuj mnie:
+    @Test
+    public void testWireshark() throws Exception
+    {
+        File tmp = createTempDirectory();
+        GitOperationHelper helper = createGitOperationHelper();
+
+//        String repositoryUrl = "git://github.com/pstefaniak/test.git";
+//        String repositoryUrl = "git://github.com/atlassian/bamboo-git-plugin.git";
+        String repositoryUrl = "git://git.jetbrains.org/idea/community.git";
+
+        helper.fetch(tmp, createAccessData(repositoryUrl));
+
+        int c = 5; c++;
+    }
+
 }

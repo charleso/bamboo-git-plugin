@@ -104,5 +104,4 @@ public class GitRepositoryTest extends GitAbstractTest
         ErrorCollection errorCollection = repo.validate(conf);
         Assert.assertNotNull(errorCollection.getErrors().get("repository.git.maven.path"));
     }
-
 }

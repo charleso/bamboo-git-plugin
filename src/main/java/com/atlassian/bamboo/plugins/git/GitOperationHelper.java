@@ -141,8 +141,9 @@ public class GitOperationHelper
             final @Nullable String targetRevision) throws RepositoryException
     {
         String previousRevision = getCurrentRevision(sourceDirectory);
+        final String notNullTargetRevision = targetRevision != null ? targetRevision : obtainLatestRevision(accessData);
         fetch(sourceDirectory, accessData);
-        return checkout(sourceDirectory, targetRevision != null ? targetRevision : obtainLatestRevision(accessData), previousRevision);
+        return checkout(sourceDirectory, notNullTargetRevision, previousRevision);
     }
 
     void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData) throws RepositoryException
@@ -172,7 +173,7 @@ public class GitOperationHelper
 
             //todo: what if remote repository doesn't contain branches? i.e. it has only HEAD reference like the ones in resources/obtainLatestRevision/x.zip?
 
-            transport.fetch(new BuildLoggerProgressMonitor(buildLogger), Arrays.asList(refSpec));
+            transport.fetch(new BuildLoggerProgressMonitor(buildLogger), Arrays.asList(refSpec), 1);
         }
         catch (IOException e)
         {

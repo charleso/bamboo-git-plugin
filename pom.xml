@@ -51,7 +51,7 @@
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
-            <version>0.10.1</version>
+            <version>0.10.1-ATLASSIAN-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.jcraft</groupId>
