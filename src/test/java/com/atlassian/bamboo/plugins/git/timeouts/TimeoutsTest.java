@@ -1,7 +1,6 @@
 package com.atlassian.bamboo.plugins.git.timeouts;
 
 
-import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.plugins.git.GitAbstractTest;
 import com.atlassian.bamboo.plugins.git.GitOperationHelper;
@@ -22,7 +21,7 @@ import java.util.Collections;
 /**
  * This test class is not intended to be run with other test classes - run it manually when solving timeout-related issues.
  */
-@Test(enabled = false)
+@Test(enabled = false, groups = "manual")
 public class TimeoutsTest extends GitAbstractTest
 {
     private Thread servingThread;
@@ -70,7 +69,9 @@ public class TimeoutsTest extends GitAbstractTest
         }
     }
 
-    private final GitOperationHelper helper = new GitOperationHelper(
+    public GitOperationHelper createGitOperationHelper()
+    {
+        return new GitOperationHelper(
             new NullBuildLogger()
             {
                 @Override
@@ -80,10 +81,12 @@ public class TimeoutsTest extends GitAbstractTest
                     return null;
                 }
             }, Mockito.mock(TextProvider.class));
+    }
 
     @Test
     public void testTimeoutIsSufficientToCheckOutBigRepo() throws Exception
     {
+        GitOperationHelper helper = createGitOperationHelper();
         String s = helper.obtainLatestRevision(createAccessData("git://git.jetbrains.org/idea/community.git"));
         File directory = createTempDirectory();
         System.out.println(directory);
@@ -103,14 +106,14 @@ public class TimeoutsTest extends GitAbstractTest
     @Test(dataProvider = "urlsToHang", expectedExceptions = RepositoryException.class, timeOut = 5000)
     public void testTimeoutOnObtainingLatestRevision(String url) throws Exception
     {
-        String rev = helper.obtainLatestRevision(createAccessData(url));
+        String rev = createGitOperationHelper().obtainLatestRevision(createAccessData(url));
     }
 
     @Test(dataProvider = "urlsToHang", expectedExceptions = RepositoryException.class, timeOut = 5000)
     public void testTimeoutOnFetch(String url) throws Exception
     {
         File directory = createTempDirectory();
-        String rev = helper.fetchAndCheckout(directory, createAccessData(url), null);
+        String rev = createGitOperationHelper().fetchAndCheckout(directory, createAccessData(url), null);
     }
 
 }
