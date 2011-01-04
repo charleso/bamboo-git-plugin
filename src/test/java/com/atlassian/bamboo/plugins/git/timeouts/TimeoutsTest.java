@@ -1,7 +1,6 @@
 package com.atlassian.bamboo.plugins.git.timeouts;
 
 
-import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.plugins.git.GitAbstractTest;
 import com.atlassian.bamboo.plugins.git.GitOperationHelper;
@@ -22,7 +21,7 @@ import java.util.Collections;
 /**
  * This test class is not intended to be run with other test classes - run it manually when solving timeout-related issues.
  */
-@Test(enabled = false)
+@Test(enabled = false, groups = "manual")
 public class TimeoutsTest extends GitAbstractTest
 {
     private Thread servingThread;

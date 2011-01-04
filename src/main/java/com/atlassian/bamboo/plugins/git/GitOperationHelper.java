@@ -1,11 +1,11 @@
 package com.atlassian.bamboo.plugins.git;
 
-import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
 import com.atlassian.bamboo.author.AuthorImpl;
 import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.commit.Commit;
 import com.atlassian.bamboo.commit.CommitFileImpl;
 import com.atlassian.bamboo.commit.CommitImpl;
+import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.utils.SystemProperty;
@@ -30,7 +30,6 @@ import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.transport.URIish;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.jetbrains.annotations.NotNull;
@@ -344,7 +343,7 @@ public class GitOperationHelper
                 SshSessionFactory factory = new GitSshSessionFactory(encrypter.decrypt(accessData.sshKey), encrypter.decrypt(accessData.sshPassphrase));
                 ((SshTransport)transport).setSshSessionFactory(factory);
             }
-            transport.setCredentialsProvider(new UsernamePasswordCredentialsProvider(accessData.username, accessData.password != null ? encrypter.decrypt(accessData.password) : ""));
+            transport.setCredentialsProvider(new TweakedUsernamePasswordCredentialsProvider(accessData.username, accessData.password != null ? encrypter.decrypt(accessData.password) : ""));
             return transport;
         }
         catch (URISyntaxException e)
