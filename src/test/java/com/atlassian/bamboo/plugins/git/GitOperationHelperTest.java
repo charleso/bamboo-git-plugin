@@ -5,7 +5,9 @@ import com.atlassian.bamboo.commit.Commit;
 import com.atlassian.bamboo.commit.CommitFile;
 import com.atlassian.bamboo.commit.CommitFileImpl;
 import com.atlassian.bamboo.commit.CommitImpl;
+import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.testtools.ZipResourceDirectory;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -271,20 +273,164 @@ public class GitOperationHelperTest extends GitAbstractTest
         }
     }
 
-    //skasuj mnie:
-    @Test
-    public void testWireshark() throws Exception
+    @DataProvider(parallel = true)
+    Object[][] testShallowCloneData() throws Exception
+    {
+        return new Object[][]{
+                {
+                        new String[][]{
+                                new String[]{"git://github.com/pstefaniak/1.git", "1455", "shallow-clones/1-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                        },
+                },
+                {
+                        new String[][]{
+                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                        },
+                },
+                {
+                        new String[][]{
+                                new String[]{"git://github.com/pstefaniak/1.git", "1455", "shallow-clones/1-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/3.git", "1455", "shallow-clones/1-contents.zip"},
+                        },
+                },
+                {
+                        new String[][]{
+                                new String[]{"git://github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/3.git", "1455", "shallow-clones/1-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                        },
+                },
+                {
+                        new String[][]{
+                                new String[]{"git://github.com/pstefaniak/1.git", "1455", "shallow-clones/1-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip"},
+                        },
+                },
+                {
+                        new String[][]{
+                                new String[]{"git://github.com/pstefaniak/2.git", "1455", "shallow-clones/1-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                        },
+                },
+                {
+                        new String[][]{
+                                new String[]{"git://github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/2.git", "1455", "shallow-clones/1-contents.zip"},
+                        },
+                },
+                {
+                        new String[][]{
+                                new String[]{"git://github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/2.git", "1455", "shallow-clones/1-contents.zip"},
+                        },
+                },
+                {
+                        new String[][]{
+                                new String[]{"git://github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/3.git", "1455", "shallow-clones/1-contents.zip"},
+                        },
+                },
+        };
+    }
+
+//    final static Map<String, String[]> testShallowCloneDataMappings = new HashMap<String, String[]>() {{
+//        put("1", new String[]{"git://github.com/pstefaniak/1.git", "1455", "shallow-clones/1-contents.zip"});
+//        put("2", new String[]{"git://github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"});
+//        put("3", new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"});
+//    }};
+
+    @Test(dataProvider = "testShallowCloneData")
+    public void testShallowClone(final String[][] successiveFetches) throws Exception
     {
         File tmp = createTempDirectory();
         GitOperationHelper helper = createGitOperationHelper();
 
-//        String repositoryUrl = "git://github.com/pstefaniak/test.git";
-//        String repositoryUrl = "git://github.com/atlassian/bamboo-git-plugin.git";
-        String repositoryUrl = "git://git.jetbrains.org/idea/community.git";
-
-        helper.fetch(tmp, createAccessData(repositoryUrl));
-
-        int c = 5; c++;
+        String revision = null;
+        for (String[] currentFetch : successiveFetches)
+        {
+            helper.fetch(tmp, createAccessData(currentFetch[0]), 1);
+            revision = helper.checkout(tmp, currentFetch[1], revision);
+            verifyContents(tmp, currentFetch[2]);
+        }
     }
 
+    @DataProvider(parallel = true)
+    Object[][] testShallowCloneDataFailing() throws Exception
+    {
+        return new Object[][]{
+                {
+                        new String[][]{
+                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/3.git", "1455", "shallow-clones/1-contents.zip", null},
+                        },
+                },
+                {
+                        new String[][]{
+                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                                new String[]{"git://github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip", "1455"},
+                        },
+                },
+                {
+                        new String[][]{
+                                new String[]{"git://github.com/pstefaniak/3.git", "1455", "shallow-clones/1-contents.zip", null},
+                        },
+                },
+                {
+                        new String[][]{
+                                new String[]{"git://github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip", "1455"},
+                        },
+                },
+        };
+    }
+
+    @Test(dataProvider = "testShallowCloneDataFailing")
+    public void testShallowCloneFailing(final String[][] successiveFetches) throws Exception
+    {
+        File tmp = createTempDirectory();
+        GitOperationHelper helper = createGitOperationHelper();
+
+        String revision = null;
+        for (String[] currentFetch : successiveFetches)
+        {
+            helper.fetch(tmp, createAccessData(currentFetch[0]), 1);
+            try
+            {
+                revision = helper.checkout(tmp, currentFetch[1], revision);
+            }
+            catch (RepositoryException e)
+            {
+                if (e.getCause() instanceof MissingObjectException && e.getCause().getMessage().startsWith("Missing commit " + currentFetch[3]))
+                {
+                    //good - we expecting that
+                    return;
+                }
+                else
+                {
+                    throw e;
+                }
+            }
+            catch (NullPointerException e)
+            {
+                if (currentFetch[3] == null)
+                {
+                    //good - we expecting that failure too
+                    return;
+                }
+                else
+                {
+                    throw e;
+                }
+            }
+            verifyContents(tmp, currentFetch[2]);
+        }
+        throw new Exception("shouldn't reach this");
+    }
 }

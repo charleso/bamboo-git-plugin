@@ -140,13 +140,25 @@ public class GitOperationHelper
     public String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData,
             final @Nullable String targetRevision) throws RepositoryException
     {
+        return fetchAndCheckout(sourceDirectory, accessData, targetRevision, 0);
+    }
+
+    @NotNull
+    public String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData,
+            final @Nullable String targetRevision, final int depth) throws RepositoryException
+    {
         String previousRevision = getCurrentRevision(sourceDirectory);
         final String notNullTargetRevision = targetRevision != null ? targetRevision : obtainLatestRevision(accessData);
-        fetch(sourceDirectory, accessData);
+        fetch(sourceDirectory, accessData, depth);
         return checkout(sourceDirectory, notNullTargetRevision, previousRevision);
     }
 
     void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData) throws RepositoryException
+    {
+        fetch(sourceDirectory, accessData, 0);
+    }
+
+    void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, final int depth) throws RepositoryException
     {
         String realBranch = StringUtils.isNotBlank(accessData.branch) ? accessData.branch : Constants.MASTER;
 
