@@ -297,6 +297,11 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         {
             errorCollection.addError(REPOSITORY_GIT_REPOSITORY_URL, textProvider.getText("repository.git.messages.missingRepositoryUrl"));
         }
+        else if (!repoUrl.startsWith("http://") && !repoUrl.startsWith("https://") && StringUtils.isNotEmpty(buildConfiguration.getString(REPOSITORY_GIT_USERNAME)))
+        {
+            errorCollection.addError(REPOSITORY_GIT_USERNAME, textProvider.getText("repository.git.messages.unsupportedUsernameField"));
+        }
+
         if (buildConfiguration.getString(REPOSITORY_GIT_MAVEN_PATH, "").contains(".."))
         {
             errorCollection.addError(REPOSITORY_GIT_MAVEN_PATH, textProvider.getText("repository.git.messages.invalidPomPath"));

@@ -72,26 +72,4 @@ public class GitRepositoryTest extends GitAbstractTest
         gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
     }
 
-    @DataProvider
-    Object[][] invalidMavenPaths()
-    {
-        return new String[][] {
-                {".."},
-                {"../relative/pom.xml"},
-                {"path/../path/pom.xml"},
-        };
-    }
-
-    @Test(dataProvider = "invalidMavenPaths")
-    public void testValidateDots(String mavenPath) throws Exception
-    {
-        BuildConfiguration conf = new BuildConfiguration();
-        conf.setProperty("repository.git.maven.path", mavenPath);
-
-        GitRepository repo = new GitRepository();
-        repo.setTextProvider(Mockito.mock(TextProvider.class, new ReturnsMocks()));
-        ErrorCollection errorCollection = repo.validate(conf);
-        Assert.assertNotNull(errorCollection.getErrors().get("repository.git.maven.path"));
-    }
-
 }
