@@ -67,8 +67,8 @@ public class GitRepositoryTest extends GitAbstractTest
     Object[][] testSshConnectionToGitHubData()
     {
         return new Object[][]{
-                {"git@github.com:cixot/test.git", "bamboo-git-plugin-tests-passphrased.id_rsa", "passphrase"},
-                {"git@github.com:cixot/test.git", "bamboo-git-plugin-tests-passphraseless.id_rsa", null},
+                {"git@github.com:bamboo-git-plugin-tests/test.git", "bamboo-git-plugin-tests-passphrased.id_rsa", "passphrase"},
+                {"git@github.com:bamboo-git-plugin-tests/test.git", "bamboo-git-plugin-tests-passphraseless.id_rsa", null},
         };
     }
 
