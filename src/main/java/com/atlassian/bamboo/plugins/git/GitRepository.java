@@ -236,10 +236,10 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         }
         if (buildConfiguration.getBoolean(TEMPORARY_GIT_SSH_KEY_CHANGE))
         {
+            String key = null;
             final Object o = buildConfiguration.getProperty(TEMPORARY_GIT_SSH_KEY_FROM_FILE);
             if (o instanceof File)
             {
-                final String key;
                 try
                 {
                     key = FileUtils.readFileToString((File) o);
@@ -249,8 +249,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                     log.error("Cannot read uploaded ssh key file", e);
                     return;
                 }
-                buildConfiguration.setProperty(REPOSITORY_GIT_SSH_KEY, encrypterRef.get().encrypt(key));
             }
+            buildConfiguration.setProperty(REPOSITORY_GIT_SSH_KEY, encrypterRef.get().encrypt(key));
         }
     }
 
