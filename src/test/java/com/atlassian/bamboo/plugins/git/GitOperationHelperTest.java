@@ -12,6 +12,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
@@ -356,7 +357,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         String revision = null;
         for (String[] currentFetch : successiveFetches)
         {
-            helper.fetch(tmp, createAccessData(currentFetch[0]), 1);
+            helper.fetch(tmp, createAccessData(currentFetch[0]), true);
             revision = helper.checkout(tmp, currentFetch[1], revision);
             verifyContents(tmp, currentFetch[2]);
         }
@@ -400,7 +401,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         String revision = null;
         for (String[] currentFetch : successiveFetches)
         {
-            helper.fetch(tmp, createAccessData(currentFetch[0]), 1);
+            helper.fetch(tmp, createAccessData(currentFetch[0]), true);
             try
             {
                 revision = helper.checkout(tmp, currentFetch[1], revision);
@@ -433,4 +434,22 @@ public class GitOperationHelperTest extends GitAbstractTest
         }
         throw new Exception("shouldn't reach this");
     }
+
+    @Test(dataProvider = "testShallowCloneDataFailing")
+    public void testRepositoryHandlesFailingShallowClone(final String[][] successiveFetches) throws Exception
+    {
+        GitRepository gitRepository = createGitRepository();
+
+        Field useShallowClones = GitRepository.class.getDeclaredField("USE_SHALLOW_CLONES");
+        useShallowClones.setAccessible(true);
+        useShallowClones.setBoolean(null, true);
+
+        for (String[] currentFetch : successiveFetches)
+        {
+            setRepositoryProperties(gitRepository, currentFetch[0]);
+            gitRepository.retrieveSourceCode(mockBuildContext(), currentFetch[1]);
+            verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), currentFetch[2]);
+        }
+    }
+
 }

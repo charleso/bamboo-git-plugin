@@ -12,6 +12,7 @@ import com.atlassian.bamboo.repository.MavenPomAccessorCapableRepository;
 import com.atlassian.bamboo.repository.Repository;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
+import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildChangesImpl;
@@ -52,6 +53,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     private static final String TEMPORARY_GIT_SSH_PASSPHRASE_CHANGE = "temporary.git.ssh.passphrase.change";
     private static final String TEMPORARY_GIT_SSH_KEY_FROM_FILE = "temporary.git.ssh.keyfile";
     private static final String TEMPORARY_GIT_SSH_KEY_CHANGE = "temporary.git.ssh.key.change";
+
+    private static boolean USE_SHALLOW_CLONES = new SystemProperty(false, "atlassian.bamboo.git.useShallowClones", "ATLASSIAN_BAMBO_GIT_USE_SHALLOW_CLONES").getValue(true);
 
     // ------------------------------------------------------------------------------------------------- Type Properties
 
@@ -140,7 +143,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             List<Commit> extractedChanges;
             try
             {
-                new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData);
+                new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData, USE_SHALLOW_CLONES);
                 extractedChanges = new GitOperationHelper(buildLogger, textProvider).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
             }
             catch (Exception e)
@@ -190,7 +193,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
             try
             {
-                return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(sourceDirectory, accessData, targetRevision));
+                return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(sourceDirectory, accessData, targetRevision, USE_SHALLOW_CLONES));
             }
             catch (Exception e)
             {

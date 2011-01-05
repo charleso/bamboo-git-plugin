@@ -3,9 +3,12 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.build.BuildLoggerManager;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
+import com.atlassian.bamboo.plan.Plan;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.util.BambooFileUtils;
 import com.atlassian.bamboo.utils.i18n.DefaultI18nBean;
+import com.atlassian.bamboo.v2.build.BuildContext;
+import com.atlassian.bamboo.v2.build.BuildContextImpl;
 import com.atlassian.bamboo.ww2.TextProviderAdapter;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.plugin.PluginAccessor;
@@ -36,6 +39,8 @@ import static org.testng.Assert.assertEquals;
 
 public class GitAbstractTest
 {
+    static final String PLAN_KEY = "PLAN-KEY";
+
     protected final Collection<File> filesToCleanUp = Collections.synchronizedCollection(new ArrayList<File>());
     private static final ResourceBundle resourceBundle = ResourceBundle.getBundle("com.atlassian.bamboo.plugins.git.i18n", Locale.US);
 
@@ -75,6 +80,11 @@ public class GitAbstractTest
     static void setRepositoryProperties(GitRepository gitRepository, File repositorySourceDir) throws Exception
     {
         setRepositoryProperties(gitRepository, repositorySourceDir.getAbsolutePath(), Collections.<String, String>emptyMap());
+    }
+
+    static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl) throws Exception
+    {
+        setRepositoryProperties(gitRepository, repositoryUrl, Collections.<String, String>emptyMap());
     }
 
     static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, Map<String, String> paramMap) throws Exception
@@ -177,6 +187,13 @@ public class GitAbstractTest
         accessData.sshKey = sshKey;
         accessData.sshPassphrase = sshPassphrase;
         return accessData;
+    }
+
+    protected static BuildContext mockBuildContext()
+    {
+        Plan plan = Mockito.mock(Plan.class);
+        Mockito.when(plan.getKey()).thenReturn(PLAN_KEY);
+        return new BuildContextImpl(plan, 1, null, null, null);
     }
 
     @AfterClass

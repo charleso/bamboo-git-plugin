@@ -48,8 +48,8 @@ import java.util.List;
  */
 public class GitOperationHelper
 {
-    private static int DEFAULT_TRANSFER_TIMEOUT = new SystemProperty(false, "git.timeout", "GIT_TIMEOUT").getValue(10 * 60);
-    private static int CHANGESET_LIMIT = new SystemProperty(false, "git.changeset.limit", "GIT_CHANGESET_LIMIT").getValue(100);
+    private static int DEFAULT_TRANSFER_TIMEOUT = new SystemProperty(false, "atlassian.bamboo.git.timeout", "GIT_TIMEOUT").getValue(10 * 60);
+    private static int CHANGESET_LIMIT = new SystemProperty(false, "atlassian.bamboo.git.changeset.limit", "GIT_CHANGESET_LIMIT").getValue(100);
 
     private static final Logger log = Logger.getLogger(GitOperationHelper.class);
     private final BuildLogger buildLogger;
@@ -139,25 +139,25 @@ public class GitOperationHelper
     public String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData,
             final @Nullable String targetRevision) throws RepositoryException
     {
-        return fetchAndCheckout(sourceDirectory, accessData, targetRevision, 0);
+        return fetchAndCheckout(sourceDirectory, accessData, targetRevision, false);
     }
 
     @NotNull
     public String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData,
-            final @Nullable String targetRevision, final int depth) throws RepositoryException
+            final @Nullable String targetRevision, boolean useShallow) throws RepositoryException
     {
         String previousRevision = getCurrentRevision(sourceDirectory);
         final String notNullTargetRevision = targetRevision != null ? targetRevision : obtainLatestRevision(accessData);
-        fetch(sourceDirectory, accessData, depth);
+        fetch(sourceDirectory, accessData, useShallow);
         return checkout(sourceDirectory, notNullTargetRevision, previousRevision);
     }
 
     void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData) throws RepositoryException
     {
-        fetch(sourceDirectory, accessData, 0);
+        fetch(sourceDirectory, accessData, false);
     }
 
-    void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, final int depth) throws RepositoryException
+    void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
     {
         String realBranch = StringUtils.isNotBlank(accessData.branch) ? accessData.branch : Constants.MASTER;
 
@@ -175,7 +175,8 @@ public class GitOperationHelper
 
             transport = open(localRepository, accessData);
 
-            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.fetchingBranch", Arrays.asList(realBranch)));
+            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.fetchingBranch", Arrays.asList(realBranch))
+                    + (useShallow ? " " + textProvider.getText("repository.git.messages.doingShallowFetch") : ""));
 
             RefSpec refSpec = new RefSpec()
                     .setForceUpdate(true)
@@ -184,7 +185,7 @@ public class GitOperationHelper
 
             //todo: what if remote repository doesn't contain branches? i.e. it has only HEAD reference like the ones in resources/obtainLatestRevision/x.zip?
 
-            transport.fetch(new BuildLoggerProgressMonitor(buildLogger), Arrays.asList(refSpec), 1);
+            transport.fetch(new BuildLoggerProgressMonitor(buildLogger), Arrays.asList(refSpec), useShallow ? 1 : 0);
         }
         catch (IOException e)
         {
