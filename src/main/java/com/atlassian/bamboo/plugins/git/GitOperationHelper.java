@@ -343,7 +343,11 @@ public class GitOperationHelper
                 SshSessionFactory factory = new GitSshSessionFactory(encrypter.decrypt(accessData.sshKey), encrypter.decrypt(accessData.sshPassphrase));
                 ((SshTransport)transport).setSshSessionFactory(factory);
             }
-            transport.setCredentialsProvider(new TweakedUsernamePasswordCredentialsProvider(accessData.username, accessData.password != null ? encrypter.decrypt(accessData.password) : ""));
+            if (StringUtils.isNotEmpty(accessData.username) || StringUtils.isNotEmpty(accessData.password))
+            {
+                // username may be specified in the URL instead of in the text field, we may still need the password if it's set
+                transport.setCredentialsProvider(new TweakedUsernamePasswordCredentialsProvider(accessData.username, encrypter.decrypt(accessData.password)));
+            }
             return transport;
         }
         catch (URISyntaxException e)

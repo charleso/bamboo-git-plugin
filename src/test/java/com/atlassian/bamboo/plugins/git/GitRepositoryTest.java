@@ -1,10 +1,7 @@
 package com.atlassian.bamboo.plugins.git;
 
-import com.atlassian.bamboo.plan.Plan;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildChanges;
-import com.atlassian.bamboo.v2.build.BuildContext;
-import com.atlassian.bamboo.v2.build.BuildContextImpl;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.testtools.ZipResourceDirectory;
 import com.opensymphony.xwork.TextProvider;
@@ -19,7 +16,6 @@ import java.io.File;
 
 public class GitRepositoryTest extends GitAbstractTest
 {
-    static final String PLAN_KEY = "PLAN-KEY";
 
     @Test
     public void testBasicFunctionality() throws Exception
@@ -54,13 +50,6 @@ public class GitRepositoryTest extends GitAbstractTest
 
         gitRepository.retrieveSourceCode(mockBuildContext(), targetRevision);
         verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), expectedContentsInZip);
-    }
-
-    BuildContext mockBuildContext()
-    {
-        Plan plan = Mockito.mock(Plan.class);
-        Mockito.when(plan.getKey()).thenReturn(PLAN_KEY);
-        return new BuildContextImpl(plan, 1, null, null, null);
     }
 
     @DataProvider(parallel = true)

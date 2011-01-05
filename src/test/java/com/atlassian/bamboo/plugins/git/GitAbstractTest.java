@@ -3,9 +3,12 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.build.BuildLoggerManager;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
+import com.atlassian.bamboo.plan.Plan;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.util.BambooFileUtils;
 import com.atlassian.bamboo.utils.i18n.DefaultI18nBean;
+import com.atlassian.bamboo.v2.build.BuildContext;
+import com.atlassian.bamboo.v2.build.BuildContextImpl;
 import com.atlassian.bamboo.ww2.TextProviderAdapter;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.plugin.PluginAccessor;
@@ -36,25 +39,26 @@ import static org.testng.Assert.assertEquals;
 
 public class GitAbstractTest
 {
-    protected final Collection<File> filesToCleanUp = Collections.synchronizedCollection(new ArrayList<File>());
+    public static final String PLAN_KEY = "PLAN-KEY";
+    private final Collection<File> filesToCleanUp = Collections.synchronizedCollection(new ArrayList<File>());
     private static final ResourceBundle resourceBundle = ResourceBundle.getBundle("com.atlassian.bamboo.plugins.git.i18n", Locale.US);
 
-    static void setRepositoryProperties(GitRepository gitRepository, File repositorySourceDir, String branch) throws Exception
+    public static void setRepositoryProperties(GitRepository gitRepository, File repositorySourceDir, String branch) throws Exception
     {
         setRepositoryProperties(gitRepository, repositorySourceDir.getAbsolutePath(), branch);
     }
 
-    static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, String branch) throws Exception
+    public static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, String branch) throws Exception
     {
         setRepositoryProperties(gitRepository, repositoryUrl, branch, null, null);
     }
 
-    static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, String branch, String sshKey, String sshPassphrase) throws Exception
+    public static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, String branch, String sshKey, String sshPassphrase) throws Exception
     {
         setRepositoryProperties(gitRepository, repositoryUrl, branch, sshKey, sshPassphrase, Collections.<String, String>emptyMap());
     }
 
-    static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, String branch, String sshKey, String sshPassphrase, Map<String, String> paramMap) throws Exception
+    public static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, String branch, String sshKey, String sshPassphrase, Map<String, String> paramMap) throws Exception
     {
         StringEncrypter encrypter = new StringEncrypter();
 
@@ -72,12 +76,12 @@ public class GitAbstractTest
         setRepositoryProperties(gitRepository, repositoryUrl, params);
     }
 
-    static void setRepositoryProperties(GitRepository gitRepository, File repositorySourceDir) throws Exception
+    public static void setRepositoryProperties(GitRepository gitRepository, File repositorySourceDir) throws Exception
     {
         setRepositoryProperties(gitRepository, repositorySourceDir.getAbsolutePath(), Collections.<String, String>emptyMap());
     }
 
-    static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, Map<String, String> paramMap) throws Exception
+    public static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, Map<String, String> paramMap) throws Exception
     {
         BuildConfiguration buildConfiguration = new BuildConfiguration();
         buildConfiguration.setProperty("repository.git.repositoryUrl", repositoryUrl);
@@ -125,7 +129,7 @@ public class GitAbstractTest
         return tmp;
     }
 
-    static void verifyContents(File directory, final String expectedZip) throws IOException
+    public static void verifyContents(File directory, final String expectedZip) throws IOException
     {
         final Enumeration<? extends ZipEntry> entries = new ZipFile(GitAbstractTest.class.getResource("/" + expectedZip).getFile()).entries();
         int fileCount = 0;
@@ -188,4 +192,10 @@ public class GitAbstractTest
         }
     }
 
+    public BuildContext mockBuildContext()
+    {
+        Plan plan = Mockito.mock(Plan.class);
+        Mockito.when(plan.getKey()).thenReturn(PLAN_KEY);
+        return new BuildContextImpl(plan, 1, null, null, null);
+    }
 }
