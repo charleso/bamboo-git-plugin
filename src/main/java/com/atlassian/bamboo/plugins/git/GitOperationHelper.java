@@ -340,10 +340,15 @@ public class GitOperationHelper
             transport.setTimeout(DEFAULT_TRANSFER_TIMEOUT);
             if (transport instanceof SshTransport)
             {
-                SshSessionFactory factory = new GitSshSessionFactory(encrypter.decrypt(accessData.sshKey), encrypter.decrypt(accessData.sshPassphrase));
+                final boolean useKey = accessData.authenticationType == GitAuthenticationType.SSH_KEYPAIR;
+
+                final String sshKey = useKey ? encrypter.decrypt(accessData.sshKey) : null;
+                final String passphrase = useKey ? encrypter.decrypt(accessData.sshPassphrase) : null;
+
+                SshSessionFactory factory = new GitSshSessionFactory(sshKey, passphrase);
                 ((SshTransport)transport).setSshSessionFactory(factory);
             }
-            if (StringUtils.isNotEmpty(accessData.username) || StringUtils.isNotEmpty(accessData.password))
+            if (accessData.authenticationType == GitAuthenticationType.PASSWORD)
             {
                 // username may be specified in the URL instead of in the text field, we may still need the password if it's set
                 transport.setCredentialsProvider(new TweakedUsernamePasswordCredentialsProvider(accessData.username, encrypter.decrypt(accessData.password)));

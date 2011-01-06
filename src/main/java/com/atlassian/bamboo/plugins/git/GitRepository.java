@@ -9,8 +9,10 @@ import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.repository.AbstractRepository;
 import com.atlassian.bamboo.repository.MavenPomAccessor;
 import com.atlassian.bamboo.repository.MavenPomAccessorCapableRepository;
+import com.atlassian.bamboo.repository.NameValuePair;
 import com.atlassian.bamboo.repository.Repository;
 import com.atlassian.bamboo.repository.RepositoryException;
+import com.atlassian.bamboo.repository.SelectableAuthenticationRepository;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildChanges;
@@ -18,6 +20,8 @@ import com.atlassian.bamboo.v2.build.BuildChangesImpl;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.util.concurrent.LazyReference;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -29,17 +33,18 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Arrays;
 
-public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository
+public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository, SelectableAuthenticationRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
     private static final String REPOSITORY_GIT_NAME = "repository.git.name";
     private static final String REPOSITORY_GIT_REPOSITORY_URL = "repository.git.repositoryUrl";
+    private static final String REPOSITORY_GIT_AUTHENTICATION_TYPE = "repository.git.authenticationType";
     private static final String REPOSITORY_GIT_USERNAME = "repository.git.username";
     private static final String REPOSITORY_GIT_PASSWORD = "repository.git.password";
     private static final String REPOSITORY_GIT_BRANCH = "repository.git.branch";
@@ -53,6 +58,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     private static final String TEMPORARY_GIT_SSH_KEY_FROM_FILE = "temporary.git.ssh.keyfile";
     private static final String TEMPORARY_GIT_SSH_KEY_CHANGE = "temporary.git.ssh.key.change";
 
+    private static final GitAuthenticationType defaultAuthenticationType = GitAuthenticationType.NONE;
+
     // ------------------------------------------------------------------------------------------------- Type Properties
 
     private static final Logger log = Logger.getLogger(GitRepository.class);
@@ -65,6 +72,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         String password;
         String sshKey;
         String sshPassphrase;
+        GitAuthenticationType authenticationType;
     }
 
     final GitRepositoryAccessData accessData = new GitRepositoryAccessData();
@@ -268,6 +276,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         accessData.branch = config.getString(REPOSITORY_GIT_BRANCH);
         accessData.sshKey = config.getString(REPOSITORY_GIT_SSH_KEY);
         accessData.sshPassphrase = config.getString(REPOSITORY_GIT_SSH_PASSPHRASE);
+        accessData.authenticationType = safeParseAuthenticationType(config.getString(REPOSITORY_GIT_AUTHENTICATION_TYPE));
 
         pathToPom = config.getString(REPOSITORY_GIT_MAVEN_PATH);
     }
@@ -283,6 +292,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         configuration.setProperty(REPOSITORY_GIT_BRANCH, accessData.branch);
         configuration.setProperty(REPOSITORY_GIT_SSH_KEY, accessData.sshKey);
         configuration.setProperty(REPOSITORY_GIT_SSH_PASSPHRASE, accessData.sshPassphrase);
+        configuration.setProperty(REPOSITORY_GIT_AUTHENTICATION_TYPE, accessData.authenticationType != null ? accessData.authenticationType.name() : null);
         return configuration;
     }
 
@@ -316,9 +326,48 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         return new GitMavenPomAccessor(this, textProvider).withPath(pathToPom);
     }
 
+    @NotNull
+    public List<NameValuePair> getAuthenticationTypes()
+    {
+        return Lists.transform(Arrays.asList(GitAuthenticationType.values()), new Function<GitAuthenticationType, NameValuePair>()
+        {
+            public NameValuePair apply(GitAuthenticationType from)
+            {
+                final String typeName = from.name();
+                return new NameValuePair(typeName, getAuthTypeName(typeName));
+            }
+        });
+    }
+
+    public String getAuthType()
+    {
+        return accessData.authenticationType != null ? accessData.authenticationType.name() : defaultAuthenticationType.name();
+    }
+
     // -------------------------------------------------------------------------------------------------- Public Methods
 
     // -------------------------------------------------------------------------------------------------- Helper Methods
+
+    GitAuthenticationType safeParseAuthenticationType(String typeName)
+    {
+        if (typeName == null)
+        {
+            return defaultAuthenticationType;
+        }
+        try
+        {
+            return GitAuthenticationType.valueOf(typeName);
+        }
+        catch (IllegalArgumentException e)
+        {
+            return defaultAuthenticationType;
+        }
+    }
+
+    String getAuthTypeName(String authType)
+    {
+        return textProvider.getText("repository.git.authenticationType." + StringUtils.lowerCase(authType));
+    }
 
     // -------------------------------------------------------------------------------------- Basic Accessors / Mutators
 
@@ -330,6 +379,11 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     public String getBranch()
     {
         return accessData.branch;
+    }
+
+    public String getAuthTypeName()
+    {
+        return getAuthTypeName(getAuthType());
     }
 
     public File getCacheDirectory()

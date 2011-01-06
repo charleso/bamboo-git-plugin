@@ -1,13 +1,9 @@
 package com.atlassian.bamboo.plugins.git;
 
-import com.atlassian.bamboo.utils.error.ErrorCollection;
+import com.atlassian.bamboo.repository.NameValuePair;
 import com.atlassian.bamboo.v2.build.BuildChanges;
-import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.testtools.ZipResourceDirectory;
-import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
-import org.mockito.Mockito;
-import org.mockito.internal.stubbing.defaultanswers.ReturnsMocks;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -72,4 +68,16 @@ public class GitRepositoryTest extends GitAbstractTest
         gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
     }
 
+    @Test
+    public void testAuthenticationTypesHaveValidLabels() throws Exception
+    {
+        GitRepository gitRepository = createGitRepository();
+        for (NameValuePair nameValuePair : gitRepository.getAuthenticationTypes())
+        {
+            Assert.assertNotNull(nameValuePair.getName());
+            Assert.assertNotNull(nameValuePair.getLabel());
+
+            Assert.assertFalse(nameValuePair.getLabel().startsWith("repository.git."), "Expecting human readable: " + nameValuePair.getLabel());
+        }
+    }
 }

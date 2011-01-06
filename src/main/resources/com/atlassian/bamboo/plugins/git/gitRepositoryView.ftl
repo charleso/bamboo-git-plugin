@@ -1,5 +1,6 @@
 [@ww.label labelKey='repository.git.repositoryUrl' value='${plan.buildDefinition.repository.repositoryUrl}' /]
 [@ww.label labelKey='repository.git.branch' value='${plan.buildDefinition.repository.branch!}' hideOnNull=true /]
+[@ww.label labelKey='repository.git.authenticationType' value='${plan.buildDefinition.repository.authTypeName}' /]
 [@ww.label labelKey='repository.git.cacheDirectory' value='${plan.buildDefinition.repository.cacheDirectory}'/]
 [#if fn.hasGlobalAdminPermission() && plan.buildDefinition.repository.cacheDirectory?? && plan.buildDefinition.repository.cacheDirectory.exists()]
     <div class="infoMessage">

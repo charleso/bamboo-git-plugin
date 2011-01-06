@@ -68,6 +68,7 @@ public class GitAbstractTest
         if (sshKey != null)
         {
             params.put("repository.git.ssh.key", encrypter.encrypt(sshKey));
+            params.put("repository.git.authenticationType", GitAuthenticationType.SSH_KEYPAIR.name());
         }
         if (sshPassphrase != null)
         {
