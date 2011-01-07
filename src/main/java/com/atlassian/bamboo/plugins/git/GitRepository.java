@@ -22,6 +22,8 @@ import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.util.concurrent.LazyReference;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import com.opensymphony.xwork.TextProvider;
+import com.opensymphony.xwork.util.LocalizedTextUtil;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -402,4 +404,14 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     {
         return GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), accessData.repositoryUrl);
     }
+
+    @Override
+    public synchronized void setTextProvider(TextProvider textProvider) {
+        super.setTextProvider(textProvider);
+        if (textProvider.getText(REPOSITORY_GIT_NAME) == null)
+        {
+            LocalizedTextUtil.addDefaultResourceBundle("com.atlassian.bamboo.plugins.git.i18n");
+        }
+    }
+
 }
