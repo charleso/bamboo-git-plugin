@@ -88,7 +88,7 @@ public class GitRepositoryTest extends GitAbstractTest
     }
 
     @Test
-    public void testHgRepositoryIsSerializable() throws Exception
+    public void testGitRepositoryIsSerializable() throws Exception
     {
         GitRepository repository = createGitRepository();
 
