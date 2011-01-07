@@ -270,7 +270,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     public void populateFromConfig(@NotNull HierarchicalConfiguration config)
     {
         super.populateFromConfig(config);
-        accessData.repositoryUrl = config.getString(REPOSITORY_GIT_REPOSITORY_URL);
+        accessData.repositoryUrl = StringUtils.trimToEmpty(config.getString(REPOSITORY_GIT_REPOSITORY_URL));
         accessData.username = config.getString(REPOSITORY_GIT_USERNAME);
         accessData.password = config.getString(REPOSITORY_GIT_PASSWORD);
         accessData.branch = config.getString(REPOSITORY_GIT_BRANCH);
