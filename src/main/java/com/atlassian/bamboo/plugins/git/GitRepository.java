@@ -302,14 +302,26 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     {
         ErrorCollection errorCollection = super.validate(buildConfiguration);
 
-        String repoUrl = buildConfiguration.getString(REPOSITORY_GIT_REPOSITORY_URL);
+        final String repoUrl = buildConfiguration.getString(REPOSITORY_GIT_REPOSITORY_URL);
+        final String username = buildConfiguration.getString(REPOSITORY_GIT_USERNAME);
+        final GitAuthenticationType authenticationType = safeParseAuthenticationType(buildConfiguration.getString(REPOSITORY_GIT_AUTHENTICATION_TYPE));
+
+
         if (StringUtils.isBlank(repoUrl))
         {
             errorCollection.addError(REPOSITORY_GIT_REPOSITORY_URL, textProvider.getText("repository.git.messages.missingRepositoryUrl"));
         }
-        else if (!repoUrl.startsWith("http://") && !repoUrl.startsWith("https://") && StringUtils.isNotEmpty(buildConfiguration.getString(REPOSITORY_GIT_USERNAME)))
+        else
         {
-            errorCollection.addError(REPOSITORY_GIT_USERNAME, textProvider.getText("repository.git.messages.unsupportedUsernameField"));
+            final boolean isHttp = repoUrl.startsWith("http://") || repoUrl.startsWith("https://");
+            if (isHttp && authenticationType == GitAuthenticationType.SSH_KEYPAIR)
+            {
+                errorCollection.addError(REPOSITORY_GIT_AUTHENTICATION_TYPE, textProvider.getText("repository.git.messages.unsupportedHttpAuthenticationType"));
+            }
+            if (!isHttp && StringUtils.isNotEmpty(username) && authenticationType == GitAuthenticationType.PASSWORD)
+            {
+                errorCollection.addError(REPOSITORY_GIT_USERNAME, textProvider.getText("repository.git.messages.unsupportedUsernameField"));
+            }
         }
 
         if (buildConfiguration.getString(REPOSITORY_GIT_MAVEN_PATH, "").contains(".."))
