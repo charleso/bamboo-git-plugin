@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.atlassian.bamboo.plugins</groupId>
     <artifactId>atlassian-bamboo-plugin-git</artifactId>
-    <version>1.0-beta1</version>
+    <version>1.0-SNAPSHOT</version>
 
     <organization>
         <name>Atlassian</name>
@@ -19,7 +19,7 @@
     <packaging>atlassian-plugin</packaging>
     <scm>
         <connection>scm:git:git://github.com/atlassian/bamboo-git-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:atlassian/bamboo-git-plugin.git</developerConnection>
+        <developerConnection>scm:git:ssh://git@github.com/atlassian/bamboo-git-plugin.git</developerConnection>
     </scm>
 
     <repositories>
@@ -121,4 +121,16 @@
         <bamboo.data.version>2.6.1</bamboo.data.version>
     </properties>
 
+    <distributionManagement>
+        <repository>
+            <id>atlassian-private</id>
+            <name>Atlassian Private Repository</name>
+            <url>https://maven.atlassian.com/private</url>
+        </repository>
+        <snapshotRepository>
+            <id>atlassian-private-snapshot</id>
+            <name>Atlassian Private Snapshot Repository</name>
+            <url>https://maven.atlassian.com/private-snapshot</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
