@@ -123,14 +123,14 @@
 
     <distributionManagement>
         <repository>
-            <id>atlassian-private</id>
-            <name>Atlassian Private Repository</name>
-            <url>https://maven.atlassian.com/private</url>
+            <id>atlassian-contrib</id>
+            <name>Atlassian Contrib Repository</name>
+            <url>dav:https://maven.atlassian.com/contrib</url>
         </repository>
         <snapshotRepository>
-            <id>atlassian-private-snapshot</id>
-            <name>Atlassian Private Snapshot Repository</name>
-            <url>https://maven.atlassian.com/private-snapshot</url>
+            <id>atlassian-contrib-snapshot</id>
+            <name>Atlassian Contrib Snapshot Repository</name>
+            <url>dav:https://maven.atlassian.com/contrib-snapshot</url>
         </snapshotRepository>
     </distributionManagement>
 </project>
