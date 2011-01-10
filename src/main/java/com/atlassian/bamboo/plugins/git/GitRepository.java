@@ -304,7 +304,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     {
         ErrorCollection errorCollection = super.validate(buildConfiguration);
 
-        final String repoUrl = buildConfiguration.getString(REPOSITORY_GIT_REPOSITORY_URL);
+        final String repoUrl = StringUtils.trim(buildConfiguration.getString(REPOSITORY_GIT_REPOSITORY_URL));
         final String username = buildConfiguration.getString(REPOSITORY_GIT_USERNAME);
         final GitAuthenticationType authenticationType = safeParseAuthenticationType(buildConfiguration.getString(REPOSITORY_GIT_AUTHENTICATION_TYPE));
 
