@@ -280,63 +280,63 @@ public class GitOperationHelperTest extends GitAbstractTest
         return new Object[][]{
                 {
                         new String[][]{
-                                new String[]{"git://github.com/pstefaniak/1.git", "1455", "shallow-clones/1-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                                new String[]{"github.com/pstefaniak/1.git", "1455", "shallow-clones/1-contents.zip"},
+                                new String[]{"github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
                         },
                 },
                 {
                         new String[][]{
-                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                                new String[]{"github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                                new String[]{"github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
                         },
                 },
                 {
                         new String[][]{
-                                new String[]{"git://github.com/pstefaniak/1.git", "1455", "shallow-clones/1-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/3.git", "1455", "shallow-clones/1-contents.zip"},
+                                new String[]{"github.com/pstefaniak/1.git", "1455", "shallow-clones/1-contents.zip"},
+                                new String[]{"github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                                new String[]{"github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"github.com/pstefaniak/3.git", "1455", "shallow-clones/1-contents.zip"},
                         },
                 },
                 {
                         new String[][]{
-                                new String[]{"git://github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/3.git", "1455", "shallow-clones/1-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                                new String[]{"github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"github.com/pstefaniak/3.git", "1455", "shallow-clones/1-contents.zip"},
+                                new String[]{"github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
                         },
                 },
                 {
                         new String[][]{
-                                new String[]{"git://github.com/pstefaniak/1.git", "1455", "shallow-clones/1-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"github.com/pstefaniak/1.git", "1455", "shallow-clones/1-contents.zip"},
+                                new String[]{"github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip"},
                         },
                 },
                 {
                         new String[][]{
-                                new String[]{"git://github.com/pstefaniak/2.git", "1455", "shallow-clones/1-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                                new String[]{"github.com/pstefaniak/2.git", "1455", "shallow-clones/1-contents.zip"},
+                                new String[]{"github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
                         },
                 },
                 {
                         new String[][]{
-                                new String[]{"git://github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/2.git", "1455", "shallow-clones/1-contents.zip"},
+                                new String[]{"github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"github.com/pstefaniak/2.git", "1455", "shallow-clones/1-contents.zip"},
                         },
                 },
                 {
                         new String[][]{
-                                new String[]{"git://github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/2.git", "1455", "shallow-clones/1-contents.zip"},
+                                new String[]{"github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"github.com/pstefaniak/2.git", "1455", "shallow-clones/1-contents.zip"},
                         },
                 },
                 {
                         new String[][]{
-                                new String[]{"git://github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/3.git", "1455", "shallow-clones/1-contents.zip"},
+                                new String[]{"github.com/pstefaniak/2.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip"},
+                                new String[]{"github.com/pstefaniak/3.git", "1455", "shallow-clones/1-contents.zip"},
                         },
                 },
         };
@@ -348,18 +348,23 @@ public class GitOperationHelperTest extends GitAbstractTest
 //        put("3", new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"});
 //    }};
 
+    static final String[] protocols = new String[]{"git://", "https://"};
+
     @Test(dataProvider = "testShallowCloneData")
     public void testShallowClone(final String[][] successiveFetches) throws Exception
     {
-        File tmp = createTempDirectory();
-        GitOperationHelper helper = createGitOperationHelper();
-
-        String revision = null;
-        for (String[] currentFetch : successiveFetches)
+        for (String protocol : protocols)
         {
-            helper.fetch(tmp, createAccessData(currentFetch[0]), true);
-            revision = helper.checkout(tmp, currentFetch[1], revision);
-            verifyContents(tmp, currentFetch[2]);
+            File tmp = createTempDirectory();
+            GitOperationHelper helper = createGitOperationHelper();
+
+            String revision = null;
+            for (String[] currentFetch : successiveFetches)
+            {
+                helper.fetch(tmp, createAccessData(protocol + currentFetch[0]), true);
+                revision = helper.checkout(tmp, currentFetch[1], revision);
+                verifyContents(tmp, currentFetch[2]);
+            }
         }
     }
 
@@ -369,24 +374,24 @@ public class GitOperationHelperTest extends GitAbstractTest
         return new Object[][]{
                 {
                         new String[][]{
-                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/3.git", "1455", "shallow-clones/1-contents.zip", null},
+                                new String[]{"github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                                new String[]{"github.com/pstefaniak/3.git", "1455", "shallow-clones/1-contents.zip", null},
                         },
                 },
                 {
                         new String[][]{
-                                new String[]{"git://github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
-                                new String[]{"git://github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip", "1455"},
+                                new String[]{"github.com/pstefaniak/3.git", "0a77", "shallow-clones/3-contents.zip"},
+                                new String[]{"github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip", "1455"},
                         },
                 },
                 {
                         new String[][]{
-                                new String[]{"git://github.com/pstefaniak/3.git", "1455", "shallow-clones/1-contents.zip", null},
+                                new String[]{"github.com/pstefaniak/3.git", "1455", "shallow-clones/1-contents.zip", null},
                         },
                 },
                 {
                         new String[][]{
-                                new String[]{"git://github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip", "1455"},
+                                new String[]{"github.com/pstefaniak/3.git", "4c9d", "shallow-clones/2-contents.zip", "1455"},
                         },
                 },
         };
@@ -395,60 +400,66 @@ public class GitOperationHelperTest extends GitAbstractTest
     @Test(dataProvider = "testShallowCloneDataFailing")
     public void testShallowCloneFailing(final String[][] successiveFetches) throws Exception
     {
-        File tmp = createTempDirectory();
-        GitOperationHelper helper = createGitOperationHelper();
-
-        String revision = null;
-        for (String[] currentFetch : successiveFetches)
+        for (String protocol : protocols)
         {
-            helper.fetch(tmp, createAccessData(currentFetch[0]), true);
-            try
+            File tmp = createTempDirectory();
+            GitOperationHelper helper = createGitOperationHelper();
+
+            String revision = null;
+            for (String[] currentFetch : successiveFetches)
             {
-                revision = helper.checkout(tmp, currentFetch[1], revision);
+                helper.fetch(tmp, createAccessData(protocol + currentFetch[0]), true);
+                try
+                {
+                    revision = helper.checkout(tmp, currentFetch[1], revision);
+                }
+                catch (RepositoryException e)
+                {
+                    if (e.getCause() instanceof MissingObjectException && e.getCause().getMessage().startsWith("Missing commit " + currentFetch[3]))
+                    {
+                        //good - we expecting that
+                        return;
+                    }
+                    else
+                    {
+                        throw e;
+                    }
+                }
+                catch (NullPointerException e)
+                {
+                    if (currentFetch[3] == null)
+                    {
+                        //good - we expecting that failure too
+                        return;
+                    }
+                    else
+                    {
+                        throw e;
+                    }
+                }
+                verifyContents(tmp, currentFetch[2]);
             }
-            catch (RepositoryException e)
-            {
-                if (e.getCause() instanceof MissingObjectException && e.getCause().getMessage().startsWith("Missing commit " + currentFetch[3]))
-                {
-                    //good - we expecting that
-                    return;
-                }
-                else
-                {
-                    throw e;
-                }
-            }
-            catch (NullPointerException e)
-            {
-                if (currentFetch[3] == null)
-                {
-                    //good - we expecting that failure too
-                    return;
-                }
-                else
-                {
-                    throw e;
-                }
-            }
-            verifyContents(tmp, currentFetch[2]);
+            throw new Exception("shouldn't reach this");
         }
-        throw new Exception("shouldn't reach this");
     }
 
     @Test(dataProvider = "testShallowCloneDataFailing")
     public void testRepositoryHandlesFailingShallowClone(final String[][] successiveFetches) throws Exception
     {
-        GitRepository gitRepository = createGitRepository();
-
-        Field useShallowClones = GitRepository.class.getDeclaredField("USE_SHALLOW_CLONES");
-        useShallowClones.setAccessible(true);
-        useShallowClones.setBoolean(null, true);
-
-        for (String[] currentFetch : successiveFetches)
+        for (String protocol : protocols)
         {
-            setRepositoryProperties(gitRepository, currentFetch[0]);
-            gitRepository.retrieveSourceCode(mockBuildContext(), currentFetch[1]);
-            verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), currentFetch[2]);
+            GitRepository gitRepository = createGitRepository();
+
+            Field useShallowClones = GitRepository.class.getDeclaredField("USE_SHALLOW_CLONES");
+            useShallowClones.setAccessible(true);
+            useShallowClones.setBoolean(null, true);
+
+            for (String[] currentFetch : successiveFetches)
+            {
+                setRepositoryProperties(gitRepository, protocol + currentFetch[0]);
+                gitRepository.retrieveSourceCode(mockBuildContext(), currentFetch[1]);
+                verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), currentFetch[2]);
+            }
         }
     }
 

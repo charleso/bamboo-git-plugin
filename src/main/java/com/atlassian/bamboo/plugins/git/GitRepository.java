@@ -143,7 +143,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             List<Commit> extractedChanges;
             try
             {
-                new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData, USE_SHALLOW_CLONES);
+                new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData, USE_SHALLOW_CLONES); //this is probably not good idea
                 extractedChanges = new GitOperationHelper(buildLogger, textProvider).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
             }
             catch (Exception e)
