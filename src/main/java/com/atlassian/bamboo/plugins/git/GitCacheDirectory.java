@@ -3,14 +3,14 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.util.concurrent.Function;
 import com.atlassian.util.concurrent.ManagedLock;
 import com.atlassian.util.concurrent.ManagedLocks;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.CharEncoding;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.Callable;
 
 /**
  * Class used to handle git cache directory operations.
@@ -18,64 +18,46 @@ import java.util.concurrent.Callable;
 public class GitCacheDirectory {
 
     static final String GIT_REPOSITORY_CACHE_DIRECTORY = "_git-repositories-cache";
-    static final String DESCRIPTION = "description";
-    static final String REPOSITORY = "repository";
 
     static final Function<File, ManagedLock> cacheLockFactory = ManagedLocks.weakManagedLockFactory();
 
     private static final Logger log = Logger.getLogger(GitCacheDirectory.class);
 
-    @SuppressWarnings({"ResultOfMethodCallIgnored"})
-    @Nullable
-    static File getCacheDirectory(@NotNull final File workingDirectory, @NotNull final String repositoryUrl)
+    @NotNull
+    static File getCacheDirectory(@NotNull final File workingDirectory, @NotNull final GitRepository.GitRepositoryAccessData repositoryData)
     {
-        long hashCode = repositoryUrl.hashCode();
+        String repositorySha = calculateAggregateSha(repositoryData.repositoryUrl, repositoryData.username);
 
         File cacheDirectory = new File(workingDirectory, GIT_REPOSITORY_CACHE_DIRECTORY);
-        if (!cacheDirectory.isDirectory() && !cacheDirectory.mkdirs())
+        return new File(cacheDirectory, repositorySha);
+    }
+    
+    static String calculateAggregateSha(String... params)
+    {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        for (String param : params)
         {
-            log.error("Failed to mkdirs on cacheDirectory(" + cacheDirectory + ").");
-            return null;
-        }
-
-        int index = 0;
-        while (true)
-        {
-            index++;
-            final File candidate = new File(cacheDirectory, "0x" + Long.toString(hashCode, 16) + "-" + Integer.toString(index));
-            final File cacheDescription = new File(candidate, DESCRIPTION);
-            try
+            if (param != null)
             {
-                if (Boolean.TRUE.equals(cacheLockFactory.get(candidate).withLock(new Callable<Boolean>()
+                try
                 {
-                    public Boolean call() throws Exception
-                    {
-                        if (candidate.exists())
-                        {
-                            return repositoryUrl.equals(FileUtils.readFileToString(cacheDescription));
-                        }
-                        else
-                        {
-                            candidate.mkdir();
-                            FileUtils.writeStringToFile(cacheDescription, repositoryUrl);
-                            return true;
-                        }
-                    }
-                })))
+                    baos.write(param.getBytes(CharEncoding.UTF_8));
+                }
+                catch (IOException e)
                 {
-                    return new File(candidate, REPOSITORY);
+                    throw new RuntimeException("Cannot happen: Error writing string to byte array", e);
                 }
             }
-            catch (IOException e)
-            {
-                log.error("Failed to get git cache repository '" + cacheDescription + "'", e);
-                return null;
-            }
-            catch (Exception e)
-            {
-                log.error("Exception during locking git cache repository '" + cacheDescription + "'", e);
-                return null;
-            }
+            baos.write(0); // separator to avoid collision when you move 1 letter from username to url
         }
+
+        return DigestUtils.shaHex(baos.toByteArray());
+    }
+
+    public static <T> T callOnCacheWithLock(@NotNull GitRepository gitRepository, @NotNull GitCacheDirectoryOperation<T> operation) throws Exception
+    {
+        File cache = getCacheDirectory(gitRepository.getWorkingDirectory(), gitRepository.accessData);
+        operation.setCacheDirectory(cache);
+        return cacheLockFactory.get(cache).withLock(operation);
     }
 }

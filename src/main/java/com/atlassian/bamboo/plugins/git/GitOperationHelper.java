@@ -153,7 +153,7 @@ public class GitOperationHelper
         try
         {
             File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);
-            localRepository = new FileRepository(new File(sourceDirectory, Constants.DOT_GIT));
+            localRepository = new FileRepository(gitDirectory);
             if (!gitDirectory.exists())
             {
                 buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.creatingGitRepository", Arrays.asList(gitDirectory)));

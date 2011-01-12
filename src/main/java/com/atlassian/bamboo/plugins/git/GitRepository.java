@@ -120,7 +120,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     }
 
     @NotNull
-    public BuildChanges collectChangesSinceLastBuild(@NotNull String planKey, @Nullable String lastVcsRevisionKey) throws RepositoryException
+    public BuildChanges collectChangesSinceLastBuild(@NotNull String planKey, @Nullable final String lastVcsRevisionKey) throws RepositoryException
     {
         try
         {
@@ -141,29 +141,38 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                 return changes;
             }
 
-            final File cacheDirectory = getCacheDirectory();
-            if (cacheDirectory == null)
-            {
-                throw new RepositoryException(textProvider.getText("repository.git.messages.cacheIsNull"));
-            }
-            
             List<Commit> extractedChanges;
             try
             {
-                new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData);
-                extractedChanges = new GitOperationHelper(buildLogger, textProvider).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
+                extractedChanges = GitCacheDirectory.callOnCacheWithLock(this, new AbstractGitCacheDirectoryOperation<List<Commit>>()
+                {
+                    public List<Commit> call(@NotNull File cacheDirectory) throws Exception
+                    {
+                        new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData);
+                        return new GitOperationHelper(buildLogger, textProvider).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
+
+                    }
+                });
             }
             catch (Exception e)
             {
-                buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.failedToCollectChangesets", Arrays.asList(cacheDirectory)));
-                FileUtils.deleteQuietly(cacheDirectory);
-                buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.cleanedCacheDirectory", Arrays.asList(cacheDirectory)));
-                new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData);
-                buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.fetchedRemoteRepository", Arrays.asList(cacheDirectory)));
                 try
                 {
-                    extractedChanges = new GitOperationHelper(buildLogger, textProvider).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
-                    buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.completed"));
+                    extractedChanges = GitCacheDirectory.callOnCacheWithLock(this, new AbstractGitCacheDirectoryOperation<List<Commit>>()
+                    {
+                        @Override
+                        public List<Commit> call(@NotNull File cacheDirectory) throws Exception
+                        {
+                            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.failedToCollectChangesets", Arrays.asList(cacheDirectory)));
+                            FileUtils.deleteQuietly(cacheDirectory);
+                            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.cleanedCacheDirectory", Arrays.asList(cacheDirectory)));
+                            new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData);
+                            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.fetchedRemoteRepository", Arrays.asList(cacheDirectory)));
+                            List<Commit> extractedChanges = new GitOperationHelper(buildLogger, textProvider).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
+                            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.completed"));
+                            return extractedChanges;
+                        }
+                    });
                 }
                 catch (Exception e2)
                 {
@@ -402,7 +411,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
     public File getCacheDirectory()
     {
-        return GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), accessData.repositoryUrl);
+        return GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), accessData);
     }
 
     @Override

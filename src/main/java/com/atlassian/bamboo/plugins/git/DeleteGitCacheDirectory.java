@@ -7,6 +7,7 @@ import com.atlassian.bamboo.ww2.actions.PlanActionSupport;
 import com.atlassian.bamboo.ww2.aware.permissions.PlanEditSecurityAware;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.Arrays;
@@ -39,26 +40,25 @@ public class DeleteGitCacheDirectory extends PlanActionSupport implements PlanEd
         final GitRepository gitRepository = (GitRepository) repository;
         try
         {
-            final File cacheDirectoryFile = gitRepository.getCacheDirectory();
-            if (cacheDirectoryFile == null)
+            return GitCacheDirectory.callOnCacheWithLock(gitRepository, new AbstractGitCacheDirectoryOperation<String>()
             {
-                String message = getText("repository.git.messages.cache.cleanFailed", Arrays.asList(buildKey));
-                addActionError(message);
-                return ERROR;
-            }
-            
-            if (cacheDirectoryFile.exists())
-            {
-                String message = getText("repository.git.messages.cache.cleaning", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath()));
-                log.info(message);
-                FileUtils.forceDelete(cacheDirectoryFile);
-            }
-            else
-            {
-                String message = getText("repository.git.messages.cache.notExist", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath()));
-                log.info(message);
-            }
-            return SUCCESS;
+                @Override
+                public String call(@NotNull File cacheDirectoryFile) throws Exception
+                {
+                    if (cacheDirectoryFile.exists())
+                    {
+                        String message = getText("repository.git.messages.cache.cleaning", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath()));
+                        log.info(message);
+                        FileUtils.forceDelete(cacheDirectoryFile); // will throw on error
+                    }
+                    else
+                    {
+                        String message = getText("repository.git.messages.cache.notExist", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath()));
+                        log.info(message);
+                    }
+                    return SUCCESS;
+                }
+            });
         }
         catch (Exception e)
         {
