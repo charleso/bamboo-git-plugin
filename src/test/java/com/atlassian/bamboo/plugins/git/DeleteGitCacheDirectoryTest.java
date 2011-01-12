@@ -1,0 +1,59 @@
+package com.atlassian.bamboo.plugins.git;
+
+import com.atlassian.bamboo.build.BuildDefinition;
+import com.atlassian.bamboo.plan.Plan;
+import com.atlassian.bamboo.plan.PlanManager;
+import org.apache.commons.io.FileUtils;
+import org.mockito.Mockito;
+import org.mockito.internal.stubbing.answers.Returns;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import java.io.File;
+
+public class DeleteGitCacheDirectoryTest extends GitAbstractTest
+{
+    @Test
+    public void testDeletingNonexistentDirectory() throws Exception
+    {
+        GitRepository repository = createGitRepository();
+        setRepositoryProperties(repository, "repository.url", "");
+
+        DeleteGitCacheDirectory action = createDeleteAction(repository);
+
+        Assert.assertEquals(action.doExecute(), "success");
+    }
+
+    @Test
+    public void testDeletingExistingDirectory() throws Exception
+    {
+        GitRepository repository = createGitRepository();
+        setRepositoryProperties(repository, "repository.url", "");
+        File cache = repository.getCacheDirectory();
+        cache.mkdirs();
+        File someFile = new File(cache, "file.txt");
+        FileUtils.writeStringToFile(someFile, "file content");
+
+        Assert.assertTrue(cache.isDirectory(), "Precondition");
+        Assert.assertTrue(someFile.exists(), "Precondition");
+
+        DeleteGitCacheDirectory action = createDeleteAction(repository);
+
+        Assert.assertEquals(action.doExecute(), "success");
+        Assert.assertFalse(cache.exists());
+    }
+
+    private static DeleteGitCacheDirectory createDeleteAction(GitRepository repository)
+    {
+        DeleteGitCacheDirectory action = new DeleteGitCacheDirectory();
+        action.setBuildKey("BUILD-KEY-1");
+        BuildDefinition buildDefinition = Mockito.mock(BuildDefinition.class, new Returns(repository));
+
+        Plan plan = Mockito.mock(Plan.class);
+        Mockito.when(plan.getBuildDefinition()).thenReturn(buildDefinition);
+        PlanManager planManager = Mockito.mock(PlanManager.class);
+        Mockito.when(planManager.getPlanByKey(action.getBuildKey())).thenReturn(plan);
+        action.setPlanManager(planManager);
+        return action;
+    }
+}
