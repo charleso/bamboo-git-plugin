@@ -6,6 +6,7 @@ import com.atlassian.bamboo.commit.CommitFile;
 import com.atlassian.bamboo.commit.CommitFileImpl;
 import com.atlassian.bamboo.commit.CommitImpl;
 import com.atlassian.testtools.ZipResourceDirectory;
+import org.apache.commons.io.FileUtils;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -180,6 +181,18 @@ public class ShallowClonesTest extends GitAbstractTest
                 verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), currentFetch[2]);
             }
         }
+    }
+
+    @Test
+    public void testShallowClone72Parents() throws Exception
+    {
+        File tmp = createTempDirectory();
+        GitOperationHelper helper = createGitOperationHelper();
+
+        helper.fetch(tmp, createAccessData("git://github.com/pstefaniak/72parents.git"), true);
+        assertEquals(FileUtils.readLines(new File(tmp, ".git/shallow")).size(), 72);
+        helper.checkout(tmp, "f9a3b37fcbf5298c1bfa", null);
+        verifyContents(tmp, "shallow-clones/72parents-contents.zip");
     }
 
 }
