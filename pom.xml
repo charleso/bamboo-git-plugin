@@ -56,6 +56,8 @@
                     <artifactId>jsch</artifactId>
                 </exclusion>
             </exclusions>
+            <scope>system</scope>
+            <systemPath>${basedir}/libs/org.eclipse.jgit-0.10.1-ATLASSIAN-SNAPSHOT.jar</systemPath>
         </dependency>
 
         <dependency>

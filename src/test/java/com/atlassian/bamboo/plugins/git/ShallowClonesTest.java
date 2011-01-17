@@ -1,19 +1,11 @@
 package com.atlassian.bamboo.plugins.git;
 
-import com.atlassian.bamboo.author.AuthorImpl;
-import com.atlassian.bamboo.commit.Commit;
-import com.atlassian.bamboo.commit.CommitFile;
-import com.atlassian.bamboo.commit.CommitFileImpl;
-import com.atlassian.bamboo.commit.CommitImpl;
-import com.atlassian.testtools.ZipResourceDirectory;
 import org.apache.commons.io.FileUtils;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.text.SimpleDateFormat;
-import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 
