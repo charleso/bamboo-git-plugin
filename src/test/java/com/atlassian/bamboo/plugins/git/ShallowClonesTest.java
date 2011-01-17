@@ -195,4 +195,18 @@ public class ShallowClonesTest extends GitAbstractTest
         verifyContents(tmp, "shallow-clones/72parents-contents.zip");
     }
 
+    @Test
+    public void testDefaultFetchingToShallowedCopy() throws Exception
+    {
+        File tmp = createTempDirectory();
+        GitOperationHelper helper = createGitOperationHelper();
+
+        helper.fetch(tmp, createAccessData("git://github.com/pstefaniak/3.git"), true);
+        assertEquals(FileUtils.readFileToString(new File(tmp, ".git/shallow")), "4c9d0c7e6167407deff1d31af5884911202dd3db\n");
+        helper.fetch(tmp, createAccessData("git://github.com/pstefaniak/7.git"), false);
+        assertEquals(FileUtils.readFileToString(new File(tmp, ".git/shallow")), "4c9d0c7e6167407deff1d31af5884911202dd3db\n");
+        helper.checkout(tmp, "1070f438270b8cf1ca36", null);
+        verifyContents(tmp, "shallow-clones/5-contents.zip");
+    }
+
 }
