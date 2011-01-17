@@ -82,6 +82,11 @@ public class GitAbstractTest
         setRepositoryProperties(gitRepository, repositorySourceDir.getAbsolutePath(), Collections.<String, String>emptyMap());
     }
 
+    public static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl) throws Exception
+    {
+        setRepositoryProperties(gitRepository, repositoryUrl, Collections.<String, String>emptyMap());
+    }
+
     public static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, Map<String, String> paramMap) throws Exception
     {
         BuildConfiguration buildConfiguration = new BuildConfiguration();
@@ -184,6 +189,13 @@ public class GitAbstractTest
         return accessData;
     }
 
+    protected static BuildContext mockBuildContext()
+    {
+        Plan plan = Mockito.mock(Plan.class);
+        Mockito.when(plan.getKey()).thenReturn(PLAN_KEY);
+        return new BuildContextImpl(plan, 1, null, null, null);
+    }
+
     @AfterClass
     void cleanUpFiles()
     {
@@ -191,12 +203,5 @@ public class GitAbstractTest
         {
             FileUtils.deleteQuietly(file);
         }
-    }
-
-    public BuildContext mockBuildContext()
-    {
-        Plan plan = Mockito.mock(Plan.class);
-        Mockito.when(plan.getKey()).thenReturn(PLAN_KEY);
-        return new BuildContextImpl(plan, 1, null, null, null);
     }
 }

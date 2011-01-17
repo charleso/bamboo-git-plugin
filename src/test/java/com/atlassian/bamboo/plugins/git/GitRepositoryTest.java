@@ -18,7 +18,6 @@ import static org.testng.Assert.assertEquals;
 
 public class GitRepositoryTest extends GitAbstractTest
 {
-
     @Test
     public void testBasicFunctionality() throws Exception
     {

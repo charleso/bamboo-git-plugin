@@ -14,6 +14,7 @@ import com.atlassian.bamboo.repository.Repository;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.repository.SelectableAuthenticationRepository;
 import com.atlassian.bamboo.security.StringEncrypter;
+import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildChangesImpl;
@@ -61,6 +62,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     private static final String TEMPORARY_GIT_SSH_KEY_CHANGE = "temporary.git.ssh.key.change";
 
     private static final GitAuthenticationType defaultAuthenticationType = GitAuthenticationType.NONE;
+    private static boolean USE_SHALLOW_CLONES = new SystemProperty(false, "atlassian.bamboo.git.useShallowClones", "ATLASSIAN_BAMBO_GIT_USE_SHALLOW_CLONES").getValue(true);
 
     // ------------------------------------------------------------------------------------------------- Type Properties
 
@@ -209,7 +211,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
             try
             {
-                return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(sourceDirectory, accessData, targetRevision));
+                return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(sourceDirectory, accessData, targetRevision, USE_SHALLOW_CLONES));
             }
             catch (Exception e)
             {
