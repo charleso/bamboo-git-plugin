@@ -249,7 +249,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         File tmp = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory(repositoryZip, tmp);
 
-        List<Commit> commits = createGitOperationHelper().extractCommits(tmp, previousRevision, targetRevision);
+        List<Commit> commits = createGitOperationHelper().extractCommits(tmp, previousRevision, targetRevision).getChanges();
 
         assertEquals(commits.size(), expectedCommits.length);
         for (int i = 0; i < commits.size(); i++)
