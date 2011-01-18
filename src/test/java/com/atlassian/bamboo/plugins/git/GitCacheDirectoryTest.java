@@ -90,7 +90,7 @@ public class GitCacheDirectoryTest extends GitAbstractTest
             {
                 try
                 {
-                    GitCacheDirectory.callOnCacheWithLock(repository1, new AbstractGitCacheDirectoryOperation<Object>()
+                    GitCacheDirectory.callOnCacheWithLock(repository1.getCacheDirectory(), new AbstractGitCacheDirectoryOperation<Object>()
                     {
                         @Override
                         public Object call(@NotNull File cacheDirectory) throws Exception
@@ -118,7 +118,7 @@ public class GitCacheDirectoryTest extends GitAbstractTest
             {
                 try
                 {
-                    GitCacheDirectory.callOnCacheWithLock(repository2, new AbstractGitCacheDirectoryOperation<Object>()
+                    GitCacheDirectory.callOnCacheWithLock(repository2.getCacheDirectory(), new AbstractGitCacheDirectoryOperation<Object>()
                     {
                         @Override
                         public Object call(@NotNull File cacheDirectory) throws Exception

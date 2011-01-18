@@ -40,7 +40,7 @@ public class DeleteGitCacheDirectory extends PlanActionSupport implements PlanEd
         final GitRepository gitRepository = (GitRepository) repository;
         try
         {
-            return GitCacheDirectory.callOnCacheWithLock(gitRepository, new AbstractGitCacheDirectoryOperation<String>()
+            return GitCacheDirectory.callOnCacheWithLock(gitRepository.getCacheDirectory(), new AbstractGitCacheDirectoryOperation<String>()
             {
                 @Override
                 public String call(@NotNull File cacheDirectoryFile) throws Exception

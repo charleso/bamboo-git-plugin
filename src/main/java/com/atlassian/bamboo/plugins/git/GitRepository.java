@@ -139,20 +139,34 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
             if (lastVcsRevisionKey == null)
             {
-                log.info("Never checked logs for '" + planKey + "' setting latest revision to " + targetRevision);
+                buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRepositoryNeverChecked", Arrays.asList(targetRevision)));
+                try
+                {
+                    GitCacheDirectory.callOnCacheWithLock(getCacheDirectory(), new AbstractGitCacheDirectoryOperation<Void>()
+                    {
+                        public Void call(@NotNull File cacheDirectory) throws RepositoryException
+                        {
+                            new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData, USE_SHALLOW_CLONES);
+                            return null;
+                        }
+                    });
+                }
+                catch (Exception e)
+                {
+                    throw new RepositoryException(e.getMessage(), e);
+                }
                 return changes;
             }
 
             List<Commit> extractedChanges;
             try
             {
-                extractedChanges = GitCacheDirectory.callOnCacheWithLock(this, new AbstractGitCacheDirectoryOperation<List<Commit>>()
+                extractedChanges = GitCacheDirectory.callOnCacheWithLock(getCacheDirectory(), new AbstractGitCacheDirectoryOperation<List<Commit>>()
                 {
                     public List<Commit> call(@NotNull File cacheDirectory) throws Exception
                     {
                         new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData);
                         return new GitOperationHelper(buildLogger, textProvider).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
-
                     }
                 });
             }
@@ -160,7 +174,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             {
                 try
                 {
-                    extractedChanges = GitCacheDirectory.callOnCacheWithLock(this, new AbstractGitCacheDirectoryOperation<List<Commit>>()
+                    extractedChanges = GitCacheDirectory.callOnCacheWithLock(getCacheDirectory(), new AbstractGitCacheDirectoryOperation<List<Commit>>()
                     {
                         @Override
                         public List<Commit> call(@NotNull File cacheDirectory) throws Exception
