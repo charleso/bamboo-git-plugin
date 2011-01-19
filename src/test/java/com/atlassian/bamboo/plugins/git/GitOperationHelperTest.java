@@ -300,7 +300,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         }
     }
     
-       @DataProvider
+   @DataProvider
     Object[][] transportMappingData()
     {
         return new Object[][] {
