@@ -120,8 +120,7 @@ public class GitAbstractTest
         BuildLoggerManager buildLoggerManager = Mockito.mock(BuildLoggerManager.class, new Returns(new NullBuildLogger()));
         gitRepository.setBuildLoggerManager(buildLoggerManager);
 
-        BuildDirectoryManager buildDirectoryManager = Mockito.mock(BuildDirectoryManager.class);
-        Mockito.when(buildDirectoryManager.getWorkingDirectoryOfCurrentAgent()).thenReturn(workingDirectory);
+        BuildDirectoryManager buildDirectoryManager = Mockito.mock(BuildDirectoryManager.class, new Returns(workingDirectory));
         gitRepository.setBuildDirectoryManager(buildDirectoryManager);
         gitRepository.setTextProvider(getTextProvider());
 
