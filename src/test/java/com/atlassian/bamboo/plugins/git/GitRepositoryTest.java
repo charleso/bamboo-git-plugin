@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.Method;
 
 import static org.testng.Assert.assertEquals;
 
@@ -130,6 +131,16 @@ public class GitRepositoryTest extends GitAbstractTest
         BuildChanges buildChanges = repository.collectChangesSinceLastBuild(PLAN_KEY, "1fea1bc1ff3a0a2a2ad5b15dc088323b906e81d7");
 
         assertEquals(buildChanges.getChanges().size(), 100);
+        try
+        {
+            Method getSkippedCommitsCount = buildChanges.getClass().getDeclaredMethod("getSkippedCommitsCount");
+            int skippedCount = (Integer)getSkippedCommitsCount.invoke(buildChanges);
+            assertEquals(skippedCount, 50);
+        }
+        catch (NoSuchMethodException e)
+        {
+            // ignore - Bamboo 2.7
+        }
 
         for (int i = 0; i < buildChanges.getChanges().size(); i++)
         {

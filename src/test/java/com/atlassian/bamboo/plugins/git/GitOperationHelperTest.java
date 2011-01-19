@@ -5,11 +5,13 @@ import com.atlassian.bamboo.commit.Commit;
 import com.atlassian.bamboo.commit.CommitFile;
 import com.atlassian.bamboo.commit.CommitFileImpl;
 import com.atlassian.bamboo.commit.CommitImpl;
+import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.testtools.ZipResourceDirectory;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
@@ -277,12 +279,22 @@ public class GitOperationHelperTest extends GitAbstractTest
         File tmp = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory("150changes.zip", tmp);
 
-        List<Commit> commits = createGitOperationHelper().extractCommits(tmp, null, "HEAD").getChanges();
-        assertEquals(commits.size(), 100);
-
-        for (int i = 0; i < commits.size(); i++)
+        BuildChanges buildChanges = createGitOperationHelper().extractCommits(tmp, null, "HEAD"); 
+        assertEquals(buildChanges.getChanges().size(), 100);
+        try
         {
-            assertEquals(commits.get(i).getComment(), Integer.toString(150 - i) + "\n");
+            Method getSkippedCommitsCount = buildChanges.getClass().getDeclaredMethod("getSkippedCommitsCount");
+            int skippedCount = (Integer)getSkippedCommitsCount.invoke(buildChanges);
+            assertEquals(skippedCount, 50);
+        }
+        catch (NoSuchMethodException e)
+        {
+            // ignore - Bamboo 2.7
+        }
+
+        for (int i = 0; i < buildChanges.getChanges().size(); i++)
+        {
+            assertEquals(buildChanges.getChanges().get(i).getComment(), Integer.toString(150 - i) + "\n");
         }
     }
 }
