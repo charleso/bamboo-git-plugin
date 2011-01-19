@@ -69,7 +69,7 @@ public class GitMavenPomAccessorTest extends GitAbstractTest
     }
 
     @Test(dataProvider = "pomPaths")
-    public void testCheckoutMavenPom(String pathToPom, final String expectedPom) throws Exception
+    public void testCheckoutMavenPom(Object pathToPom, final String expectedPom) throws Exception
     {
         GitRepository repository = createGitRepository();
 
@@ -101,7 +101,7 @@ public class GitMavenPomAccessorTest extends GitAbstractTest
     }
 
     @Test(dataProvider = "pomWrongPaths", expectedExceptions = RepositoryException.class)
-    public void testNotCheckingOutTheWrongPom(String pathToPom, final String mockedPath) throws Exception
+    public void testNotCheckingOutTheWrongPom(Object pathToPom, final String mockedPath) throws Exception
     {
         final File destDir = createTempDirectory();
         final File perTestRepo = createTempDirectory();

@@ -1,16 +1,30 @@
 package com.atlassian.bamboo.plugins.git;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.testng.Assert.assertEquals;
 
 public class ShallowClonesTest extends GitAbstractTest
 {
+    @BeforeClass
+    void setupGlobalShallowClones() throws Exception
+    {
+        Field useShallowClones = GitRepository.class.getDeclaredField("USE_SHALLOW_CLONES");
+        useShallowClones.setAccessible(true);
+        useShallowClones.setBoolean(null, true);
+    }
+
     @DataProvider(parallel = true)
     Object[][] testShallowCloneData() throws Exception
     {
@@ -162,10 +176,6 @@ public class ShallowClonesTest extends GitAbstractTest
         {
             GitRepository gitRepository = createGitRepository();
 
-            Field useShallowClones = GitRepository.class.getDeclaredField("USE_SHALLOW_CLONES");
-            useShallowClones.setAccessible(true);
-            useShallowClones.setBoolean(null, true);
-
             for (String[] currentFetch : successiveFetches)
             {
                 setRepositoryProperties(gitRepository, protocol + currentFetch[0]);
@@ -173,6 +183,30 @@ public class ShallowClonesTest extends GitAbstractTest
                 verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), currentFetch[2]);
             }
         }
+    }
+
+    @DataProvider(parallel = true)
+    Object[][] testUseShallowClonesCheckboxData() throws Exception
+    {
+        return new Object[][]{
+                {"git://github.com/pstefaniak/7.git",         "728b4f095a115a91be26",  true,    2},
+                {"git://github.com/pstefaniak/7.git",         "728b4f095a115a91be26", false,    7},
+                {"git://github.com/pstefaniak/72parents.git", "f9a3b37fcbf5298c1bfa",  true,   73},
+                {"git://github.com/pstefaniak/72parents.git", "f9a3b37fcbf5298c1bfa", false,   74},
+        };
+    }
+
+    @Test(dataProvider = "testUseShallowClonesCheckboxData")
+    public void testUseShallowClonesCheckbox(String repositoryUrl, String targetRevision, boolean shallow, int expectedChangesetCount) throws Exception
+    {
+        GitRepository gitRepository = createGitRepository();
+
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("repository.git.useShallowClones", shallow);
+        setRepositoryProperties(gitRepository, repositoryUrl, params);
+
+        gitRepository.retrieveSourceCode(mockBuildContext(), targetRevision);
+        assertEquals(createGitOperationHelper().extractCommits(gitRepository.getSourceCodeDirectory(PLAN_KEY), null, targetRevision).getChanges().size(), expectedChangesetCount);
     }
 
     @Test

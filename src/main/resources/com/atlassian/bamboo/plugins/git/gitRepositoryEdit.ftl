@@ -47,4 +47,7 @@
             [@ww.password labelKey='repository.git.ssh.passphrase' name='temporary.git.ssh.passphrase' /]
         [/#if]
     [/@ui.bambooSection]
+
+    [@ww.checkbox labelKey='repository.git.useShallowClones' name='repository.git.useShallowClones' /]
+
 [/@ui.bambooSection]

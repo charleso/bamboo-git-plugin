@@ -307,6 +307,11 @@ public class GitOperationHelper
                     continue;
                 }
 
+                if (localRepository.getShallows().contains(commit.getId()))
+                {
+                    continue;
+                }
+
                 treeWalk.reset();
                 int treePosition = commit.getParentCount() > 0 ? treeWalk.addTree(commit.getParent(0).getTree()) : treeWalk.addTree(new EmptyTreeIterator());
                 treeWalk.addTree(commit.getTree());

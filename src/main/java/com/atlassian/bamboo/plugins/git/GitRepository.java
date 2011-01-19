@@ -53,6 +53,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     private static final String REPOSITORY_GIT_BRANCH = "repository.git.branch";
     private static final String REPOSITORY_GIT_SSH_KEY = "repository.git.ssh.key";
     private static final String REPOSITORY_GIT_SSH_PASSPHRASE = "repository.git.ssh.passphrase";
+    private static final String REPOSITORY_GIT_USE_SHALLOW_CLONES = "repository.git.useShallowClones";
     private static final String REPOSITORY_GIT_MAVEN_PATH = "repository.git.maven.path";
     private static final String TEMPORARY_GIT_PASSWORD = "temporary.git.password";
     private static final String TEMPORARY_GIT_PASSWORD_CHANGE = "temporary.git.password.change";
@@ -80,6 +81,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     }
 
     final GitRepositoryAccessData accessData = new GitRepositoryAccessData();
+
+    private boolean useShallowClones;
 
     // Maven 2 import
     private transient String pathToPom;
@@ -144,7 +147,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                     {
                         public Void call(@NotNull File cacheDirectory) throws RepositoryException
                         {
-                            new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData, USE_SHALLOW_CLONES);
+                            new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData, USE_SHALLOW_CLONES & useShallowClones );
                             return null;
                         }
                     });
@@ -223,7 +226,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
             try
             {
-                return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(sourceDirectory, accessData, targetRevision, USE_SHALLOW_CLONES));
+                return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(sourceDirectory, accessData, targetRevision, USE_SHALLOW_CLONES & useShallowClones));
             }
             catch (Exception e)
             {
@@ -246,6 +249,12 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     {
         //deprecated!
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addDefaultValues(@NotNull BuildConfiguration buildConfiguration)
+    {
+        buildConfiguration.setProperty(REPOSITORY_GIT_USE_SHALLOW_CLONES, true);
     }
 
     public void prepareConfigObject(@NotNull BuildConfiguration buildConfiguration)
@@ -302,6 +311,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         accessData.sshKey = config.getString(REPOSITORY_GIT_SSH_KEY);
         accessData.sshPassphrase = config.getString(REPOSITORY_GIT_SSH_PASSPHRASE);
         accessData.authenticationType = safeParseAuthenticationType(config.getString(REPOSITORY_GIT_AUTHENTICATION_TYPE));
+        useShallowClones = config.getBoolean(REPOSITORY_GIT_USE_SHALLOW_CLONES);
 
         pathToPom = config.getString(REPOSITORY_GIT_MAVEN_PATH);
     }
@@ -318,6 +328,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         configuration.setProperty(REPOSITORY_GIT_SSH_KEY, accessData.sshKey);
         configuration.setProperty(REPOSITORY_GIT_SSH_PASSPHRASE, accessData.sshPassphrase);
         configuration.setProperty(REPOSITORY_GIT_AUTHENTICATION_TYPE, accessData.authenticationType != null ? accessData.authenticationType.name() : null);
+        configuration.setProperty(REPOSITORY_GIT_USE_SHALLOW_CLONES, useShallowClones);
         return configuration;
     }
 
@@ -407,6 +418,11 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     }
 
     // -------------------------------------------------------------------------------------- Basic Accessors / Mutators
+
+    public boolean getUseShallowClones()
+    {
+        return useShallowClones;
+    }
 
     public String getRepositoryUrl()
     {

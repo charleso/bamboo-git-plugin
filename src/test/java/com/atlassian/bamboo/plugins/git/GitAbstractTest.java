@@ -63,7 +63,7 @@ public class GitAbstractTest
     {
         StringEncrypter encrypter = new StringEncrypter();
 
-        Map<String, String> params = new HashMap<String, String>(paramMap);
+        Map<String, Object> params = new HashMap<String, Object>(paramMap);
 
         params.put("repository.git.branch", branch);
         if (sshKey != null)
@@ -80,20 +80,20 @@ public class GitAbstractTest
 
     public static void setRepositoryProperties(GitRepository gitRepository, File repositorySourceDir) throws Exception
     {
-        setRepositoryProperties(gitRepository, repositorySourceDir.getAbsolutePath(), Collections.<String, String>emptyMap());
+        setRepositoryProperties(gitRepository, repositorySourceDir.getAbsolutePath(), Collections.<String, Object>emptyMap());
     }
 
     public static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl) throws Exception
     {
-        setRepositoryProperties(gitRepository, repositoryUrl, Collections.<String, String>emptyMap());
+        setRepositoryProperties(gitRepository, repositoryUrl, Collections.<String, Object>emptyMap());
     }
 
-    public static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, Map<String, String> paramMap) throws Exception
+    public static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, Map<String, Object> paramMap) throws Exception
     {
         BuildConfiguration buildConfiguration = new BuildConfiguration();
         buildConfiguration.setProperty("repository.git.repositoryUrl", repositoryUrl);
 
-        for (Map.Entry<String, String> entry : paramMap.entrySet())
+        for (Map.Entry<String, Object> entry : paramMap.entrySet())
         {
             buildConfiguration.setProperty(entry.getKey(), entry.getValue());
         }
