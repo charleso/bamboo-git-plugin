@@ -5,12 +5,13 @@ import com.atlassian.bamboo.plan.Plan;
 import com.atlassian.bamboo.v2.build.repository.RepositoryV2;
 import com.atlassian.bamboo.ww2.actions.PlanActionSupport;
 import com.atlassian.bamboo.ww2.aware.permissions.PlanEditSecurityAware;
+import com.atlassian.util.concurrent.Supplier;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.Callable;
 
 public class DeleteGitCacheDirectory extends PlanActionSupport implements PlanEditSecurityAware
 {
@@ -38,34 +39,33 @@ public class DeleteGitCacheDirectory extends PlanActionSupport implements PlanEd
         }
 
         final GitRepository gitRepository = (GitRepository) repository;
-        try
+        final File cacheDirectoryFile = gitRepository.getCacheDirectory();
+        return GitCacheDirectory.getCacheLock(cacheDirectoryFile).withLock(new Supplier<String>()
         {
-            final File cacheDirectoryFile = gitRepository.getCacheDirectory();
-            return GitCacheDirectory.getCacheLock(cacheDirectoryFile).withLock(new Callable<String>()
+            public String get()
             {
-                public String call() throws Exception
+                if (cacheDirectoryFile.exists())
                 {
-                    if (cacheDirectoryFile.exists())
+                    log.info(getText("repository.git.messages.cache.cleaning", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath())));
+                    try
                     {
-                        String message = getText("repository.git.messages.cache.cleaning", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath()));
-                        log.info(message);
-                        FileUtils.forceDelete(cacheDirectoryFile); // will throw on error
+                        FileUtils.forceDelete(cacheDirectoryFile);
                     }
-                    else
+                    catch (IOException e)
                     {
-                        String message = getText("repository.git.messages.cache.notExist", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath()));
-                        log.info(message);
+                        String message = getText("repository.git.messages.cache.cleanFailed", Arrays.asList(buildKey));
+                        log.error(message, e);
+                        addActionError(message);
+                        return ERROR;
                     }
-                    return SUCCESS;
                 }
-            });
-        }
-        catch (Exception e)
-        {
-            String message = getText("repository.git.messages.cache.cleanFailed", Arrays.asList(buildKey));
-            log.error(message, e);
-            addActionError(message);
-            return ERROR;
-        }
+                else
+                {
+                    String message = getText("repository.git.messages.cache.notExist", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath()));
+                    log.info(message);
+                }
+                return SUCCESS;
+            }
+        });
     }
 }

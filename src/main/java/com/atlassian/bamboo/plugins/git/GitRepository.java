@@ -21,6 +21,7 @@ import com.atlassian.bamboo.v2.build.BuildChangesImpl;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.util.concurrent.LazyReference;
+import com.atlassian.util.concurrent.Supplier;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.opensymphony.xwork.TextProvider;
@@ -161,25 +162,18 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                 return new BuildChangesImpl(targetRevision);
             }
 
-            BuildChanges buildChanges;
-            try
+            final BuildChanges buildChanges = GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Supplier<BuildChanges>()
             {
-                buildChanges = GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Callable<BuildChanges>()
+                public BuildChanges get()
                 {
-                    public BuildChanges call() throws Exception
+                    try
                     {
                         new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData);
                         return new GitOperationHelper(buildLogger, textProvider).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
                     }
-                });
-            }
-            catch (Exception e)
-            {
-                try
-                {
-                    buildChanges = GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Callable<BuildChanges>()
+                    catch (Exception e) // not just RepositoryException - see HandlingSwitchingRepositoriesToUnrelatedOnesTest.testCollectChangesWithUnrelatedPreviousRevision
                     {
-                        public BuildChanges call() throws Exception
+                        try
                         {
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.failedToCollectChangesets", Arrays.asList(cacheDirectory)));
                             FileUtils.deleteQuietly(cacheDirectory);
@@ -190,25 +184,24 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.completed"));
                             return extractedChanges;
                         }
-                    });
+                        catch (Exception e2)
+                        {
+                            log.error(buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.failedToExtractChangesets")), e2);
+                            return null;
+                        }
+                    }
                 }
-                catch (Exception e2)
-                {
-                    log.error(buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.failedToExtractChangesets")), e2);
-                    buildChanges = null;
-                }
-            }
+            });
 
-            if (buildChanges == null || buildChanges.getChanges().isEmpty())
+            if (buildChanges != null && !buildChanges.getChanges().isEmpty())
+            {
+                return buildChanges;
+            }
+            else
             {
                 return new BuildChangesImpl(targetRevision, Collections.singletonList((Commit) new CommitImpl(new AuthorImpl(Author.UNKNOWN_AUTHOR),
                         textProvider.getText("repository.git.messages.unknownChanges", Arrays.asList(lastVcsRevisionKey, targetRevision)), new Date())));
             }
-            else
-            {
-                return buildChanges;
-            }
-
         }
         catch (RuntimeException e)
         {
