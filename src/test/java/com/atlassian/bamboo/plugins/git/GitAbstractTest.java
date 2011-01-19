@@ -4,6 +4,7 @@ import com.atlassian.bamboo.build.BuildLoggerManager;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.plan.Plan;
+import com.atlassian.bamboo.project.Project;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.util.BambooFileUtils;
 import com.atlassian.bamboo.utils.i18n.DefaultI18nBean;
@@ -120,7 +121,7 @@ public class GitAbstractTest
         gitRepository.setBuildLoggerManager(buildLoggerManager);
 
         BuildDirectoryManager buildDirectoryManager = Mockito.mock(BuildDirectoryManager.class);
-        Mockito.when(buildDirectoryManager.getBuildWorkingDirectory()).thenReturn(workingDirectory);
+        Mockito.when(buildDirectoryManager.getWorkingDirectoryOfCurrentAgent()).thenReturn(workingDirectory);
         gitRepository.setBuildDirectoryManager(buildDirectoryManager);
         gitRepository.setTextProvider(getTextProvider());
 
@@ -193,6 +194,8 @@ public class GitAbstractTest
     {
         Plan plan = Mockito.mock(Plan.class);
         Mockito.when(plan.getKey()).thenReturn(PLAN_KEY);
+        Project project = Mockito.mock(Project.class);
+        Mockito.when(plan.getProject()).thenReturn(project);
         return new BuildContextImpl(plan, 1, null, null, null);
     }
 

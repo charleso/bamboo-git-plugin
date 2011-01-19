@@ -9,6 +9,8 @@ import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.utils.SystemProperty;
+import com.atlassian.bamboo.v2.build.BuildChanges;
+import com.atlassian.bamboo.v2.build.BuildChangesImpl;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -257,10 +259,11 @@ public class GitOperationHelper
         }
     }
 
-    List<Commit> extractCommits(@NotNull final File directory, @Nullable final String previousRevision, @Nullable final String targetRevision)
+    BuildChanges extractCommits(@NotNull final File directory, @Nullable final String previousRevision, @Nullable final String targetRevision)
             throws RepositoryException
     {
         List<Commit> commits = new ArrayList<Commit>();
+        int skippedCommits = 0;
 
         FileRepository localRepository = null;
         RevWalk revWalk = null;
@@ -284,7 +287,6 @@ public class GitOperationHelper
             treeWalk = new TreeWalk(localRepository);
             treeWalk.setRecursive(true);
 
-            int skippedCommits = 0; //todo: return it :P
             for (final RevCommit commit : revWalk)
             {
                 if (commits.size() >= CHANGESET_LIMIT)
@@ -314,10 +316,7 @@ public class GitOperationHelper
                     {
                         continue;
                     }
-//                    curr.addFile(new CommitFileImpl(commit.getId().getName(), entry.getNewPath())); <-- since bamboo 3.0
-                    CommitFileImpl commitFile = new CommitFileImpl(entry.getChangeType() == DiffEntry.ChangeType.DELETE ? entry.getOldPath() : entry.getNewPath());
-                    commitFile.setRevision(commit.getId().getName());
-                    curr.addFile(commitFile);
+                    curr.addFile(new CommitFileImpl(commit.getId().getName(), entry.getChangeType() == DiffEntry.ChangeType.DELETE ? entry.getOldPath() : entry.getNewPath()));
                 }
             }
         }
@@ -341,7 +340,9 @@ public class GitOperationHelper
                 localRepository.close();
             }
         }
-        return commits;
+        BuildChanges buildChanges = new BuildChangesImpl(targetRevision, commits);
+        buildChanges.setSkippedCommitsCount(skippedCommits);
+        return buildChanges;
     }
 
     //user of this method has responsibility to finally .close() returned Transport!
