@@ -54,9 +54,8 @@ public class GitCacheDirectory {
         return DigestUtils.shaHex(baos.toByteArray());
     }
 
-    public static <T> T callOnCacheWithLock(@NotNull File cache, @NotNull GitCacheDirectoryOperation<T> operation) throws Exception
+    public static ManagedLock getCacheLock(@NotNull File cache)
     {
-        operation.setCacheDirectory(cache);
-        return cacheLockFactory.get(cache).withLock(operation);
+        return cacheLockFactory.get(cache);
     }
 }

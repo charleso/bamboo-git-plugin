@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository, SelectableAuthenticationRepository
 {
@@ -138,14 +139,15 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                 return new BuildChangesImpl(targetRevision);
             }
 
+            final File cacheDirectory = getCacheDirectory();
             if (lastVcsRevisionKey == null)
             {
                 buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRepositoryNeverChecked", Arrays.asList(targetRevision)));
                 try
                 {
-                    GitCacheDirectory.callOnCacheWithLock(getCacheDirectory(), new AbstractGitCacheDirectoryOperation<Void>()
+                    GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Callable<Void>()
                     {
-                        public Void call(@NotNull File cacheDirectory) throws RepositoryException
+                        public Void call() throws RepositoryException
                         {
                             new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData, USE_SHALLOW_CLONES & useShallowClones );
                             return null;
@@ -162,9 +164,9 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             BuildChanges buildChanges;
             try
             {
-                buildChanges = GitCacheDirectory.callOnCacheWithLock(getCacheDirectory(), new AbstractGitCacheDirectoryOperation<BuildChanges>()
+                buildChanges = GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Callable<BuildChanges>()
                 {
-                    public BuildChanges call(@NotNull File cacheDirectory) throws Exception
+                    public BuildChanges call() throws Exception
                     {
                         new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData);
                         return new GitOperationHelper(buildLogger, textProvider).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
@@ -175,10 +177,9 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             {
                 try
                 {
-                    buildChanges = GitCacheDirectory.callOnCacheWithLock(getCacheDirectory(), new AbstractGitCacheDirectoryOperation<BuildChanges>()
+                    buildChanges = GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Callable<BuildChanges>()
                     {
-                        @Override
-                        public BuildChanges call(@NotNull File cacheDirectory) throws Exception
+                        public BuildChanges call() throws Exception
                         {
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.failedToCollectChangesets", Arrays.asList(cacheDirectory)));
                             FileUtils.deleteQuietly(cacheDirectory);

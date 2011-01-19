@@ -7,10 +7,10 @@ import com.atlassian.bamboo.ww2.actions.PlanActionSupport;
 import com.atlassian.bamboo.ww2.aware.permissions.PlanEditSecurityAware;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.concurrent.Callable;
 
 public class DeleteGitCacheDirectory extends PlanActionSupport implements PlanEditSecurityAware
 {
@@ -40,10 +40,10 @@ public class DeleteGitCacheDirectory extends PlanActionSupport implements PlanEd
         final GitRepository gitRepository = (GitRepository) repository;
         try
         {
-            return GitCacheDirectory.callOnCacheWithLock(gitRepository.getCacheDirectory(), new AbstractGitCacheDirectoryOperation<String>()
+            final File cacheDirectoryFile = gitRepository.getCacheDirectory();
+            return GitCacheDirectory.getCacheLock(cacheDirectoryFile).withLock(new Callable<String>()
             {
-                @Override
-                public String call(@NotNull File cacheDirectoryFile) throws Exception
+                public String call() throws Exception
                 {
                     if (cacheDirectoryFile.exists())
                     {

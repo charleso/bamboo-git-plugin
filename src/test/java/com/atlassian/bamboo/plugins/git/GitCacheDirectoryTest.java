@@ -1,6 +1,5 @@
 package com.atlassian.bamboo.plugins.git;
 
-import org.jetbrains.annotations.NotNull;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -8,6 +7,7 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -90,10 +90,10 @@ public class GitCacheDirectoryTest extends GitAbstractTest
             {
                 try
                 {
-                    GitCacheDirectory.callOnCacheWithLock(repository1.getCacheDirectory(), new AbstractGitCacheDirectoryOperation<Object>()
+                    File cacheDirectory = repository1.getCacheDirectory();
+                    GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Callable<Void>()
                     {
-                        @Override
-                        public Object call(@NotNull File cacheDirectory) throws Exception
+                        public Void call() throws Exception
                         {
                             firstCalled.countDown();
                             boolean await = secondCalled.await(1000, TimeUnit.MILLISECONDS);
@@ -118,10 +118,10 @@ public class GitCacheDirectoryTest extends GitAbstractTest
             {
                 try
                 {
-                    GitCacheDirectory.callOnCacheWithLock(repository2.getCacheDirectory(), new AbstractGitCacheDirectoryOperation<Object>()
+                    File cacheDirectory = repository2.getCacheDirectory();
+                    GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Callable<Void>()
                     {
-                        @Override
-                        public Object call(@NotNull File cacheDirectory) throws Exception
+                        public Void call() throws Exception
                         {
                             secondCalled.countDown();
                             return null;
