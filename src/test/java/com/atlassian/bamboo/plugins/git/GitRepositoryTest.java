@@ -116,6 +116,25 @@ public class GitRepositoryTest extends GitAbstractTest
         assertEquals(encrypter.decrypt(out.accessData.sshKey), sshKey);
         assertEquals(encrypter.decrypt(out.accessData.sshPassphrase), sshPassphrase);
         assertEquals(out.accessData.authenticationType, GitAuthenticationType.SSH_KEYPAIR);
-
     }
+
+    @Test
+    public void testRepositoryChangesetLimit() throws Exception
+    {
+        File tmp = createTempDirectory();
+        ZipResourceDirectory.copyZipResourceToDirectory("150changes.zip", tmp);
+
+        GitRepository repository = createGitRepository();
+        setRepositoryProperties(repository, tmp);
+
+        BuildChanges buildChanges = repository.collectChangesSinceLastBuild(PLAN_KEY, "1fea1bc1ff3a0a2a2ad5b15dc088323b906e81d7");
+
+        assertEquals(buildChanges.getChanges().size(), 100);
+
+        for (int i = 0; i < buildChanges.getChanges().size(); i++)
+        {
+            assertEquals(buildChanges.getChanges().get(i).getComment(), Integer.toString(150 - i) + "\n");
+        }
+    }
+
 }

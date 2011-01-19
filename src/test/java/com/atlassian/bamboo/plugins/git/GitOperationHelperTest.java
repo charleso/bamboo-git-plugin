@@ -270,4 +270,19 @@ public class GitOperationHelperTest extends GitAbstractTest
             }
         }
     }
+
+    @Test
+    public void testChangesetLimit() throws Exception
+    {
+        File tmp = createTempDirectory();
+        ZipResourceDirectory.copyZipResourceToDirectory("150changes.zip", tmp);
+
+        List<Commit> commits = createGitOperationHelper().extractCommits(tmp, null, "HEAD").getChanges();
+        assertEquals(commits.size(), 100);
+
+        for (int i = 0; i < commits.size(); i++)
+        {
+            assertEquals(commits.get(i).getComment(), Integer.toString(150 - i) + "\n");
+        }
+    }
 }
