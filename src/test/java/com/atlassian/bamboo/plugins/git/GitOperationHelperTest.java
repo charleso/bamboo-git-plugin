@@ -13,7 +13,6 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
@@ -283,16 +282,7 @@ public class GitOperationHelperTest extends GitAbstractTest
 
         BuildChanges buildChanges = createGitOperationHelper().extractCommits(tmp, null, "HEAD"); 
         assertEquals(buildChanges.getChanges().size(), 100);
-        try
-        {
-            Method getSkippedCommitsCount = buildChanges.getClass().getDeclaredMethod("getSkippedCommitsCount");
-            int skippedCount = (Integer)getSkippedCommitsCount.invoke(buildChanges);
-            assertEquals(skippedCount, 50);
-        }
-        catch (NoSuchMethodException e)
-        {
-            // ignore - Bamboo 2.7
-        }
+        assertEquals(buildChanges.getSkippedCommitsCount(), 50);
 
         for (int i = 0; i < buildChanges.getChanges().size(); i++)
         {

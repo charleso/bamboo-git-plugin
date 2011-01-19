@@ -39,7 +39,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -347,27 +346,8 @@ public class GitOperationHelper
             }
         }
         BuildChanges buildChanges = new BuildChangesImpl(targetRevision, commits);
-        // Let's be 2.7 compatible for a while - 3.0 has buildChanges.setSkippedCommitsCount(skippedCommits);
-        setSkippedCommitsCount(buildChanges, skippedCommits);
-
+        buildChanges.setSkippedCommitsCount(skippedCommits);
         return buildChanges;
-    }
-
-    private static void setSkippedCommitsCount(BuildChanges buildChanges, int count)
-    {
-        try
-        {
-            Method setSkippedCommitsCount = buildChanges.getClass().getDeclaredMethod("setSkippedCommitsCount", Integer.TYPE);
-            setSkippedCommitsCount.invoke(buildChanges, count);
-        }
-        catch (NoSuchMethodException e)
-        {
-            // ignore - Bamboo 2.7
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
     }
 
     //user of this method has responsibility to finally .close() returned Transport!

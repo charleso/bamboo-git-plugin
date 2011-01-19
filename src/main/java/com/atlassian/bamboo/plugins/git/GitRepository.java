@@ -7,6 +7,7 @@ import com.atlassian.bamboo.commit.Commit;
 import com.atlassian.bamboo.commit.CommitImpl;
 import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.repository.AbstractRepository;
+import com.atlassian.bamboo.repository.CustomVariableProviderRepository;
 import com.atlassian.bamboo.repository.MavenPomAccessor;
 import com.atlassian.bamboo.repository.MavenPomAccessorCapableRepository;
 import com.atlassian.bamboo.repository.NameValuePair;
@@ -24,6 +25,7 @@ import com.atlassian.util.concurrent.LazyReference;
 import com.atlassian.util.concurrent.Supplier;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.opensymphony.xwork.TextProvider;
 import com.opensymphony.xwork.util.LocalizedTextUtil;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -44,8 +46,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.Map;
 
-public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository, SelectableAuthenticationRepository
+public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository, SelectableAuthenticationRepository, CustomVariableProviderRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -393,6 +396,16 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         }
 
         return errorCollection;
+    }
+
+    @NotNull
+    public Map<String, String> getCustomVariables()
+    {
+        Map<String, String> variables = Maps.newHashMap();
+        variables.put(REPOSITORY_GIT_REPOSITORY_URL, accessData.repositoryUrl);
+        variables.put(REPOSITORY_GIT_BRANCH, accessData.branch);
+        variables.put(REPOSITORY_GIT_USERNAME, accessData.username);
+        return variables;
     }
 
     @NotNull
