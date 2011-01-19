@@ -7,6 +7,8 @@ import com.atlassian.bamboo.commit.CommitFileImpl;
 import com.atlassian.bamboo.commit.CommitImpl;
 import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.testtools.ZipResourceDirectory;
+import org.eclipse.jgit.storage.file.FileRepository;
+import org.eclipse.jgit.transport.Transport;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -296,5 +298,29 @@ public class GitOperationHelperTest extends GitAbstractTest
         {
             assertEquals(buildChanges.getChanges().get(i).getComment(), Integer.toString(150 - i) + "\n");
         }
+    }
+    
+       @DataProvider
+    Object[][] transportMappingData()
+    {
+        return new Object[][] {
+                {"https://localhost/repository", true},
+                {"https://user@localhost/repository", true},
+                {"http://localhost/repository", false},
+                {"http://user@localhost/repository", false},
+                {"git@github.com:atlassian/bamboo-git-plugin.git", false},
+                {"git://github.com/atlassian/bamboo-git-plugin.git", false},
+        };
+    }
+
+    @Test(dataProvider = "transportMappingData")
+    public void testOpenConnectionUsesCustomizedTransport(String url, boolean expectCustomized) throws Exception
+    {
+        GitOperationHelper goh = createGitOperationHelper();
+        GitRepository.GitRepositoryAccessData accessData = createAccessData(url);
+        FileRepository fileRepository = new FileRepository(createTempDirectory());
+        Transport transport = goh.open(fileRepository, accessData);
+
+        assertEquals(transport instanceof TransportAllTrustingHttps, expectCustomized);
     }
 }
