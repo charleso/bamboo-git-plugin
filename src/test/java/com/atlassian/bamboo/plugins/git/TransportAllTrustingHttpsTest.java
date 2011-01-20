@@ -51,7 +51,7 @@ public class TransportAllTrustingHttpsTest extends GitAbstractTest
             }
         });
 
-		server.setStopAtShutdown(true);
+        server.setStopAtShutdown(true);
         server.start();
         port = connector.getLocalPort();
     }
