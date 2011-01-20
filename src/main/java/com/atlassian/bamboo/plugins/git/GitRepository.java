@@ -31,12 +31,14 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.log4j.Logger;
+import org.eclipse.jgit.transport.URIish;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -332,25 +334,56 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     {
         ErrorCollection errorCollection = super.validate(buildConfiguration);
 
-        final String repoUrl = StringUtils.trim(buildConfiguration.getString(REPOSITORY_GIT_REPOSITORY_URL));
-        final String username = buildConfiguration.getString(REPOSITORY_GIT_USERNAME);
+        final String repositoryUrl = StringUtils.trim(buildConfiguration.getString(REPOSITORY_GIT_REPOSITORY_URL));
         final GitAuthenticationType authenticationType = safeParseAuthenticationType(buildConfiguration.getString(REPOSITORY_GIT_AUTHENTICATION_TYPE));
 
-
-        if (StringUtils.isBlank(repoUrl))
+        if (StringUtils.isBlank(repositoryUrl))
         {
             errorCollection.addError(REPOSITORY_GIT_REPOSITORY_URL, textProvider.getText("repository.git.messages.missingRepositoryUrl"));
         }
         else
         {
-            final boolean isHttp = repoUrl.startsWith("http://") || repoUrl.startsWith("https://");
-            if (isHttp && authenticationType == GitAuthenticationType.SSH_KEYPAIR)
+            final boolean isHttp = repositoryUrl.startsWith("http://") || repositoryUrl.startsWith("https://");
+            if (authenticationType == GitAuthenticationType.SSH_KEYPAIR && isHttp)
             {
                 errorCollection.addError(REPOSITORY_GIT_AUTHENTICATION_TYPE, textProvider.getText("repository.git.messages.unsupportedHttpAuthenticationType"));
             }
-            if (!isHttp && StringUtils.isNotEmpty(username) && authenticationType == GitAuthenticationType.PASSWORD)
+            else if (authenticationType == GitAuthenticationType.PASSWORD)
             {
-                errorCollection.addError(REPOSITORY_GIT_USERNAME, textProvider.getText("repository.git.messages.unsupportedUsernameField"));
+                final boolean hasUsername = StringUtils.isNotBlank(buildConfiguration.getString(REPOSITORY_GIT_USERNAME));
+                final boolean hasPassword = StringUtils.isNotBlank(buildConfiguration.getString(REPOSITORY_GIT_PASSWORD));
+                try
+                {
+                    final URIish uri = new URIish(repositoryUrl);
+                    boolean duplicateUsername = hasUsername && StringUtils.isNotBlank(uri.getUser());
+                    boolean duplicatePassword = hasPassword && StringUtils.isNotBlank(uri.getPass());
+                    if (duplicateUsername || duplicatePassword)
+                    {
+                        errorCollection.addError(REPOSITORY_GIT_REPOSITORY_URL,
+                                (duplicateUsername ? textProvider.getText("repository.git.messages.duplicateUsernameField") : "")
+                                + ((duplicateUsername && duplicatePassword) ? " " : "")
+                                + (duplicatePassword ? textProvider.getText("repository.git.messages.duplicatePasswordField") : ""));
+                    }
+                    if (duplicateUsername)
+                    {
+                        errorCollection.addError(REPOSITORY_GIT_USERNAME, textProvider.getText("repository.git.messages.duplicateUsernameField"));
+                    }
+                    if (duplicatePassword)
+                    {
+                        errorCollection.addError(TEMPORARY_GIT_PASSWORD_CHANGE, textProvider.getText("repository.git.messages.duplicatePasswordField"));
+                    }
+                    if (uri.getHost() == null && hasUsername)
+                    {
+                        errorCollection.addError(REPOSITORY_GIT_USERNAME, textProvider.getText("repository.git.messages.unsupportedUsernameField"));
+                    }
+                }
+                catch (URISyntaxException e)
+                {
+                    if (hasUsername)
+                    {
+                        errorCollection.addError(REPOSITORY_GIT_USERNAME, textProvider.getText("repository.git.messages.unsupportedUsernameField"));
+                    }
+                }
             }
         }
 

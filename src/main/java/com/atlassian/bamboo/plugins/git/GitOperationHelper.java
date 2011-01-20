@@ -376,17 +376,21 @@ public class GitOperationHelper
         try
         {
             StringEncrypter encrypter = new StringEncrypter();
-            URIish remote = new URIish(accessData.repositoryUrl);
-            final Transport transport;
-            if (TransportAllTrustingHttps.canHandle(remote))
+            URIish uri = new URIish(accessData.repositoryUrl);
+            if (accessData.repositoryUrl.startsWith("ssh://") && accessData.authenticationType == GitAuthenticationType.PASSWORD
+                    && StringUtils.isBlank(uri.getUser()) && StringUtils.isNotBlank(accessData.username))
             {
-                transport = new TransportAllTrustingHttps(localRepository, remote);
+                uri = uri.setUser(accessData.username);
+            }
+            final Transport transport;
+            if (TransportAllTrustingHttps.canHandle(uri))
+            {
+                transport = new TransportAllTrustingHttps(localRepository, uri);
             }
             else
             {
-                transport = Transport.open(localRepository, remote);
+                transport = Transport.open(localRepository, uri);
             }
-
             transport.setTimeout(DEFAULT_TRANSFER_TIMEOUT);
             if (transport instanceof SshTransport)
             {
