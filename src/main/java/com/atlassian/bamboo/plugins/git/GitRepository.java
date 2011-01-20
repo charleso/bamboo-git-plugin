@@ -459,7 +459,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
     // -------------------------------------------------------------------------------------- Basic Accessors / Mutators
 
-    public boolean getUseShallowClones()
+    public boolean isUseShallowClones()
     {
         return useShallowClones;
     }
