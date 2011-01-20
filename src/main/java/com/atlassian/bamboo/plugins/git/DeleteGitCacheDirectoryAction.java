@@ -13,9 +13,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class DeleteGitCacheDirectory extends PlanActionSupport implements PlanEditSecurityAware
+public class DeleteGitCacheDirectoryAction extends PlanActionSupport implements PlanEditSecurityAware
 {
-    private static final Logger log = Logger.getLogger(DeleteGitCacheDirectory.class);
+    private static final Logger log = Logger.getLogger(DeleteGitCacheDirectoryAction.class);
 
     @Override
     public String doExecute() throws Exception

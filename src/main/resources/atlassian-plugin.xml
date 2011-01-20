@@ -16,7 +16,7 @@
 
     <xwork key="deleteGitCacheDirectory" name="Delete Git Cache Directory" class="java.lang.Void">
       <package name="gitPlugin" extends="buildAdmin">
-        <action name="deleteGitCacheDirectory" class="com.atlassian.bamboo.plugins.git.DeleteGitCacheDirectory">
+        <action name="deleteGitCacheDirectory" class="com.atlassian.bamboo.plugins.git.DeleteGitCacheDirectoryAction">
             <result name="success" type="redirect">/browse/${buildKey}/config</result>
             <result name="error" type="freemarker">/error.ftl</result>
           </action>

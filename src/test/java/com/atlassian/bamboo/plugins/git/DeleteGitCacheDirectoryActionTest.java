@@ -11,7 +11,7 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 
-public class DeleteGitCacheDirectoryTest extends GitAbstractTest
+public class DeleteGitCacheDirectoryActionTest extends GitAbstractTest
 {
     @Test
     public void testDeletingNonexistentDirectory() throws Exception
@@ -19,7 +19,7 @@ public class DeleteGitCacheDirectoryTest extends GitAbstractTest
         GitRepository repository = createGitRepository();
         setRepositoryProperties(repository, "repository.url", "");
 
-        DeleteGitCacheDirectory action = createDeleteAction(repository);
+        DeleteGitCacheDirectoryAction action = createDeleteAction(repository);
 
         Assert.assertEquals(action.doExecute(), "success");
     }
@@ -37,15 +37,15 @@ public class DeleteGitCacheDirectoryTest extends GitAbstractTest
         Assert.assertTrue(cache.isDirectory(), "Precondition");
         Assert.assertTrue(someFile.exists(), "Precondition");
 
-        DeleteGitCacheDirectory action = createDeleteAction(repository);
+        DeleteGitCacheDirectoryAction action = createDeleteAction(repository);
 
         Assert.assertEquals(action.doExecute(), "success");
         Assert.assertFalse(cache.exists());
     }
 
-    private static DeleteGitCacheDirectory createDeleteAction(GitRepository repository)
+    private static DeleteGitCacheDirectoryAction createDeleteAction(GitRepository repository)
     {
-        DeleteGitCacheDirectory action = new DeleteGitCacheDirectory();
+        DeleteGitCacheDirectoryAction action = new DeleteGitCacheDirectoryAction();
         action.setBuildKey("BUILD-KEY-1");
         BuildDefinition buildDefinition = Mockito.mock(BuildDefinition.class, new Returns(repository));
 
