@@ -357,7 +357,7 @@ public class GitOperationHelper
         {
             StringEncrypter encrypter = new StringEncrypter();
             URIish uri = new URIish(accessData.repositoryUrl);
-            if (accessData.repositoryUrl.startsWith("ssh://") && accessData.authenticationType == GitAuthenticationType.PASSWORD
+            if ("ssh".equals(uri.getScheme()) && accessData.authenticationType == GitAuthenticationType.PASSWORD
                     && StringUtils.isBlank(uri.getUser()) && StringUtils.isNotBlank(accessData.username))
             {
                 uri = uri.setUser(accessData.username);

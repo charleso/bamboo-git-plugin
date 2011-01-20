@@ -346,26 +346,25 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         }
         else
         {
-            final boolean isHttp = repositoryUrl.startsWith("http://") || repositoryUrl.startsWith("https://");
-            if (authenticationType == GitAuthenticationType.SSH_KEYPAIR && isHttp)
+            final boolean hasUsername = StringUtils.isNotBlank(buildConfiguration.getString(REPOSITORY_GIT_USERNAME));
+            final boolean hasPassword = StringUtils.isNotBlank(buildConfiguration.getString(REPOSITORY_GIT_PASSWORD));
+            try
             {
-                errorCollection.addError(REPOSITORY_GIT_AUTHENTICATION_TYPE, textProvider.getText("repository.git.messages.unsupportedHttpAuthenticationType"));
-            }
-            else if (authenticationType == GitAuthenticationType.PASSWORD)
-            {
-                final boolean hasUsername = StringUtils.isNotBlank(buildConfiguration.getString(REPOSITORY_GIT_USERNAME));
-                final boolean hasPassword = StringUtils.isNotBlank(buildConfiguration.getString(REPOSITORY_GIT_PASSWORD));
-                try
+                final URIish uri = new URIish(repositoryUrl);
+                if (authenticationType == GitAuthenticationType.SSH_KEYPAIR && ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())))
                 {
-                    final URIish uri = new URIish(repositoryUrl);
+                    errorCollection.addError(REPOSITORY_GIT_AUTHENTICATION_TYPE, textProvider.getText("repository.git.messages.unsupportedHttpAuthenticationType"));
+                }
+                else if (authenticationType == GitAuthenticationType.PASSWORD)
+                {
                     boolean duplicateUsername = hasUsername && StringUtils.isNotBlank(uri.getUser());
                     boolean duplicatePassword = hasPassword && StringUtils.isNotBlank(uri.getPass());
                     if (duplicateUsername || duplicatePassword)
                     {
                         errorCollection.addError(REPOSITORY_GIT_REPOSITORY_URL,
                                 (duplicateUsername ? textProvider.getText("repository.git.messages.duplicateUsernameField") : "")
-                                + ((duplicateUsername && duplicatePassword) ? " " : "")
-                                + (duplicatePassword ? textProvider.getText("repository.git.messages.duplicatePasswordField") : ""));
+                                        + ((duplicateUsername && duplicatePassword) ? " " : "")
+                                        + (duplicatePassword ? textProvider.getText("repository.git.messages.duplicatePasswordField") : ""));
                     }
                     if (duplicateUsername)
                     {
@@ -380,12 +379,12 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                         errorCollection.addError(REPOSITORY_GIT_USERNAME, textProvider.getText("repository.git.messages.unsupportedUsernameField"));
                     }
                 }
-                catch (URISyntaxException e)
+            }
+            catch (URISyntaxException e)
+            {
+                if (hasUsername)
                 {
-                    if (hasUsername)
-                    {
-                        errorCollection.addError(REPOSITORY_GIT_USERNAME, textProvider.getText("repository.git.messages.unsupportedUsernameField"));
-                    }
+                    errorCollection.addError(REPOSITORY_GIT_USERNAME, textProvider.getText("repository.git.messages.unsupportedUsernameField"));
                 }
             }
         }
