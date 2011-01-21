@@ -5,6 +5,7 @@ import com.atlassian.bamboo.author.AuthorImpl;
 import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.commit.Commit;
 import com.atlassian.bamboo.commit.CommitImpl;
+import com.atlassian.bamboo.fileserver.SystemDirectory;
 import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.repository.AbstractRepository;
 import com.atlassian.bamboo.repository.CustomVariableProviderRepository;
@@ -155,7 +156,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                     {
                         public Void call() throws RepositoryException
                         {
-                            new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData, USE_SHALLOW_CLONES & useShallowClones );
+                            new GitOperationHelper(buildLogger, textProvider).fetch(null, cacheDirectory, accessData, USE_SHALLOW_CLONES & useShallowClones );
                             return null;
                         }
                     });
@@ -173,7 +174,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                 {
                     try
                     {
-                        new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData);
+                        new GitOperationHelper(buildLogger, textProvider).fetch(null, cacheDirectory, accessData, false);
                         return new GitOperationHelper(buildLogger, textProvider).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
                     }
                     catch (Exception e) // not just RepositoryException - see HandlingSwitchingRepositoriesToUnrelatedOnesTest.testCollectChangesWithUnrelatedPreviousRevision
@@ -183,7 +184,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.failedToCollectChangesets", Arrays.asList(cacheDirectory)));
                             FileUtils.deleteQuietly(cacheDirectory);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.cleanedCacheDirectory", Arrays.asList(cacheDirectory)));
-                            new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData);
+                            new GitOperationHelper(buildLogger, textProvider).fetch(null, cacheDirectory, accessData, false);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.fetchedRemoteRepository", Arrays.asList(cacheDirectory)));
                             BuildChanges extractedChanges = new GitOperationHelper(buildLogger, textProvider).extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.completed"));
@@ -223,21 +224,32 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             final String planKey = buildContext.getPlanKey();
             final File sourceDirectory = getSourceCodeDirectory(planKey);
 
-            try
+            final File cacheDirectory = getCacheDirectory();
+            return GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Callable<String>()
             {
-                return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(sourceDirectory, accessData, targetRevision, USE_SHALLOW_CLONES & useShallowClones));
-            }
-            catch (Exception e)
-            {
-                buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.failedToRetrieveSource", Arrays.asList(sourceDirectory)));
-                FileUtils.deleteQuietly(sourceDirectory);
-                buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(sourceDirectory)));
-                String returnRevision = new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(sourceDirectory, accessData, targetRevision);
-                buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.completed"));
-                return returnRevision;
-            }
+                public String call() throws Exception
+                {
+                    try
+                    {
+                        return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(cacheDirectory, sourceDirectory, accessData, targetRevision, USE_SHALLOW_CLONES & useShallowClones));
+                    }
+                    catch (Exception e)
+                    {
+                        buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.failedToRetrieveSource", Arrays.asList(sourceDirectory)));
+                        FileUtils.deleteQuietly(sourceDirectory);
+                        buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(sourceDirectory)));
+                        String returnRevision = new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(cacheDirectory, sourceDirectory, accessData, targetRevision, false);
+                        buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.completed"));
+                        return returnRevision;
+                    }
+                }
+            });
         }
-        catch (RuntimeException e)
+        catch (RepositoryException e)
+        {
+            throw e;
+        }
+        catch (Exception e)
         {
             throw new RepositoryException(textProvider.getText("repository.git.messages.runtimeException"), e);
         }
@@ -480,7 +492,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
     public File getCacheDirectory()
     {
-        return GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), accessData);
+        return GitCacheDirectory.getCacheDirectory(new File(SystemDirectory.getApplicationHome(), "caches"), accessData);
     }
 
     @Override

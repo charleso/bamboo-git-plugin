@@ -115,7 +115,7 @@ public class GitAbstractTest
     {
         File workingDirectory = createTempDirectory();
 
-        final GitRepository gitRepository = new GitRepository();
+        final GitRepository gitRepository = new GitRepositoryFixture();
 
         BuildLoggerManager buildLoggerManager = Mockito.mock(BuildLoggerManager.class, new Returns(new NullBuildLogger()));
         gitRepository.setBuildLoggerManager(buildLoggerManager);
@@ -204,6 +204,15 @@ public class GitAbstractTest
         for (File file : filesToCleanUp)
         {
             FileUtils.deleteQuietly(file);
+        }
+    }
+
+    static class GitRepositoryFixture extends GitRepository
+    {
+        @Override
+        public File getCacheDirectory()
+        {
+            return GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), accessData);
         }
     }
 }

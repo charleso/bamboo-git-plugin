@@ -13,6 +13,7 @@ import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildChangesImpl;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -26,6 +27,7 @@ import org.eclipse.jgit.lib.RefUpdate;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepository;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.transport.FetchConnection;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.SshSessionFactory;
@@ -138,28 +140,16 @@ public class GitOperationHelper
     }
 
     @NotNull
-    public String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData,
-            final @Nullable String targetRevision) throws RepositoryException
-    {
-        return fetchAndCheckout(sourceDirectory, accessData, targetRevision, false);
-    }
-
-    @NotNull
-    public String fetchAndCheckout(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData,
+    public String fetchAndCheckout(@Nullable final File cacheDirectory, @NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData,
             final @Nullable String targetRevision, boolean useShallow) throws RepositoryException
     {
         String previousRevision = getCurrentRevision(sourceDirectory);
         final String notNullTargetRevision = targetRevision != null ? targetRevision : obtainLatestRevision(accessData);
-        fetch(sourceDirectory, accessData, useShallow);
+        fetch(cacheDirectory, sourceDirectory, accessData, useShallow);
         return checkout(sourceDirectory, notNullTargetRevision, previousRevision);
     }
 
-    void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData) throws RepositoryException
-    {
-        fetch(sourceDirectory, accessData, false);
-    }
-
-    void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
+    void fetch(@Nullable File cacheDirectory, @NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
     {
         String realBranch = StringUtils.isNotBlank(accessData.branch) ? accessData.branch : Constants.MASTER;
 
@@ -168,7 +158,18 @@ public class GitOperationHelper
         try
         {
             File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);
-            localRepository = new FileRepository(gitDirectory);
+            FileRepositoryBuilder builder = new FileRepositoryBuilder();
+            builder.setGitDir(gitDirectory);
+            if (cacheDirectory != null && cacheDirectory.exists())
+            {
+                File objectsCache = new FileRepositoryBuilder().setWorkTree(cacheDirectory).setup().getObjectDirectory();
+                if (objectsCache != null && objectsCache.exists())
+                {
+                    builder.addAlternateObjectDirectory(objectsCache);
+                }
+            }
+            localRepository = builder.build();
+
             if (!gitDirectory.exists())
             {
                 buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.creatingGitRepository", Arrays.asList(gitDirectory)));
@@ -188,6 +189,18 @@ public class GitOperationHelper
             //todo: what if remote repository doesn't contain branches? i.e. it has only HEAD reference like the ones in resources/obtainLatestRevision/x.zip?
 
             transport.fetch(new BuildLoggerProgressMonitor(buildLogger), Arrays.asList(refSpec), useShallow ? 1 : 0);
+            // lets update alternatives here for a moment
+            File[] alternateObjectDirectories = builder.getAlternateObjectDirectories();
+            if (ArrayUtils.isNotEmpty(alternateObjectDirectories))
+            {
+                List<String> alternatePaths = new ArrayList<String>(alternateObjectDirectories.length);
+                for (File alternateObjectDirectory : alternateObjectDirectories)
+                {
+                    alternatePaths.add(alternateObjectDirectory.getAbsolutePath());
+                }
+                final File alternates = new File(new File(localRepository.getObjectsDirectory(), "info"), "alternates");
+                FileUtils.writeLines(alternates, alternatePaths, "\n");
+            }
         }
         catch (IOException e)
         {
