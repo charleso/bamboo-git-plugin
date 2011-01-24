@@ -145,11 +145,18 @@ public class GitOperationHelper
     {
         String previousRevision = getCurrentRevision(sourceDirectory);
         final String notNullTargetRevision = targetRevision != null ? targetRevision : obtainLatestRevision(accessData);
-        fetch(cacheDirectory, sourceDirectory, accessData, useShallow);
-        return checkout(sourceDirectory, notNullTargetRevision, previousRevision);
+        if (cacheDirectory != null && cacheDirectory.isDirectory())
+        {
+            return checkout(cacheDirectory, sourceDirectory, notNullTargetRevision, previousRevision);
+        }
+        else
+        {
+            fetch(sourceDirectory, accessData, useShallow);
+            return checkout(null, sourceDirectory, notNullTargetRevision, previousRevision);
+        }
     }
 
-    void fetch(@Nullable File cacheDirectory, @NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
+    public void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
     {
         String realBranch = StringUtils.isNotBlank(accessData.branch) ? accessData.branch : Constants.MASTER;
 
@@ -157,24 +164,7 @@ public class GitOperationHelper
         FileRepository localRepository = null;
         try
         {
-            File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);
-            FileRepositoryBuilder builder = new FileRepositoryBuilder();
-            builder.setGitDir(gitDirectory);
-            if (cacheDirectory != null && cacheDirectory.exists())
-            {
-                File objectsCache = new FileRepositoryBuilder().setWorkTree(cacheDirectory).setup().getObjectDirectory();
-                if (objectsCache != null && objectsCache.exists())
-                {
-                    builder.addAlternateObjectDirectory(objectsCache);
-                }
-            }
-            localRepository = builder.build();
-
-            if (!gitDirectory.exists())
-            {
-                buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.creatingGitRepository", Arrays.asList(gitDirectory)));
-                localRepository.create();
-            }
+            localRepository = createLocalRepository(sourceDirectory, null);
 
             transport = open(localRepository, accessData);
 
@@ -189,18 +179,6 @@ public class GitOperationHelper
             //todo: what if remote repository doesn't contain branches? i.e. it has only HEAD reference like the ones in resources/obtainLatestRevision/x.zip?
 
             transport.fetch(new BuildLoggerProgressMonitor(buildLogger), Arrays.asList(refSpec), useShallow ? 1 : 0);
-            // lets update alternatives here for a moment
-            File[] alternateObjectDirectories = builder.getAlternateObjectDirectories();
-            if (ArrayUtils.isNotEmpty(alternateObjectDirectories))
-            {
-                List<String> alternatePaths = new ArrayList<String>(alternateObjectDirectories.length);
-                for (File alternateObjectDirectory : alternateObjectDirectories)
-                {
-                    alternatePaths.add(alternateObjectDirectory.getAbsolutePath());
-                }
-                final File alternates = new File(new File(localRepository.getObjectsDirectory(), "info"), "alternates");
-                FileUtils.writeLines(alternates, alternatePaths, "\n");
-            }
         }
         catch (IOException e)
         {
@@ -220,19 +198,56 @@ public class GitOperationHelper
         }
     }
 
+    private FileRepository createLocalRepository(File workingDirectory, @Nullable File cacheDirectory)
+            throws IOException
+    {
+        File gitDirectory = new File(workingDirectory, Constants.DOT_GIT);
+        FileRepositoryBuilder builder = new FileRepositoryBuilder();
+        builder.setGitDir(gitDirectory);
+        if (cacheDirectory != null && cacheDirectory.exists())
+        {
+            File objectsCache = new FileRepositoryBuilder().setWorkTree(cacheDirectory).setup().getObjectDirectory();
+            if (objectsCache != null && objectsCache.exists())
+            {
+                builder.addAlternateObjectDirectory(objectsCache);
+            }
+        }
+        FileRepository localRepository = builder.build();
+
+        if (!gitDirectory.exists())
+        {
+            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.creatingGitRepository", Arrays.asList(gitDirectory)));
+            localRepository.create();
+        }
+
+        // lets update alternatives here for a moment
+        File[] alternateObjectDirectories = builder.getAlternateObjectDirectories();
+        if (ArrayUtils.isNotEmpty(alternateObjectDirectories))
+        {
+            List<String> alternatePaths = new ArrayList<String>(alternateObjectDirectories.length);
+            for (File alternateObjectDirectory : alternateObjectDirectories)
+            {
+                alternatePaths.add(alternateObjectDirectory.getAbsolutePath());
+            }
+            final File alternates = new File(new File(localRepository.getObjectsDirectory(), "info"), "alternates");
+            FileUtils.writeLines(alternates, alternatePaths, "\n");
+        }
+
+        return localRepository;
+    }
+
     /*
      * returns revision found after checkout in sourceDirectory
      */
     @NotNull
-    String checkout(@NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
+    String checkout(@Nullable File cacheDirectory, @NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
     {
         buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.checkingOutRevision", Arrays.asList(targetRevision)));
-        File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);
         FileRepository localRepository = null;
         RevWalk revWalk = null;
         try
         {
-            localRepository = new FileRepository(gitDirectory);
+            localRepository = createLocalRepository(sourceDirectory, cacheDirectory);
             revWalk = new RevWalk(localRepository);
             final RevCommit targetCommit = revWalk.parseCommit(localRepository.resolve(targetRevision));
             final RevCommit previousCommit = previousRevision == null ? null : revWalk.parseCommit(localRepository.resolve(previousRevision));

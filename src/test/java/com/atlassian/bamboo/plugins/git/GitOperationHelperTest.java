@@ -77,7 +77,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         {
             String targetRevision = testCase[0];
             String expectedContentsInZip = testCase[1];
-            String result = createGitOperationHelper().checkout(tmp, targetRevision, previousRevision);
+            String result = createGitOperationHelper().checkout(null, tmp, targetRevision, previousRevision);
 
             assertEquals(result, targetRevision);
             verifyContents(tmp, expectedContentsInZip);
