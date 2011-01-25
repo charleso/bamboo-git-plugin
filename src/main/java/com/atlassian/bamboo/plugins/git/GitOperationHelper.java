@@ -23,6 +23,7 @@ import org.eclipse.jgit.errors.TransportException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.RefDatabase;
 import org.eclipse.jgit.lib.RefUpdate;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -44,7 +45,10 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Class used for issuing various git operations. We don't want to hold this logic in
@@ -56,6 +60,8 @@ public class GitOperationHelper
     private static int CHANGESET_LIMIT = new SystemProperty(false, "atlassian.bamboo.git.changeset.limit", "GIT_CHANGESET_LIMIT").getValue(100);
 
     private static final Logger log = Logger.getLogger(GitOperationHelper.class);
+    private static final String[] FQREF_PREFIXES = {Constants.R_HEADS, Constants.R_REFS};
+
     private final BuildLogger buildLogger;
     private final TextProvider textProvider;
 
@@ -74,8 +80,7 @@ public class GitOperationHelper
         {
             transport = open(new FileRepository(""), repositoryData);
             fetchConnection = transport.openFetch();
-            Ref headRef = fetchConnection.getRef(Constants.R_HEADS + (StringUtils.isNotBlank(repositoryData.branch) ? repositoryData.branch : Constants.MASTER));
-            headRef = (headRef != null) ? headRef : fetchConnection.getRef(StringUtils.isNotBlank(repositoryData.branch) ? repositoryData.branch : Constants.HEAD);
+            Ref headRef = resolveRefSpec(repositoryData, fetchConnection);
             if (headRef == null)
             {
                 throw new RepositoryException(textProvider.getText("repository.git.messages.cannotDetermineHead", Arrays.asList(repositoryData.repositoryUrl, repositoryData.branch)));
@@ -108,6 +113,33 @@ public class GitOperationHelper
                 transport.close();
             }
         }
+    }
+
+    static Ref resolveRefSpec(GitRepositoryAccessData repositoryData, FetchConnection fetchConnection)
+    {
+        final Collection<String> candidates;
+        if (StringUtils.isBlank(repositoryData.branch))
+        {
+            candidates = Arrays.asList(Constants.R_HEADS + Constants.MASTER, Constants.HEAD);
+        }
+        else if (StringUtils.startsWithAny(repositoryData.branch, FQREF_PREFIXES))
+        {
+            candidates = Collections.singletonList(repositoryData.branch);
+        }
+        else
+        {
+            candidates = Arrays.asList(repositoryData.branch, Constants.R_HEADS + repositoryData.branch, Constants.R_TAGS + repositoryData.branch);
+        }
+
+        for (String candidate : candidates)
+        {
+            Ref headRef = fetchConnection.getRef(candidate);
+            if (headRef != null)
+            {
+                return headRef;
+            }
+        }
+        return null;
     }
 
     @Nullable
@@ -158,31 +190,47 @@ public class GitOperationHelper
 
     public void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
     {
-        String realBranch = StringUtils.isNotBlank(accessData.branch) ? accessData.branch : Constants.MASTER;
 
         Transport transport = null;
         FileRepository localRepository = null;
+        String branchDescription = "(unresolved) " + accessData.branch;
         try
         {
             localRepository = createLocalRepository(sourceDirectory, null);
 
             transport = open(localRepository, accessData);
+            final String resolvedBranch;
+            if (StringUtils.startsWithAny(accessData.branch, FQREF_PREFIXES))
+            {
+                resolvedBranch = accessData.branch;
+            }
+            else
+            {
+                FetchConnection fetchConnection = transport.openFetch();
+                try
+                {
+                    resolvedBranch = resolveRefSpec(accessData, fetchConnection).getName();
+                }
+                finally
+                {
+                    fetchConnection.close();
+                }
+            }
+            branchDescription = resolvedBranch;
 
-            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.fetchingBranch", Arrays.asList(realBranch))
+            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.fetchingBranch", Arrays.asList(branchDescription))
                     + (useShallow ? " " + textProvider.getText("repository.git.messages.doingShallowFetch") : ""));
-
             RefSpec refSpec = new RefSpec()
                     .setForceUpdate(true)
-                    .setSource(Constants.R_HEADS + realBranch)
-                    .setDestination(Constants.R_HEADS + realBranch);
-
+                    .setSource(resolvedBranch);
+            // todo: refSpec.setDestination() if we decide that we want local branch name to reflect remote one instead of being default master
             //todo: what if remote repository doesn't contain branches? i.e. it has only HEAD reference like the ones in resources/obtainLatestRevision/x.zip?
 
             transport.fetch(new BuildLoggerProgressMonitor(buildLogger), Arrays.asList(refSpec), useShallow ? 1 : 0);
         }
         catch (IOException e)
         {
-            String message = textProvider.getText("repository.git.messages.fetchingFailed", Arrays.asList(accessData.repositoryUrl, realBranch, sourceDirectory));
+            String message = textProvider.getText("repository.git.messages.fetchingFailed", Arrays.asList(accessData.repositoryUrl, branchDescription, sourceDirectory));
             throw new RepositoryException(buildLogger.addErrorLogEntry(message + " " + e.getMessage()), e);
         }
         finally
