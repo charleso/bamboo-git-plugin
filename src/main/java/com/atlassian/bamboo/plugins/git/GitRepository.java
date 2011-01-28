@@ -232,7 +232,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                 {
                     try
                     {
-                        return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(cacheDirectory, sourceDirectory, accessData, targetRevision, USE_SHALLOW_CLONES & useShallowClones));
+                        return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(cacheDirectory, sourceDirectory, accessData, targetRevision, USE_SHALLOW_CLONES && useShallowClones));
                     }
                     catch (Exception e)
                     {
