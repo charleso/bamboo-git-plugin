@@ -256,6 +256,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         }
     }
 
+    @Deprecated
     @NotNull
     public String retrieveSourceCode(@NotNull String planKey, @Nullable String vcsRevisionKey) throws RepositoryException
     {
@@ -493,7 +494,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
     public File getCacheDirectory()
     {
-        return GitCacheDirectory.getCacheDirectory(new File(SystemDirectory.getApplicationHome(), "caches"), accessData);
+        return GitCacheDirectory.getCacheDirectory(buildDirectoryManager.getBaseBuildWorkingDirectory(), accessData);
     }
 
     @Override
