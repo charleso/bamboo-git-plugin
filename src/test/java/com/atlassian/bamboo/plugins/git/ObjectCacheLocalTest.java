@@ -2,7 +2,6 @@ package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.repository.RepositoryException;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.ConcurrentRefUpdateException;
 import org.eclipse.jgit.api.errors.NoFilepatternException;
@@ -11,14 +10,11 @@ import org.eclipse.jgit.api.errors.NoMessageException;
 import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.storage.file.FileRepository;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
 
 public class ObjectCacheLocalTest extends GitAbstractTest
 {
@@ -56,6 +52,21 @@ public class ObjectCacheLocalTest extends GitAbstractTest
          // no cache - something expected but we can't know whether objects or pack - depends
         Assert.assertFalse(rs.objects.isEmpty() && rs.packs.isEmpty());
     }
+
+    @Test
+    public void testDeleteCacheDirBeforeSourceCheckout() throws Exception
+    {
+        TestSetup t = new TestSetup().prepare();
+        File targetDir = t.createDir("target");
+        File emptyCache = new File(createTempDirectory(), "not_created");
+
+        GitOperationHelper goh = createGitOperationHelper();
+        goh.fetchAndCheckout(emptyCache, targetDir, t.accessData, t.lastRevision, false);
+
+        String contents = FileUtils.readFileToString(new File(targetDir, "file.txt"));
+        Assert.assertEquals(contents, t.lastContents);
+    }
+
 
     // this test is invalid
     public void testOldCacheGetsReusedLocally() throws Exception
