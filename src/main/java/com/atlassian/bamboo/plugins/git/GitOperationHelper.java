@@ -23,12 +23,12 @@ import org.eclipse.jgit.errors.TransportException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.lib.RefDatabase;
 import org.eclipse.jgit.lib.RefUpdate;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.storage.file.RefDirectory;
 import org.eclipse.jgit.transport.FetchConnection;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.SshSessionFactory;
@@ -48,7 +48,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Class used for issuing various git operations. We don't want to hold this logic in
@@ -222,11 +221,15 @@ public class GitOperationHelper
                     + (useShallow ? " " + textProvider.getText("repository.git.messages.doingShallowFetch") : ""));
             RefSpec refSpec = new RefSpec()
                     .setForceUpdate(true)
-                    .setSource(resolvedBranch);
-            // todo: refSpec.setDestination() if we decide that we want local branch name to reflect remote one instead of being default master
-            //todo: what if remote repository doesn't contain branches? i.e. it has only HEAD reference like the ones in resources/obtainLatestRevision/x.zip?
+                    .setSource(resolvedBranch)
+                    .setDestination(resolvedBranch);
 
             transport.fetch(new BuildLoggerProgressMonitor(buildLogger), Arrays.asList(refSpec), useShallow ? 1 : 0);
+
+            if (resolvedBranch.startsWith(Constants.R_HEADS))
+            {
+                localRepository.updateRef(Constants.HEAD).link(resolvedBranch);
+            }
         }
         catch (IOException e)
         {
@@ -252,12 +255,15 @@ public class GitOperationHelper
         File gitDirectory = new File(workingDirectory, Constants.DOT_GIT);
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
         builder.setGitDir(gitDirectory);
+        String headRef = null;
         if (cacheDirectory != null && cacheDirectory.exists())
         {
-            File objectsCache = new FileRepositoryBuilder().setWorkTree(cacheDirectory).setup().getObjectDirectory();
+            FileRepositoryBuilder cacheRepoBuilder = new FileRepositoryBuilder().setWorkTree(cacheDirectory).setup();
+            File objectsCache = cacheRepoBuilder.getObjectDirectory();
             if (objectsCache != null && objectsCache.exists())
             {
                 builder.addAlternateObjectDirectory(objectsCache);
+                headRef = FileUtils.readFileToString(new File(cacheRepoBuilder.getGitDir(), Constants.HEAD));
             }
         }
         FileRepository localRepository = builder.build();
@@ -279,6 +285,11 @@ public class GitOperationHelper
             }
             final File alternates = new File(new File(localRepository.getObjectsDirectory(), "info"), "alternates");
             FileUtils.writeLines(alternates, alternatePaths, "\n");
+        }
+
+        if (StringUtils.startsWith(headRef, RefDirectory.SYMREF))
+        {
+            FileUtils.writeStringToFile(new File(localRepository.getDirectory(), Constants.HEAD), headRef);
         }
 
         return localRepository;
