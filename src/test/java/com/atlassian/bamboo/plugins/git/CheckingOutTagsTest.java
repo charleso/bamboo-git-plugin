@@ -153,9 +153,46 @@ public class CheckingOutTagsTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, srcDir, ref);
 
-        gitRepository.retrieveSourceCode(mockBuildContext(), srcRepo.srcRepo.getRefDatabase().getRef(ref).getObjectId().name());
+        String expectedRevision = srcRepo.srcRepo.getRefDatabase().getRef(ref).getObjectId().name();
+        gitRepository.retrieveSourceCode(mockBuildContext(), expectedRevision);
 
         verifyCurrentBranch(localBranch, expectedContents, gitRepository);
+    }
+
+    @Test
+    public void testSwitchingBetweenBranchesWithCache() throws Exception
+    {
+        GitRepository gitRepository = createGitRepository();
+        setRepositoryProperties(gitRepository, srcDir, "master");
+
+        BuildChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
+        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
+
+        verifyCurrentBranch("refs/heads/master", "Master top", gitRepository);
+
+        setRepositoryProperties(gitRepository, srcDir, "branch");
+        BuildChanges changes2 = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, changes.getVcsRevisionKey());
+        gitRepository.retrieveSourceCode(mockBuildContext(), changes2.getVcsRevisionKey());
+
+        verifyCurrentBranch("refs/heads/branch", "Branch top", gitRepository);
+    }
+
+    @Test
+    public void testSwitchingBetweenBranchesDirect() throws Exception
+    {
+        GitRepository gitRepository = createGitRepository();
+        setRepositoryProperties(gitRepository, srcDir, "master");
+
+        final String masterHead = srcRepo.srcRepo.getRefDatabase().getRef("refs/heads/master").getObjectId().name();
+        gitRepository.retrieveSourceCode(mockBuildContext(), masterHead);
+
+        verifyCurrentBranch("refs/heads/master", "Master top", gitRepository);
+
+        setRepositoryProperties(gitRepository, srcDir, "branch");
+        final String branchHead = srcRepo.srcRepo.getRefDatabase().getRef("refs/heads/branch").getObjectId().name();
+        gitRepository.retrieveSourceCode(mockBuildContext(), branchHead);
+
+        verifyCurrentBranch("refs/heads/branch", "Branch top", gitRepository);
     }
 
     private void verifyCurrentBranch(String localBranch, String expectedContents, GitRepository gitRepository)
@@ -171,7 +208,6 @@ public class CheckingOutTagsTest extends GitAbstractTest
         Assert.assertEquals(targetRepository.getFullBranch(), localBranch);
         targetRepository.close();
     }
-
 }
 
 class GitTestRepository
