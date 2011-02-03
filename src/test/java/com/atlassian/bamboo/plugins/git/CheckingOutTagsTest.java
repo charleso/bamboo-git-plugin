@@ -210,34 +210,3 @@ public class CheckingOutTagsTest extends GitAbstractTest
     }
 }
 
-class GitTestRepository
-{
-    public final FileRepository srcRepo;
-    public final Git git;
-    public final File textFile;
-
-    GitTestRepository(File srcDir) throws IOException
-    {
-        srcRepo = new FileRepository(new File(srcDir, Constants.DOT_GIT));
-        srcRepo.create();
-        textFile = getTextFile(srcDir);
-        git = new Git(srcRepo);
-    }
-
-    void close()
-    {
-        srcRepo.close();
-    }
-
-    RevCommit commitFileContents(String text) throws IOException, GitAPIException
-    {
-        FileUtils.writeStringToFile(textFile, text);
-        git.add().addFilepattern(".").call();
-        return git.commit().setMessage(text).setCommitter("testUser", "testUser@testDomain").call();
-    }
-
-    File getTextFile(File baseDir)
-    {
-        return new File(baseDir, "file.txt");
-    }
-}
