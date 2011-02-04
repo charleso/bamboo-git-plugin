@@ -138,4 +138,16 @@ public class GitRepositoryTest extends GitAbstractTest
         }
     }
 
+    @Test
+    public void testRepositoryInitialDetectionDoesntReturnChangesets() throws Exception
+    {
+        File testRepository = createTempDirectory();
+        ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
+
+        GitRepository gitRepository = createGitRepository();
+        setRepositoryProperties(gitRepository, testRepository, "master");
+
+        BuildChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
+        assertEquals(changes.getChanges().size(), 0);
+    }
 }
