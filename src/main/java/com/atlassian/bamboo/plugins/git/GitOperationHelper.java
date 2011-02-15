@@ -192,6 +192,8 @@ public class GitOperationHelper
     {
         Transport transport = null;
         FileRepository localRepository = null;
+        FetchConnection fetchConnection = null;
+        RevWalk revWalk = null;
         String branchDescription = "(unresolved) " + accessData.branch;
         try
         {
@@ -205,15 +207,8 @@ public class GitOperationHelper
             }
             else
             {
-                FetchConnection fetchConnection = transport.openFetch();
-                try
-                {
-                    resolvedBranch = resolveRefSpec(accessData, fetchConnection).getName();
-                }
-                finally
-                {
-                    fetchConnection.close();
-                }
+                fetchConnection = transport.openFetch();
+                resolvedBranch = resolveRefSpec(accessData, fetchConnection).getName();
             }
             branchDescription = resolvedBranch;
 
@@ -231,32 +226,26 @@ public class GitOperationHelper
                 localRepository.updateRef(Constants.HEAD).link(resolvedBranch);
             }
 
-            FetchConnection fetchConnection = transport.openFetch();
-            try
+            fetchConnection = (fetchConnection != null) ? fetchConnection : transport.openFetch();
+            for (Ref ref : fetchConnection.getRefs())
             {
-                for (Ref ref : fetchConnection.getRefs())
+                final String refName = ref.getName();
+                if (refName.startsWith(Constants.R_TAGS))
                 {
-                    final String refName = ref.getName();
-                    if (refName.startsWith(Constants.R_TAGS))
+                    ObjectId taggedObjectId = ref.getPeeledObjectId() != null ? ref.getPeeledObjectId() : ref.getObjectId();
+                    revWalk = (revWalk != null) ? revWalk : new RevWalk(localRepository);
+                    try
                     {
-                        ObjectId taggedObjectId = ref.getPeeledObjectId() != null ? ref.getPeeledObjectId() : ref.getObjectId();
-                        try
-                        {
-                            new RevWalk(localRepository).parseCommit(taggedObjectId);
-                            RefUpdate refUpdate = localRepository.updateRef(refName);
-                            refUpdate.setNewObjectId(taggedObjectId);
-                            refUpdate.forceUpdate();
-                        }
-                        catch (MissingObjectException e)
-                        {
-                            // do nothing - apparently this tag isn't contained by the fetched branch
-                        }
+                        revWalk.parseCommit(taggedObjectId);
                     }
+                    catch (MissingObjectException e)
+                    {
+                        continue; // do nothing - apparently this tag isn't contained by the fetched branch
+                    }
+                    RefUpdate refUpdate = localRepository.updateRef(refName);
+                    refUpdate.setNewObjectId(taggedObjectId);
+                    refUpdate.forceUpdate();
                 }
-            }
-            finally
-            {
-                fetchConnection.close();
             }
         }
         catch (IOException e)
@@ -273,6 +262,14 @@ public class GitOperationHelper
             if (transport != null)
             {
                 transport.close();
+            }
+            if (fetchConnection != null)
+            {
+                fetchConnection.close();
+            }
+            if (revWalk != null)
+            {
+                revWalk.release();
             }
         }
     }
