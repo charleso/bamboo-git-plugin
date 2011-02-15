@@ -71,7 +71,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     private static final String TEMPORARY_GIT_SSH_KEY_CHANGE = "temporary.git.ssh.key.change";
 
     private static final GitAuthenticationType defaultAuthenticationType = GitAuthenticationType.NONE;
-    private static boolean USE_SHALLOW_CLONES = new SystemProperty(false, "atlassian.bamboo.git.useShallowClones", "ATLASSIAN_BAMBO_GIT_USE_SHALLOW_CLONES").getValue(true);
+    private static boolean USE_SHALLOW_CLONES = new SystemProperty(false, "atlassian.bamboo.git.useShallowClones", "ATLASSIAN_BAMBOO_GIT_USE_SHALLOW_CLONES").getValue(true);
 
     // ------------------------------------------------------------------------------------------------- Type Properties
 

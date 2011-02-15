@@ -18,6 +18,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.NotSupportedException;
 import org.eclipse.jgit.errors.TransportException;
 import org.eclipse.jgit.lib.Constants;
@@ -189,7 +190,6 @@ public class GitOperationHelper
 
     public void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
     {
-
         Transport transport = null;
         FileRepository localRepository = null;
         String branchDescription = "(unresolved) " + accessData.branch;
@@ -229,6 +229,34 @@ public class GitOperationHelper
             if (resolvedBranch.startsWith(Constants.R_HEADS))
             {
                 localRepository.updateRef(Constants.HEAD).link(resolvedBranch);
+            }
+
+            FetchConnection fetchConnection = transport.openFetch();
+            try
+            {
+                for (Ref ref : fetchConnection.getRefs())
+                {
+                    final String refName = ref.getName();
+                    if (refName.startsWith(Constants.R_TAGS))
+                    {
+                        ObjectId taggedObjectId = ref.getPeeledObjectId() != null ? ref.getPeeledObjectId() : ref.getObjectId();
+                        try
+                        {
+                            new RevWalk(localRepository).parseCommit(taggedObjectId);
+                            RefUpdate refUpdate = localRepository.updateRef(refName);
+                            refUpdate.setNewObjectId(taggedObjectId);
+                            refUpdate.forceUpdate();
+                        }
+                        catch (MissingObjectException e)
+                        {
+                            // do nothing - apparently this tag isn't contained by the fetched branch
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                fetchConnection.close();
             }
         }
         catch (IOException e)
@@ -285,6 +313,12 @@ public class GitOperationHelper
             }
             final File alternates = new File(new File(localRepository.getObjectsDirectory(), "info"), "alternates");
             FileUtils.writeLines(alternates, alternatePaths, "\n");
+        }
+
+        if (cacheDirectory != null && cacheDirectory.exists())
+        {
+            // copy tags from the cache repository
+            FileUtils.copyDirectoryToDirectory(new File(cacheDirectory, Constants.DOT_GIT + "/" + Constants.R_TAGS), new File(localRepository.getDirectory(), Constants.R_REFS));
         }
 
         if (StringUtils.startsWith(headRef, RefDirectory.SYMREF))
@@ -442,7 +476,7 @@ public class GitOperationHelper
     {
         try
         {
-            StringEncrypter encrypter = new StringEncrypter();
+            final StringEncrypter encrypter = new StringEncrypter();
             URIish uri = new URIish(accessData.repositoryUrl);
             if ("ssh".equals(uri.getScheme()) && accessData.authenticationType == GitAuthenticationType.PASSWORD
                     && StringUtils.isBlank(uri.getUser()) && StringUtils.isNotBlank(accessData.username))
