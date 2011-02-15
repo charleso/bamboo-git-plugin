@@ -208,5 +208,46 @@ public class CheckingOutTagsTest extends GitAbstractTest
         Assert.assertEquals(targetRepository.getFullBranch(), localBranch);
         targetRepository.close();
     }
+
+    @DataProvider(parallel = true)
+    Object[][] tagsData()
+    {
+        return new Object[][] {
+                {false, "master", "master1",  "master1"},
+                {false, "master", "master2",  "master2"},
+                {false, "master", "master/3", "master/3"},
+                {false, "branch", "branch1",  "branch1"},
+                {false, "branch", "branch2",  "branch2"},
+                {true,  "master", "master1",  "master1"},
+                {true,  "master", "master2",  "master2"},
+                {true,  "master", "master/3", "master/3"},
+                {true,  "branch", "branch1",  "branch1"},
+                {true,  "branch", "branch2",  "branch2"},
+        };
+    }
+
+    @Test(dataProvider = "tagsData")
+    public void testTagsExistsAfterFetch(boolean useCache, String branch, String tag, String expectedContents) throws Exception
+    {
+        boolean useShallow = false; // this doesn't matter until jgit has server support for shallow clones over local repositories
+        File src = createTempDirectory();
+        GitOperationHelper helper = createGitOperationHelper();
+        GitRepository.GitRepositoryAccessData accessData = createAccessData(srcDir, branch);
+        File cache = null;
+
+        if (useCache)
+        {
+            cache = createTempDirectory();
+            helper.fetch(cache, accessData, useShallow);
+        }
+        else
+        {
+            helper.fetch(src, accessData, useShallow);
+        }
+        helper.checkout(cache, src, tag, null);
+
+        String contents = FileUtils.readFileToString(srcRepo.getTextFile(src));
+        Assert.assertEquals(contents, expectedContents);
+    }
 }
 

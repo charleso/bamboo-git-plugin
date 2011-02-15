@@ -227,13 +227,13 @@ public class GitOperationHelper
             }
 
             fetchConnection = (fetchConnection != null) ? fetchConnection : transport.openFetch();
+            revWalk = new RevWalk(localRepository);
             for (Ref ref : fetchConnection.getRefs())
             {
                 final String refName = ref.getName();
                 if (refName.startsWith(Constants.R_TAGS))
                 {
                     ObjectId taggedObjectId = ref.getPeeledObjectId() != null ? ref.getPeeledObjectId() : ref.getObjectId();
-                    revWalk = (revWalk != null) ? revWalk : new RevWalk(localRepository);
                     try
                     {
                         revWalk.parseCommit(taggedObjectId);
