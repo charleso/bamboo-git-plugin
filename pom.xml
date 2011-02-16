@@ -140,7 +140,7 @@
     </build>
 
     <properties>
-        <bamboo.version>3.0-pre-rc1git</bamboo.version>
+        <bamboo.version>3.1-SNAPSHOT</bamboo.version>
         <bamboo.data.version>2.6.1</bamboo.data.version>
     </properties>
 

@@ -5,9 +5,11 @@ import com.atlassian.bamboo.author.AuthorImpl;
 import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.commit.Commit;
 import com.atlassian.bamboo.commit.CommitImpl;
-import com.atlassian.bamboo.fileserver.SystemDirectory;
+import com.atlassian.bamboo.plan.Plan;
 import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.repository.AbstractRepository;
+import com.atlassian.bamboo.repository.CacheDescription;
+import com.atlassian.bamboo.repository.CacheHandler;
 import com.atlassian.bamboo.repository.CustomVariableProviderRepository;
 import com.atlassian.bamboo.repository.MavenPomAccessor;
 import com.atlassian.bamboo.repository.MavenPomAccessorCapableRepository;
@@ -28,6 +30,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.opensymphony.xwork.TextProvider;
+import com.opensymphony.xwork.ValidationAware;
 import com.opensymphony.xwork.util.LocalizedTextUtil;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
@@ -43,13 +46,14 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.Map;
 
-public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository, SelectableAuthenticationRepository, CustomVariableProviderRepository
+public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository, SelectableAuthenticationRepository, CustomVariableProviderRepository, CacheHandler
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -94,7 +98,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
     // Maven 2 import
     private transient String pathToPom;
-
+    private transient GitCacheHandler gitCacheHandler;
     //todo: Spring-inject StringEncrypter singleton, https://atlaseye.atlassian.com/cru/CR-BAM-2232#c37222
 
     // ---------------------------------------------------------------------------------------------------- Dependencies
@@ -445,6 +449,28 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         return accessData.authenticationType != null ? accessData.authenticationType.name() : defaultAuthenticationType.name();
     }
 
+    @NotNull
+    public String getHandlerDescription()
+    {
+        return textProvider.getText("");
+    }
+
+    @NotNull
+    public Collection<CacheDescription> getCacheDescriptions()
+    {
+        return gitCacheHandler.getCacheDescriptions();
+    }
+
+    public void deleteCaches(@NotNull Collection<String> cacheKeys, @NotNull ValidationAware validationAware)
+    {
+        gitCacheHandler.deleteCaches(cacheKeys, validationAware);
+    }
+
+    public void deleteUnusedCaches(@NotNull ValidationAware validationAware)
+    {
+        gitCacheHandler.deleteUnusedCaches(validationAware);
+    }
+
     // -------------------------------------------------------------------------------------------------- Public Methods
 
     // -------------------------------------------------------------------------------------------------- Helper Methods
@@ -487,6 +513,13 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         return accessData.branch;
     }
 
+    public List<Plan> getOtherPlansSharingCache(Plan current)
+    {
+        List<Plan> other = Lists.newArrayList(gitCacheHandler.getCacheDescription(this).getUsingPlans());
+        other.remove(current);
+        return other;
+    }
+
     public String getAuthTypeName()
     {
         return getAuthTypeName(getAuthType());
@@ -506,4 +539,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         }
     }
 
+    public void setGitCacheHandler(GitCacheHandler gitCacheHandler)
+    {
+        this.gitCacheHandler = gitCacheHandler;
+    }
 }

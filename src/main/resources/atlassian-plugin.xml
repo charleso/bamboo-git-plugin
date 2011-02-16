@@ -22,4 +22,6 @@
           </action>
       </package>
     </xwork>
+
+    <component key="gitCacheHandler" name="Git Cache Handler" class="com.atlassian.bamboo.plugins.git.GitCacheHandler" />
 </atlassian-plugin>
