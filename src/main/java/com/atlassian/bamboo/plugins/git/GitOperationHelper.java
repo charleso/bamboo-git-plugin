@@ -18,7 +18,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
-import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.NotSupportedException;
 import org.eclipse.jgit.errors.TransportException;
 import org.eclipse.jgit.lib.Constants;
@@ -34,6 +33,7 @@ import org.eclipse.jgit.transport.FetchConnection;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
+import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
@@ -192,8 +192,6 @@ public class GitOperationHelper
     {
         Transport transport = null;
         FileRepository localRepository = null;
-        FetchConnection fetchConnection = null;
-        RevWalk revWalk = null;
         String branchDescription = "(unresolved) " + accessData.branch;
         try
         {
@@ -207,8 +205,15 @@ public class GitOperationHelper
             }
             else
             {
-                fetchConnection = transport.openFetch();
-                resolvedBranch = resolveRefSpec(accessData, fetchConnection).getName();
+                final FetchConnection fetchConnection = transport.openFetch();
+                try
+                {
+                    resolvedBranch = resolveRefSpec(accessData, fetchConnection).getName();
+                }
+                finally
+                {
+                    fetchConnection.close();
+                }
             }
             branchDescription = resolvedBranch;
 
@@ -219,33 +224,16 @@ public class GitOperationHelper
                     .setSource(resolvedBranch)
                     .setDestination(resolvedBranch);
 
+            if (!useShallow && localRepository.getShallows().isEmpty())
+            {
+                transport.setTagOpt(TagOpt.AUTO_FOLLOW);
+            }
+
             transport.fetch(new BuildLoggerProgressMonitor(buildLogger), Arrays.asList(refSpec), useShallow ? 1 : 0);
 
             if (resolvedBranch.startsWith(Constants.R_HEADS))
             {
                 localRepository.updateRef(Constants.HEAD).link(resolvedBranch);
-            }
-
-            fetchConnection = (fetchConnection != null) ? fetchConnection : transport.openFetch();
-            revWalk = new RevWalk(localRepository);
-            for (Ref ref : fetchConnection.getRefs())
-            {
-                final String refName = ref.getName();
-                if (refName.startsWith(Constants.R_TAGS))
-                {
-                    ObjectId taggedObjectId = ref.getPeeledObjectId() != null ? ref.getPeeledObjectId() : ref.getObjectId();
-                    try
-                    {
-                        revWalk.parseCommit(taggedObjectId);
-                    }
-                    catch (MissingObjectException e)
-                    {
-                        continue; // do nothing - apparently this tag isn't contained by the fetched branch
-                    }
-                    RefUpdate refUpdate = localRepository.updateRef(refName);
-                    refUpdate.setNewObjectId(taggedObjectId);
-                    refUpdate.forceUpdate();
-                }
             }
         }
         catch (IOException e)
@@ -262,14 +250,6 @@ public class GitOperationHelper
             if (transport != null)
             {
                 transport.close();
-            }
-            if (fetchConnection != null)
-            {
-                fetchConnection.close();
-            }
-            if (revWalk != null)
-            {
-                revWalk.release();
             }
         }
     }
