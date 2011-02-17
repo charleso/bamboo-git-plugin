@@ -452,7 +452,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     @NotNull
     public String getHandlerDescription()
     {
-        return textProvider.getText("");
+        return "";
     }
 
     @NotNull

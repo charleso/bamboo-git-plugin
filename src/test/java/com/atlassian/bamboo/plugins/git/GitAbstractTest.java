@@ -113,8 +113,12 @@ public class GitAbstractTest
 
     public GitRepository createGitRepository() throws Exception
     {
-        File workingDirectory = createTempDirectory();
 
+        return createGitRepository(createTempDirectory());
+    }
+
+    public GitRepository createGitRepository(File workingDirectory)
+    {
         final GitRepository gitRepository = new GitRepositoryFixture();
 
         BuildLoggerManager buildLoggerManager = Mockito.mock(BuildLoggerManager.class, new Returns(new NullBuildLogger()));

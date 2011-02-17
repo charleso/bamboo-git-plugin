@@ -15,6 +15,7 @@ import com.opensymphony.xwork.ValidationAware;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -84,7 +85,7 @@ public class GitCacheHandler
     {
         StringBuilder sb = new StringBuilder();
         sb.append("URL: '").append(repository.accessData.repositoryUrl).append('\'');
-        if (repository.accessData.username != null)
+        if (StringUtils.isNotBlank(repository.accessData.username))
         {
             sb.append(", Username: '").append(repository.accessData.username).append('\'');
         }
