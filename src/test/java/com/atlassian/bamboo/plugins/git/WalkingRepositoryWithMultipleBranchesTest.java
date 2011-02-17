@@ -18,6 +18,8 @@ import java.util.List;
 
 import static java.util.Arrays.asList;
 
+// sequentialChangeDetections need sequence from dataProvider
+@Test(singleThreaded = true)
 public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
 {
     /* repository structure:
@@ -105,7 +107,7 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
         testSubsequentChangeDetections(branch, previousChangeset, srcRepo, null, expectedComments);
     }
 
-    @Test(dataProvider = "subsequentChangeDetectionsData", singleThreaded = true)
+    @Test(dataProvider = "subsequentChangeDetectionsData")
     public void testSubsequentChangeDetectionsWithCache(String branch, String previousChangeset, String srcRepo, String expectedHead, List<String> expectedComments) throws Exception
     {
         File source = new File(sourceRepositoriesBase, srcRepo);
@@ -130,8 +132,7 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
 
     }
 
-    @Test(dataProvider = "subsequentChangeDetectionsDataFailing", singleThreaded = true,
-            expectedExceptions = RepositoryException.class, expectedExceptionsMessageRegExp = "Cannot determine head revision.*")
+    @Test(dataProvider = "subsequentChangeDetectionsDataFailing", expectedExceptions = RepositoryException.class, expectedExceptionsMessageRegExp = "Cannot determine head revision.*")
     public void testSubsequentChangeDetectionsWithCacheFailing(String branch, String previousChangeset, String srcRepo, List<String> expectedComments) throws Exception
     {
         testSubsequentChangeDetectionsWithCache(branch, previousChangeset, srcRepo, null, expectedComments);

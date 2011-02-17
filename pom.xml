@@ -20,13 +20,6 @@
         <developerConnection>scm:git:ssh://git@github.com/atlassian/bamboo-git-plugin.git</developerConnection>
     </scm>
 
-    <repositories>
-        <repository>
-            <id>jgit-repository</id>
-            <url>http://download.eclipse.org/jgit/maven</url>
-        </repository>
-    </repositories>
-
     <dependencies>
         <dependency>
             <groupId>com.atlassian.bamboo</groupId>
@@ -117,6 +110,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <excludedGroups>manual</excludedGroups>
+                    <parallel>methods</parallel>
+                    <threadCount>16</threadCount>
                 </configuration>
             </plugin>
 
@@ -140,7 +135,7 @@
     </build>
 
     <properties>
-        <bamboo.version>3.0-pre-rc1git</bamboo.version>
+        <bamboo.version>3.0</bamboo.version>
         <bamboo.data.version>2.6.1</bamboo.data.version>
     </properties>
 
