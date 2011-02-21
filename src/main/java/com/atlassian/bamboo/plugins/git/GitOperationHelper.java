@@ -261,9 +261,11 @@ public class GitOperationHelper
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
         builder.setGitDir(gitDirectory);
         String headRef = null;
+        File cacheGitDir = null;
         if (cacheDirectory != null && cacheDirectory.exists())
         {
             FileRepositoryBuilder cacheRepoBuilder = new FileRepositoryBuilder().setWorkTree(cacheDirectory).setup();
+            cacheGitDir = cacheRepoBuilder.getGitDir();
             File objectsCache = cacheRepoBuilder.getObjectDirectory();
             if (objectsCache != null && objectsCache.exists())
             {
@@ -292,10 +294,12 @@ public class GitOperationHelper
             FileUtils.writeLines(alternates, alternatePaths, "\n");
         }
 
-        if (cacheDirectory != null && cacheDirectory.exists())
+        if (cacheGitDir != null && cacheGitDir.isDirectory())
         {
             // copy tags from the cache repository
-            FileUtils.copyDirectoryToDirectory(new File(cacheDirectory, Constants.DOT_GIT + "/" + Constants.R_TAGS), new File(localRepository.getDirectory(), Constants.R_REFS));
+            FileUtils.copyDirectoryToDirectory(new File(cacheGitDir, Constants.R_TAGS), new File(localRepository.getDirectory(), Constants.R_REFS));
+
+            FileUtils.copyFileToDirectory(new File(cacheGitDir, "shallow"), localRepository.getDirectory());
         }
 
         if (StringUtils.startsWith(headRef, RefDirectory.SYMREF))

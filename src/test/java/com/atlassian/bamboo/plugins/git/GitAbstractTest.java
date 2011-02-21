@@ -16,6 +16,8 @@ import com.atlassian.plugin.PluginAccessor;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.poi.hssf.record.formula.functions.T;
+import org.eclipse.jgit.lib.Repository;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
 import org.testng.annotations.AfterClass;
@@ -42,6 +44,7 @@ public class GitAbstractTest
 {
     public static final String PLAN_KEY = "PLAN-KEY";
     private final Collection<File> filesToCleanUp = Collections.synchronizedCollection(new ArrayList<File>());
+    private final Collection<Repository> repositoriesToCleanUp = Collections.synchronizedCollection(new ArrayList<Repository>());
     private static final ResourceBundle resourceBundle = ResourceBundle.getBundle("com.atlassian.bamboo.plugins.git.i18n", Locale.US);
 
     public static void setRepositoryProperties(GitRepository gitRepository, File repositorySourceDir, String branch) throws Exception
@@ -88,12 +91,12 @@ public class GitAbstractTest
         setRepositoryProperties(gitRepository, repositoryUrl, Collections.<String, Object>emptyMap());
     }
 
-    public static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, Map<String, Object> paramMap) throws Exception
+    public static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, Map<String, ?> paramMap) throws Exception
     {
         BuildConfiguration buildConfiguration = new BuildConfiguration();
         buildConfiguration.setProperty("repository.git.repositoryUrl", repositoryUrl);
 
-        for (Map.Entry<String, Object> entry : paramMap.entrySet())
+        for (Map.Entry<String, ?> entry : paramMap.entrySet())
         {
             buildConfiguration.setProperty(entry.getKey(), entry.getValue());
         }
@@ -133,6 +136,12 @@ public class GitAbstractTest
         FileUtils.forceDeleteOnExit(tmp);
         filesToCleanUp.add(tmp);
         return tmp;
+    }
+
+    protected <T extends Repository> T register(T repository)
+    {
+        repositoriesToCleanUp.add(repository);
+        return repository;
     }
 
     public static void verifyContents(File directory, final String expectedZip) throws IOException
@@ -204,6 +213,10 @@ public class GitAbstractTest
         for (File file : filesToCleanUp)
         {
             FileUtils.deleteQuietly(file);
+        }
+        for (Repository repository : repositoriesToCleanUp)
+        {
+            repository.close();
         }
     }
 

@@ -1,12 +1,17 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.repository.RepositoryException;
+import com.atlassian.bamboo.v2.build.BuildChanges;
+import com.google.common.collect.Iterables;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepository;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -16,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -285,4 +291,22 @@ public class ShallowClonesTest extends GitAbstractTest
         }
         return sizeDeep;
     }
+
+    @Test
+    public void testShallowCloneFromCacheContainsShalowInfo() throws Exception
+    {
+        GitRepository gitRepository = createGitRepository();
+        setRepositoryProperties(gitRepository, "git://github.com/pstefaniak/7.git", Collections.singletonMap("repository.git.useShallowClones", true));
+
+        BuildChanges buildChanges = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
+        gitRepository.retrieveSourceCode(mockBuildContext(), buildChanges.getVcsRevisionKey());
+
+        File sourceCodeDirectory = gitRepository.getSourceCodeDirectory(PLAN_KEY);
+
+        FileRepository repository = register(new FileRepositoryBuilder().setWorkTree(sourceCodeDirectory).build());
+        Git git = new Git(repository);
+        Iterable<RevCommit> commits = git.log().call();
+        assertEquals(Iterables.size(commits), 2);
+    }
+
 }
