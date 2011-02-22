@@ -42,7 +42,7 @@
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
-            <version>0.10.1-ATLASSIAN</version>
+            <version>0.11.3-ATLASSIAN-1</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.jcraft</groupId>
@@ -50,7 +50,7 @@
                 </exclusion>
             </exclusions>
             <scope>system</scope>
-            <systemPath>${basedir}/libs/org.eclipse.jgit-0.10.1-ATLASSIAN.jar</systemPath>
+            <systemPath>${basedir}/libs/org.eclipse.jgit-0.11.3-ATLASSIAN-1.jar</systemPath>
         </dependency>
 
         <dependency>
