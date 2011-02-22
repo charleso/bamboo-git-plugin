@@ -299,7 +299,11 @@ public class GitOperationHelper
             // copy tags from the cache repository
             FileUtils.copyDirectoryToDirectory(new File(cacheGitDir, Constants.R_TAGS), new File(localRepository.getDirectory(), Constants.R_REFS));
 
-            FileUtils.copyFileToDirectory(new File(cacheGitDir, "shallow"), localRepository.getDirectory());
+            File shallow = new File(cacheGitDir, "shallow");
+            if (shallow.exists())
+            {
+                FileUtils.copyFileToDirectory(shallow, localRepository.getDirectory());
+            }
         }
 
         if (StringUtils.startsWith(headRef, RefDirectory.SYMREF))
