@@ -5,7 +5,6 @@ import com.atlassian.bamboo.author.AuthorImpl;
 import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.commit.Commit;
 import com.atlassian.bamboo.commit.CommitImpl;
-import com.atlassian.bamboo.fileserver.SystemDirectory;
 import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.repository.AbstractRepository;
 import com.atlassian.bamboo.repository.CustomVariableProviderRepository;
@@ -239,7 +238,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                         buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.failedToRetrieveSource", Arrays.asList(sourceDirectory)));
                         FileUtils.deleteQuietly(sourceDirectory);
                         buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(sourceDirectory)));
-                        String returnRevision = new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(cacheDirectory, sourceDirectory, accessData, targetRevision, false);
+                        String returnRevision = new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(null, sourceDirectory, accessData, targetRevision, false);
                         buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.completed"));
                         return returnRevision;
                     }

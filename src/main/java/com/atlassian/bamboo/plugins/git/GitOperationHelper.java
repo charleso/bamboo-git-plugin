@@ -18,6 +18,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.NotSupportedException;
 import org.eclipse.jgit.errors.TransportException;
 import org.eclipse.jgit.lib.Constants;
@@ -339,7 +340,15 @@ public class GitOperationHelper
                     localRepository.lockDirCache(),
                     targetCommit.getTree());
             dirCacheCheckout.setFailOnConflict(true);
-            dirCacheCheckout.checkout();
+            try
+            {
+                dirCacheCheckout.checkout();
+            }
+            catch (MissingObjectException e)
+            {
+                final String message = textProvider.getText("repository.git.messages.checkoutFailedMissingObject", Arrays.asList(targetRevision, e.getObjectId().getName()));
+                throw new RepositoryException(buildLogger.addErrorLogEntry(message));
+            }
 
             final RefUpdate refUpdate = localRepository.updateRef(Constants.HEAD);
             refUpdate.setNewObjectId(targetCommit);
