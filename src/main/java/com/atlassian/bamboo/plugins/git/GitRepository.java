@@ -85,11 +85,10 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         String sshKey;
         String sshPassphrase;
         GitAuthenticationType authenticationType;
+        boolean useShallowClones;
     }
 
     final GitRepositoryAccessData accessData = new GitRepositoryAccessData();
-
-    private boolean useShallowClones;
 
     // Maven 2 import
     private transient String pathToPom;
@@ -155,7 +154,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                     {
                         public Void call() throws RepositoryException
                         {
-                            boolean useShallow = USE_SHALLOW_CLONES && useShallowClones && !cacheDirectory.isDirectory();
+                            boolean useShallow = USE_SHALLOW_CLONES && accessData.useShallowClones && !cacheDirectory.isDirectory();
                             new GitOperationHelper(buildLogger, textProvider).fetch(cacheDirectory, accessData, useShallow);
                             return null;
                         }
@@ -231,7 +230,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                 {
                     try
                     {
-                        return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(cacheDirectory, sourceDirectory, accessData, targetRevision, USE_SHALLOW_CLONES && useShallowClones));
+                        return (new GitOperationHelper(buildLogger, textProvider).fetchAndCheckout(cacheDirectory, sourceDirectory, accessData, targetRevision, USE_SHALLOW_CLONES && accessData.useShallowClones));
                     }
                     catch (Exception e)
                     {
@@ -323,7 +322,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         accessData.sshKey = config.getString(REPOSITORY_GIT_SSH_KEY);
         accessData.sshPassphrase = config.getString(REPOSITORY_GIT_SSH_PASSPHRASE);
         accessData.authenticationType = safeParseAuthenticationType(config.getString(REPOSITORY_GIT_AUTHENTICATION_TYPE));
-        useShallowClones = config.getBoolean(REPOSITORY_GIT_USE_SHALLOW_CLONES);
+        accessData.useShallowClones = config.getBoolean(REPOSITORY_GIT_USE_SHALLOW_CLONES);
 
         pathToPom = config.getString(REPOSITORY_GIT_MAVEN_PATH);
     }
@@ -340,7 +339,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         configuration.setProperty(REPOSITORY_GIT_SSH_KEY, accessData.sshKey);
         configuration.setProperty(REPOSITORY_GIT_SSH_PASSPHRASE, accessData.sshPassphrase);
         configuration.setProperty(REPOSITORY_GIT_AUTHENTICATION_TYPE, accessData.authenticationType != null ? accessData.authenticationType.name() : null);
-        configuration.setProperty(REPOSITORY_GIT_USE_SHALLOW_CLONES, useShallowClones);
+        configuration.setProperty(REPOSITORY_GIT_USE_SHALLOW_CLONES, accessData.useShallowClones);
         return configuration;
     }
 
@@ -473,7 +472,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
     public boolean isUseShallowClones()
     {
-        return useShallowClones;
+        return accessData.useShallowClones;
     }
 
     public String getRepositoryUrl()

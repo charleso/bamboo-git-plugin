@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 public class GitCacheDirectoryTest extends GitAbstractTest
 {
     @DataProvider
-    Object[][] fieldInfluenceOnCacheLocation()
+    Object[][] fieldInfluenceOnCacheLocationNonShallow()
     {
         return new Object[][] {
                 {"repositoryUrl", true},
@@ -27,25 +27,36 @@ public class GitCacheDirectoryTest extends GitAbstractTest
         };
     }
 
-    @Test(dataProvider = "fieldInfluenceOnCacheLocation")
-    public void testFieldInfluenceOnCacheLocaton(String field, boolean different) throws Exception
+    @Test(dataProvider = "fieldInfluenceOnCacheLocationNonShallow")
+    public void testFieldInfluenceOnCacheLocatonNonShallow(String field, boolean different) throws Exception
     {
-        GitRepository.GitRepositoryAccessData accessData = createAccessData(
-                "someUrl",
-                "branch",
-                "username",
-                "password",
-                "sshKey",
-                "sshPass"
-        );
-        GitRepository.GitRepositoryAccessData accessData2 = createAccessData(
-                "someUrl",
-                "branch",
-                "username",
-                "password",
-                "sshKey",
-                "sshPass"
-        );
+        doTestFieldInfluenceOnCacheLocaton(field, false, different);
+    }
+
+    @DataProvider
+    Object[][] fieldInfluenceOnCacheLocationShallow()
+    {
+        return new Object[][] {
+                {"repositoryUrl", true},
+                {"username", true},
+                {"branch", true},
+
+                {"password", false},
+                {"sshKey", false},
+                {"sshPassphrase", false},
+        };
+    }
+
+    @Test(dataProvider = "fieldInfluenceOnCacheLocationShallow")
+    public void testFieldInfluenceOnCacheLocatonShallow(String field, boolean different) throws Exception
+    {
+        doTestFieldInfluenceOnCacheLocaton(field, true, different);
+    }
+
+    private void doTestFieldInfluenceOnCacheLocaton(String field, boolean shallow, boolean different) throws Exception
+    {
+        GitRepository.GitRepositoryAccessData accessData = createSampleAccessData(shallow);
+        GitRepository.GitRepositoryAccessData accessData2 = createSampleAccessData(shallow);
 
         Field f = GitRepository.GitRepositoryAccessData.class.getDeclaredField(field);
         String val = (String) f.get(accessData2);
@@ -56,6 +67,51 @@ public class GitCacheDirectoryTest extends GitAbstractTest
         File cache2 = GitCacheDirectory.getCacheDirectory(baseDir, accessData2);
 
         Assert.assertEquals(cache1.equals(cache2), !different);
+    }
+
+    @Test
+    public void testShallowGetsDifferentCache() throws Exception
+    {
+        GitRepository.GitRepositoryAccessData accessData = createSampleAccessData(false);
+        GitRepository.GitRepositoryAccessData accessData2 = createSampleAccessData(true);
+
+        File baseDir = createTempDirectory();
+        File cache1 = GitCacheDirectory.getCacheDirectory(baseDir, accessData);
+        File cache2 = GitCacheDirectory.getCacheDirectory(baseDir, accessData2);
+
+        Assert.assertFalse(cache1.equals(cache2));
+
+    }
+
+    @Test
+    public void testShallowGetsDifferentCacheWithEmptyBranch() throws Exception
+    {
+        GitRepository.GitRepositoryAccessData accessData = createSampleAccessData(false);
+        GitRepository.GitRepositoryAccessData accessData2 = createSampleAccessData(true);
+
+        accessData.branch = "";
+        accessData2.branch = "";
+
+        File baseDir = createTempDirectory();
+        File cache1 = GitCacheDirectory.getCacheDirectory(baseDir, accessData);
+        File cache2 = GitCacheDirectory.getCacheDirectory(baseDir, accessData2);
+
+        Assert.assertFalse(cache1.equals(cache2));
+
+    }
+
+    private static GitRepository.GitRepositoryAccessData createSampleAccessData(boolean shallow)
+    {
+        GitRepository.GitRepositoryAccessData accessData = createAccessData(
+                "someUrl",
+                "branch",
+                "username",
+                "password",
+                "sshKey",
+                "sshPass"
+        );
+        accessData.useShallowClones = shallow;
+        return accessData;
     }
 
     @Test(timeOut = 5000)

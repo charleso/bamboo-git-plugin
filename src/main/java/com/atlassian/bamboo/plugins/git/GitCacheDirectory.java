@@ -26,7 +26,9 @@ public class GitCacheDirectory {
     @NotNull
     static File getCacheDirectory(@NotNull final File workingDirectory, @NotNull final GitRepository.GitRepositoryAccessData repositoryData)
     {
-        String repositorySha = calculateAggregateSha(repositoryData.repositoryUrl, repositoryData.username);
+        String repositorySha = repositoryData.useShallowClones ?
+                calculateAggregateSha(repositoryData.repositoryUrl, repositoryData.username, repositoryData.branch) :
+                calculateAggregateSha(repositoryData.repositoryUrl, repositoryData.username);
 
         File cacheDirectory = new File(workingDirectory, GIT_REPOSITORY_CACHE_DIRECTORY);
         return new File(cacheDirectory, repositorySha);

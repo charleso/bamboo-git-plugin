@@ -16,7 +16,6 @@ import com.atlassian.plugin.PluginAccessor;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
-import org.apache.poi.hssf.record.formula.functions.T;
 import org.eclipse.jgit.lib.Repository;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
