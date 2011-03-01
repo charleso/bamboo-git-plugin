@@ -90,6 +90,13 @@ public class GitCacheHandler
             sb.append(", Username: '").append(repository.accessData.username).append('\'');
         }
 
+        if (repository.isUseShallowClones())
+        {
+            sb.append(", shallow, Branch: '");
+            sb.append(StringUtils.defaultString(repository.accessData.branch));
+            sb.append("'");
+        }
+
         final String description = sb.toString();
 
         return new CacheDescription.FileBased(cacheDir, description, usingPlans);
