@@ -18,7 +18,7 @@ public class BuildLoggerProgressMonitor implements ProgressMonitor
 
     public void beginTask(String title, int totalWork)
     {
-        buildLogger.addBuildLogEntry("Git: " + title);
+        buildLogger.addBuildLogEntry("Git: " + title + " (" + totalWork + ")");
     }
 
     public void update(int completed)
