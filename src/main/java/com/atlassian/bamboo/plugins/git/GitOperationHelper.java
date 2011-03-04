@@ -31,6 +31,7 @@ import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.storage.file.RefDirectory;
 import org.eclipse.jgit.transport.FetchConnection;
+import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
@@ -225,12 +226,10 @@ public class GitOperationHelper
                     .setSource(resolvedBranch)
                     .setDestination(resolvedBranch);
 
-            if (!useShallow && localRepository.getShallows().isEmpty())
-            {
-                transport.setTagOpt(TagOpt.AUTO_FOLLOW);
-            }
+            transport.setTagOpt(TagOpt.AUTO_FOLLOW);
 
-            transport.fetch(new BuildLoggerProgressMonitor(buildLogger), Arrays.asList(refSpec), useShallow ? 1 : 0);
+            FetchResult fetchResult = transport.fetch(new BuildLoggerProgressMonitor(buildLogger), Arrays.asList(refSpec), useShallow ? 1 : 0);
+            buildLogger.addBuildLogEntry("Git: " + fetchResult.getMessages());
 
             if (resolvedBranch.startsWith(Constants.R_HEADS))
             {
