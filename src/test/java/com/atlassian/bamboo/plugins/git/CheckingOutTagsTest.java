@@ -3,10 +3,8 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.v2.build.BuildChanges;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.testng.Assert;
 import org.testng.annotations.*;
@@ -116,7 +114,7 @@ public class CheckingOutTagsTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, srcDir, ref);
 
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
+        gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
     }
 
     @DataProvider(parallel = true)

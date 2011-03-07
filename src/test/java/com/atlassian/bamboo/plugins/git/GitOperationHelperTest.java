@@ -71,18 +71,18 @@ public class GitOperationHelperTest extends GitAbstractTest
     {
         File tmp = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory(repositoryZip, tmp);
-
+        GitOperationHelper helper = createGitOperationHelper();
         String previousRevision = null;
+
         for(String[] testCase : targetRevisions)
         {
             String targetRevision = testCase[0];
             String expectedContentsInZip = testCase[1];
-            String result = createGitOperationHelper().checkout(null, tmp, targetRevision, previousRevision);
+            String result = helper.checkout(null, tmp, targetRevision, previousRevision);
+            previousRevision = result;
 
             assertEquals(result, targetRevision);
             verifyContents(tmp, expectedContentsInZip);
-
-            previousRevision = result;
         }
     }
 

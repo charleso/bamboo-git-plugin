@@ -90,7 +90,8 @@ public class TimeoutsTest extends GitAbstractTest
         String s = helper.obtainLatestRevision(createAccessData("git://git.jetbrains.org/idea/community.git"));
         File directory = createTempDirectory();
         System.out.println(directory);
-        helper.fetchAndCheckout(null, directory, createAccessData("git://git.jetbrains.org/idea/community.git"), s, false);
+        helper.fetch(directory, createAccessData("git://git.jetbrains.org/idea/community.git"), false);
+        helper.checkout(null, directory, s, null);
     }
 
     @DataProvider
@@ -113,7 +114,9 @@ public class TimeoutsTest extends GitAbstractTest
     public void testTimeoutOnFetch(String url) throws Exception
     {
         File directory = createTempDirectory();
-        String rev = createGitOperationHelper().fetchAndCheckout(null, directory, createAccessData(url), null, false);
+        String targetRevision = createGitOperationHelper().obtainLatestRevision(createAccessData(url));
+        createGitOperationHelper().fetch(directory, createAccessData(url), false);
+        createGitOperationHelper().checkout(null, directory, targetRevision, null);
     }
 
 }

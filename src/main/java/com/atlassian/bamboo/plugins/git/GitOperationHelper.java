@@ -173,23 +173,6 @@ public class GitOperationHelper
         }
     }
 
-    @NotNull
-    public String fetchAndCheckout(@Nullable final File cacheDirectory, @NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData,
-            final @Nullable String targetRevision, boolean useShallow) throws RepositoryException
-    {
-        String previousRevision = getCurrentRevision(sourceDirectory);
-        final String notNullTargetRevision = targetRevision != null ? targetRevision : obtainLatestRevision(accessData);
-        if (cacheDirectory != null && cacheDirectory.isDirectory())
-        {
-            return checkout(cacheDirectory, sourceDirectory, notNullTargetRevision, previousRevision);
-        }
-        else
-        {
-            fetch(sourceDirectory, accessData, useShallow);
-            return checkout(null, sourceDirectory, notNullTargetRevision, previousRevision);
-        }
-    }
-
     public void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
     {
         Transport transport = null;
@@ -318,8 +301,9 @@ public class GitOperationHelper
      * returns revision found after checkout in sourceDirectory
      */
     @NotNull
-    String checkout(@Nullable File cacheDirectory, @NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
+    public String checkout(@Nullable File cacheDirectory, @NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
     {
+        // would be cool to store lastCheckoutedRevision in the localRepository somehow - so we don't need to specify it
         buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.checkingOutRevision", Arrays.asList(targetRevision)));
         FileRepository localRepository = null;
         RevWalk revWalk = null;

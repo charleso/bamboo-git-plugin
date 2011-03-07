@@ -26,7 +26,7 @@ public class ObjectCacheLocalTest extends GitAbstractTest
         File targetDir = t.createDir("target");
 
         GitOperationHelper goh = createGitOperationHelper();
-        goh.fetchAndCheckout(t.cacheDir, targetDir, t.accessData, t.lastRevision, false);
+        goh.checkout(t.cacheDir, targetDir, t.lastRevision, null);
 
         String contents = FileUtils.readFileToString(new File(targetDir, "file.txt"));
         Assert.assertEquals(contents, t.lastContents);
@@ -43,7 +43,8 @@ public class ObjectCacheLocalTest extends GitAbstractTest
         File targetDir = t.createDir("target");
 
         GitOperationHelper goh = createGitOperationHelper();
-        goh.fetchAndCheckout(null, targetDir, t.accessData, t.lastRevision, false);
+        goh.fetch(targetDir, t.accessData, false);
+        goh.checkout(null, targetDir, t.lastRevision, null);
 
         String contents = FileUtils.readFileToString(new File(targetDir, "file.txt"));
         Assert.assertEquals(contents, t.lastContents);
@@ -61,7 +62,8 @@ public class ObjectCacheLocalTest extends GitAbstractTest
         File emptyCache = new File(createTempDirectory(), "not_created");
 
         GitOperationHelper goh = createGitOperationHelper();
-        goh.fetchAndCheckout(emptyCache, targetDir, t.accessData, t.lastRevision, false);
+        goh.fetch(targetDir, t.accessData, false);
+        goh.checkout(emptyCache, targetDir, t.lastRevision, null);
 
         String contents = FileUtils.readFileToString(new File(targetDir, "file.txt"));
         Assert.assertEquals(contents, t.lastContents);
@@ -79,7 +81,8 @@ public class ObjectCacheLocalTest extends GitAbstractTest
         File targetDir = t.createDir("target");
 
         GitOperationHelper goh = createGitOperationHelper();
-        goh.fetchAndCheckout(t.cacheDir, targetDir, t.accessData, asyncRev, false);
+        goh.fetch(targetDir, t.accessData, false);
+        goh.checkout(t.cacheDir, targetDir, asyncRev, null);
 
         String contents = FileUtils.readFileToString(new File(targetDir, "file.txt"));
         Assert.assertEquals(contents, asyncContents);
