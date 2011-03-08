@@ -1,8 +1,10 @@
 package com.atlassian.bamboo.plugins.git;
 
+import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.repository.NameValuePair;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.v2.build.BuildChanges;
+import com.atlassian.bamboo.v2.build.agent.remote.RemoteBuildDirectoryManager;
 import com.atlassian.testtools.ZipResourceDirectory;
 import org.apache.commons.io.FileUtils;
 import org.testng.Assert;
@@ -52,6 +54,26 @@ public class GitRepositoryTest extends GitAbstractTest
         gitRepository.retrieveSourceCode(mockBuildContext(), targetRevision);
         verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), expectedContentsInZip);
     }
+
+    @Test(dataProvider = "testSourceCodeRetrievalData")
+    public void testSourceCodeRetrievalOnRemoteAgent(String targetRevision, String branch, String expectedContentsInZip) throws Exception
+    {
+        File testRepository = createTempDirectory();
+        ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
+
+        GitRepository gitRepository = createGitRepository();
+        File workingDirectory = gitRepository.getWorkingDirectory();
+        BuildDirectoryManager buildDirectoryManager = new RemoteBuildDirectoryManager();
+        gitRepository.setBuildDirectoryManager(buildDirectoryManager);
+        gitRepository.setWorkingDir(workingDirectory);
+
+        setRepositoryProperties(gitRepository, testRepository, branch);
+
+        gitRepository.retrieveSourceCode(mockBuildContext(), targetRevision);
+        verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), expectedContentsInZip);
+    }
+
+
 
     @DataProvider(parallel = true)
     Object[][] testSshConnectionToGitHubData()
