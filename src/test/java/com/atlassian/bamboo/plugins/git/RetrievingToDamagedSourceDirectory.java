@@ -1,6 +1,8 @@
 package com.atlassian.bamboo.plugins.git;
 
+import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.repository.RepositoryException;
+import com.atlassian.bamboo.v2.build.agent.remote.RemoteBuildDirectoryManager;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -19,17 +21,34 @@ public class RetrievingToDamagedSourceDirectory extends GitAbstractTest
     Object[][] variants()
     {
         return new Boolean[][] {
-                {true, true},
-                {true, false},
-                {false, true},
-                {false, false},
+                {true, true, false},
+                {true, false, false},
+                {false, true, false},
+                {false, false, false},
+                {true, true, true},
+                {true, false, true},
+                {false, true, true},
+                {false, false, true},
         };
     }
 
-    @Test(dataProvider = "variants")
-    public void testRetrieveWithDeletedFile_shallow_cache(boolean useShallow, boolean useCache) throws Exception
+    public GitRepository createGitRepository(boolean simulateRemote) throws Exception
     {
-        GitRepository gitRepository = createGitRepository();
+        GitRepository gitRepository = super.createGitRepository();
+        if (simulateRemote)
+        {
+            File workingDirectory = gitRepository.getWorkingDirectory();
+            BuildDirectoryManager buildDirectoryManager = new RemoteBuildDirectoryManager();
+            gitRepository.setBuildDirectoryManager(buildDirectoryManager);
+            gitRepository.setWorkingDir(workingDirectory);
+        }
+        return gitRepository;
+    }
+
+    @Test(dataProvider = "variants")
+    public void testRetrieveWithDeletedFile_shallow_cache(boolean useShallow, boolean useCache, boolean simulateRemote) throws Exception
+    {
+        GitRepository gitRepository = createGitRepository(simulateRemote);
 
         GitTestRepository gtr = prepareExistingState(gitRepository, useShallow, useCache);
 
@@ -40,9 +59,9 @@ public class RetrievingToDamagedSourceDirectory extends GitAbstractTest
     }
 
     @Test(dataProvider = "variants")
-    public void testRetrieveWithChangedFile_shallow_cache(boolean useShallow, boolean useCache) throws Exception
+    public void testRetrieveWithChangedFile_shallow_cache(boolean useShallow, boolean useCache, boolean simulateRemote) throws Exception
     {
-        GitRepository gitRepository = createGitRepository();
+        GitRepository gitRepository = createGitRepository(simulateRemote);
 
         GitTestRepository gtr = prepareExistingState(gitRepository, useShallow, useCache);
 
@@ -53,9 +72,9 @@ public class RetrievingToDamagedSourceDirectory extends GitAbstractTest
     }
 
     @Test(dataProvider = "variants")
-    public void testRetrieveWithDeletedRepository_shallow_cache(boolean useShallow, boolean useCache) throws Exception
+    public void testRetrieveWithDeletedRepository_shallow_cache(boolean useShallow, boolean useCache, boolean simulateRemote) throws Exception
     {
-        GitRepository gitRepository = createGitRepository();
+        GitRepository gitRepository = createGitRepository(simulateRemote);
 
         GitTestRepository gtr = prepareExistingState(gitRepository, useShallow, useCache);
 
@@ -68,9 +87,9 @@ public class RetrievingToDamagedSourceDirectory extends GitAbstractTest
     }
 
     @Test(dataProvider = "variants")
-    public void testRetrieveWithChangedRepository_shallow_cache(boolean useShallow, boolean useCache) throws Exception
+    public void testRetrieveWithChangedRepository_shallow_cache(boolean useShallow, boolean useCache, boolean simulateRemote) throws Exception
     {
-        GitRepository gitRepository = createGitRepository();
+        GitRepository gitRepository = createGitRepository(simulateRemote);
 
         GitTestRepository gtr = prepareExistingState(gitRepository, useShallow, useCache);
 
@@ -88,9 +107,9 @@ public class RetrievingToDamagedSourceDirectory extends GitAbstractTest
     }
 
     @Test(dataProvider = "variants")
-    public void testRetrieveWithBranchedRepository_shallow_cache(boolean useShallow, boolean useCache) throws Exception
+    public void testRetrieveWithBranchedRepository_shallow_cache(boolean useShallow, boolean useCache, boolean simulateRemote) throws Exception
     {
-        GitRepository gitRepository = createGitRepository();
+        GitRepository gitRepository = createGitRepository(simulateRemote);
 
         GitTestRepository gtr = prepareExistingState(gitRepository, useShallow, useCache);
 

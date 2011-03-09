@@ -279,6 +279,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.failedToCheckout", Arrays.asList(sourceDirectory)));
                     FileUtils.deleteQuietly(sourceDirectory);
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(sourceDirectory)));
+                    helper.fetch(sourceDirectory, accessData, false);
+                    buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.fetchingCompleted", Arrays.asList(sourceDirectory)));
                     String returnRevision = helper.checkout(null, sourceDirectory, targetRevision, null);
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.checkoutCompleted"));
                     return returnRevision;
