@@ -1,9 +1,12 @@
-[@ww.label labelKey='repository.git.repositoryUrl' value='${plan.buildDefinition.repository.repositoryUrl}' /]
-[@ww.label labelKey='repository.git.branch' value='${plan.buildDefinition.repository.branch!}' hideOnNull=true /]
-[@ww.label labelKey='repository.git.authenticationType' value='${plan.buildDefinition.repository.authTypeName}' /]
-[@ww.label labelKey='repository.git.useShallowClones' value='${plan.buildDefinition.repository.useShallowClones?string}' hideOnNull=true /]
-[@ww.label labelKey='repository.git.cacheDirectory' value='${plan.buildDefinition.repository.cacheDirectory}'/]
-[#if fn.hasGlobalAdminPermission() && plan.buildDefinition.repository.cacheDirectory?? && plan.buildDefinition.repository.cacheDirectory.exists()]
+[#-- @ftlvariable name="plan" type="com.atlassian.bamboo.plan.Plan" --]
+[#-- @ftlvariable name="plan.buildDefinition.repository" type="com.atlassian.bamboo.plugins.git.GitRepository" --]
+[#assign repository=plan.buildDefinition.repository /]
+[@ww.label labelKey='repository.git.repositoryUrl' value='${repository.repositoryUrl}' /]
+[@ww.label labelKey='repository.git.branch' value='${repository.branch!}' hideOnNull=true /]
+[@ww.label labelKey='repository.git.authenticationType' value='${repository.authTypeName}' /]
+[@ww.label labelKey='repository.git.useShallowClones' value='${repository.useShallowClones?string}' hideOnNull=true /]
+[@ww.label labelKey='repository.git.cacheDirectory' value='${repository.cacheDirectory}'/]
+[#if fn.hasGlobalAdminPermission() && repository.cacheDirectory?? && repository.cacheDirectory.exists()]
     <div class="infoMessage">
         [@ww.text name='repository.git.cacheDirectory.cleanMessage'/]
         <a class="requireConfirmation"

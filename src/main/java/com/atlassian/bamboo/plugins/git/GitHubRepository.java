@@ -67,13 +67,6 @@ public class GitHubRepository extends AbstractRepository
     // ---------------------------------------------------------------------------------------------------- Constructors
     // ----------------------------------------------------------------------------------------------- Interface Methods
 
-//    @Override
-//    public void init(@NotNull ModuleDescriptor moduleDescriptor)
-//    {
-//        super.init(moduleDescriptor);
-//        hgRepository.setRepositoryModuleDesciptor((RepositoryModuleDescriptor) moduleDescriptor);
-//    }
-
     @NotNull
     public String getName()
     {
