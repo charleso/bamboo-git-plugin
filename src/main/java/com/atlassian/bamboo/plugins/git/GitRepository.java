@@ -21,6 +21,7 @@ import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildChangesImpl;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.agent.remote.RemoteBuildDirectoryManager;
+import com.atlassian.bamboo.variable.CustomVariableContextThreadLocal;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.util.concurrent.LazyReference;
 import com.atlassian.util.concurrent.Supplier;
@@ -136,10 +137,11 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     {
         try
         {
+            final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(PlanKeys.getPlanKey(planKey));
             final GitOperationHelper helper = new GitOperationHelper(buildLogger, textProvider);
 
-            final String targetRevision = helper.obtainLatestRevision(accessData);
+            final String targetRevision = helper.obtainLatestRevision(substitutedAccessData);
 
             if (targetRevision.equals(lastVcsRevisionKey))
             {
@@ -156,8 +158,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                     {
                         public Void call() throws RepositoryException
                         {
-                            boolean doShallowFetch = USE_SHALLOW_CLONES && accessData.useShallowClones && !cacheDirectory.isDirectory();
-                            helper.fetch(cacheDirectory, accessData, doShallowFetch);
+                            boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones && !cacheDirectory.isDirectory();
+                            helper.fetch(cacheDirectory, substitutedAccessData, doShallowFetch);
                             return null;
                         }
                     });
@@ -175,7 +177,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                 {
                     try
                     {
-                        helper.fetch(cacheDirectory, accessData, false);
+                        helper.fetch(cacheDirectory, substitutedAccessData, false);
                         return helper.extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
                     }
                     catch (Exception e) // not just RepositoryException - see HandlingSwitchingRepositoriesToUnrelatedOnesTest.testCollectChangesWithUnrelatedPreviousRevision
@@ -185,7 +187,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.failedToCollectChangesets", Arrays.asList(cacheDirectory)));
                             FileUtils.deleteQuietly(cacheDirectory);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.cleanedCacheDirectory", Arrays.asList(cacheDirectory)));
-                            helper.fetch(cacheDirectory, accessData, false);
+                            helper.fetch(cacheDirectory, substitutedAccessData, false);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.fetchedRemoteRepository", Arrays.asList(cacheDirectory)));
                             BuildChanges extractedChanges = helper.extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.completed"));
@@ -221,13 +223,14 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     {
         try
         {
+            final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(buildContext.getPlanResultKey());
             final String planKey = buildContext.getPlanKey();
             final File sourceDirectory = getSourceCodeDirectory(planKey);
-            final boolean doShallowFetch = USE_SHALLOW_CLONES && accessData.useShallowClones;
+            final boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones;
             final boolean isOnLocalAgent = !(buildDirectoryManager instanceof RemoteBuildDirectoryManager);
             final GitOperationHelper helper = new GitOperationHelper(buildLogger, textProvider);
-            final String targetRevision = nullableTargetRevision != null ? nullableTargetRevision : helper.obtainLatestRevision(accessData);
+            final String targetRevision = nullableTargetRevision != null ? nullableTargetRevision : helper.obtainLatestRevision(substitutedAccessData);
             final String previousRevision = helper.getCurrentRevision(sourceDirectory);
 
             if (isOnLocalAgent)
@@ -239,14 +242,14 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                     {
                         try
                         {
-                            helper.fetch(cacheDirectory, accessData, doShallowFetch);
+                            helper.fetch(cacheDirectory, substitutedAccessData, doShallowFetch);
                         }
                         catch (Exception e)
                         {
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.failedToFetchCache", Arrays.asList(cacheDirectory)));
                             FileUtils.deleteQuietly(cacheDirectory);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedCacheDirectory", Arrays.asList(cacheDirectory)));
-                            helper.fetch(cacheDirectory, accessData, doShallowFetch);
+                            helper.fetch(cacheDirectory, substitutedAccessData, doShallowFetch);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.fetchingCacheCompleted", Arrays.asList(cacheDirectory)));
                         }
 
@@ -271,7 +274,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             {
                 try
                 {
-                    helper.fetch(sourceDirectory, accessData, doShallowFetch);
+                    helper.fetch(sourceDirectory, substitutedAccessData, doShallowFetch);
                     return helper.checkout(null, sourceDirectory, targetRevision, previousRevision);
                 }
                 catch (Exception e)
@@ -279,7 +282,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.failedToCheckout", Arrays.asList(sourceDirectory)));
                     FileUtils.deleteQuietly(sourceDirectory);
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(sourceDirectory)));
-                    helper.fetch(sourceDirectory, accessData, false);
+                    helper.fetch(sourceDirectory, substitutedAccessData, false);
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.fetchingCompleted", Arrays.asList(sourceDirectory)));
                     String returnRevision = helper.checkout(null, sourceDirectory, targetRevision, null);
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.checkoutCompleted"));
@@ -511,6 +514,20 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         return textProvider.getText("repository.git.authenticationType." + StringUtils.lowerCase(authType));
     }
 
+    GitRepositoryAccessData getSubstitutedAccessData()
+    {
+        GitRepositoryAccessData substituted = new GitRepositoryAccessData();
+        substituted.repositoryUrl = CustomVariableContextThreadLocal.get().substituteString(accessData.repositoryUrl);
+        substituted.branch = CustomVariableContextThreadLocal.get().substituteString(accessData.branch);
+        substituted.username = CustomVariableContextThreadLocal.get().substituteString(accessData.username);
+        substituted.password = accessData.password;
+        substituted.sshKey = accessData.sshKey;
+        substituted.sshPassphrase = accessData.sshPassphrase;
+        substituted.authenticationType = accessData.authenticationType;
+        substituted.useShallowClones = accessData.useShallowClones;
+        return substituted;
+    }
+
     // -------------------------------------------------------------------------------------- Basic Accessors / Mutators
 
     public boolean isUseShallowClones()
@@ -535,7 +552,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
     public File getCacheDirectory()
     {
-        return GitCacheDirectory.getCacheDirectory(buildDirectoryManager.getBaseBuildWorkingDirectory(), accessData);
+        return GitCacheDirectory.getCacheDirectory(buildDirectoryManager.getBaseBuildWorkingDirectory(), getSubstitutedAccessData());
     }
 
     @Override

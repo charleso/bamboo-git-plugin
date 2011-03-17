@@ -10,6 +10,8 @@ import com.atlassian.bamboo.util.BambooFileUtils;
 import com.atlassian.bamboo.utils.i18n.DefaultI18nBean;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.BuildContextImpl;
+import com.atlassian.bamboo.variable.CustomVariableContextImpl;
+import com.atlassian.bamboo.variable.CustomVariableContextThreadLocal;
 import com.atlassian.bamboo.ww2.TextProviderAdapter;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.plugin.PluginAccessor;
@@ -35,6 +37,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
+import org.testng.annotations.BeforeClass;
 
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.testng.Assert.assertEquals;
@@ -115,6 +118,7 @@ public class GitAbstractTest
 
     public GitRepository createGitRepository() throws Exception
     {
+        setupCustomVariableContext();
         File workingDirectory = createTempDirectory();
 
         final GitRepository gitRepository = new GitRepositoryFixture();
@@ -204,6 +208,12 @@ public class GitAbstractTest
         Project project = Mockito.mock(Project.class);
         Mockito.when(plan.getProject()).thenReturn(project);
         return new BuildContextImpl(plan, 1, null, null, null);
+    }
+
+    @BeforeClass
+    void setupCustomVariableContext()
+    {
+         CustomVariableContextThreadLocal.set(new CustomVariableContextImpl());
     }
 
     @AfterClass
