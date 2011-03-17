@@ -1,6 +1,8 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.rest.util.Get;
+import com.atlassian.bamboo.security.StringEncrypter;
+import com.atlassian.bamboo.util.Narrow;
 import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.ww2.actions.PlanActionSupport;
 import com.atlassian.bamboo.ww2.aware.permissions.PlanEditSecurityAware;
@@ -13,6 +15,7 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -50,6 +53,13 @@ public class LoadGitHubRepositories extends PlanActionSupport implements PlanEdi
     public JSONObject getJsonObject() throws JSONException
     {
         Map<String, List<String>> gitHubRepositories = null;
+
+        if (getPlan() != null && getPlan().getBuildDefinition().getRepository() instanceof GitHubRepository)
+        {
+            GitHubRepository ghRepository = Narrow.to(getPlan().getBuildDefinition().getRepository(), GitHubRepository.class);
+            password = new StringEncrypter().decrypt(ghRepository.getPassword());
+        }
+
         if (StringUtils.isBlank(username))
         {
             addFieldError("username", getText("repository.github.error.emptyUsername"));
@@ -61,10 +71,6 @@ public class LoadGitHubRepositories extends PlanActionSupport implements PlanEdi
             try
             {
                 gitHubRepositories = getGitHubRepositores();
-                if (gitHubRepositories.isEmpty())
-                {
-                    addFieldError("username", getText("repository.github.error.noRepositories", Arrays.asList(username)));
-                }
             }
             catch (FileNotFoundException e)
             {
@@ -129,12 +135,10 @@ public class LoadGitHubRepositories extends PlanActionSupport implements PlanEdi
     }
 
     @NotNull
-    private List<String> getRepositoryBranches(String repositoryName) throws Exception
+    private List<String> getRepositoryBranches(String repository) throws Exception
     {
         final List<String> repositoryBranches = new ArrayList<String>();
-        final String url = GITHUB_API_BASE_URL + "repos/show/" + username + "/" + repositoryName + "/branches";
-
-        final JSONObject json = getJSONResponseFromUrl(url);
+        final JSONObject json = getJSONResponseFromUrl(GITHUB_API_BASE_URL + "repos/show/" + repository + "/branches");
         final JSONObject branches = json.getJSONObject("branches");
         if (branches != null)
         {
@@ -147,18 +151,41 @@ public class LoadGitHubRepositories extends PlanActionSupport implements PlanEdi
         return repositoryBranches;
     }
 
+    private void addRepositoriesFromJson(@NotNull final Map<String, List<String>> repositories, @NotNull final JSONObject json) throws Exception
+    {
+        final JSONArray jsonRepositories = json.getJSONArray("repositories");
+        for (int index = 0; index < jsonRepositories.length(); index++)
+        {
+            final JSONObject jsonRepository = jsonRepositories.getJSONObject(index);
+            final String owner = jsonRepository.getString("owner");
+            final String name = jsonRepository.getString("name");
+            final String repository = owner + "/" + name;
+            repositories.put(repository, getRepositoryBranches(repository));
+        }
+    }
+
     @NotNull
     private Map<String, List<String>> getGitHubRepositores() throws Exception
     {
         final Map<String, List<String>> githubRepositories = new LinkedHashMap<String, List<String>>();
-        final String url = GITHUB_API_BASE_URL + "repos/show/" + username;
 
-        final JSONObject json = getJSONResponseFromUrl(url);
-        final JSONArray repositories = json.getJSONArray("repositories");
-        for (int index = 0; index < repositories.length(); index++)
+        if (StringUtils.isNotBlank(password))
         {
-            final String name = repositories.getJSONObject(index).getString("name");
-            githubRepositories.put(name, getRepositoryBranches(name));
+            final JSONObject json = getJSONResponseFromUrl(GITHUB_API_BASE_URL + "repos/pushable");
+            if (json.has("error") && json.getString("error").equals("not authorized"))
+            {
+                addFieldError("temporary.password", getText("repository.github.error.notAuthorized"));
+                return githubRepositories;
+            }
+            addRepositoriesFromJson(githubRepositories, json);
+        }
+
+        final JSONObject json = getJSONResponseFromUrl(GITHUB_API_BASE_URL + "repos/show/" + username);
+        addRepositoriesFromJson(githubRepositories, json);
+
+        if (githubRepositories.isEmpty())
+        {
+            addFieldError("username", getText("repository.bitbucket.error.noRepositories", Arrays.asList(username)));
         }
         return githubRepositories;
     }

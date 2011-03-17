@@ -202,7 +202,7 @@ public class GitOperationHelper
             }
             branchDescription = resolvedBranch;
 
-            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.fetchingBranch", Arrays.asList(branchDescription))
+            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.fetchingBranch", Arrays.asList(branchDescription, accessData.repositoryUrl))
                     + (useShallow ? " " + textProvider.getText("repository.git.messages.doingShallowFetch") : ""));
             RefSpec refSpec = new RefSpec()
                     .setForceUpdate(true)

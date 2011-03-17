@@ -1,21 +1,21 @@
 [#-- @ftlvariable name="repository" type="com.atlassian.bamboo.plugins.git.GitHubRepository" --]
 
-[@ww.textfield labelKey='repository.github.username' name='repository.github.username' /]
+[@ww.textfield labelKey='repository.github.username' name='repository.github.username' required='true' /]
 [#if buildConfiguration.getString('repository.github.password')?has_content]
-    [@ww.checkbox labelKey='repository.github.change' toggle='true' name='temporary.github.password.change' /]
+    [@ww.checkbox labelKey='repository.password.change' toggle='true' name='temporary.github.password.change' /]
     [@ui.bambooSection dependsOn='temporary.github.password.change' showOn='true']
-        [@ww.password labelKey='repository.github.password' name='temporary.github.password' required='false' /]
+        [@ww.password labelKey='repository.github.password' name='repository.github.temporary.password' /]
     [/@ui.bambooSection]
 [#else]
     [@ww.hidden name='temporary.github.password.change' value='true' /]
-    [@ww.password labelKey='repository.github.password' name='temporary.github.password' /]
+    [@ww.password labelKey='repository.github.password' name='repository.github.temporary.password' /]
 [/#if]
 
 <div class="field-group" id="fieldArea_repository_github_repository">
     <label for="repository_github_repository" >[@ww.text name='repository.github.repository'/]</label>
     <p id="loadGitHubRepositoriesSpinner" class="hidden" >[@ui.icon type="loading" /] [@ww.text name='repository.github.loadingRepositories'/]</p>
     <select class="select" id="repository_github_repository" name="repository.github.repository" ></select>
-    <button style="margin-top: 0px" id="loadGitHubRepositoriesButton" title="[@ww.text name='repository.github.loadRepositories'/]">
+    <button type="button" style="margin-top: 0px" id="loadGitHubRepositoriesButton" title="[@ww.text name='repository.github.loadRepositories'/]">
         [@ww.text name='repository.github.loadRepositories'/]
     </button>
     [#if fieldErrors?has_content && fieldErrors['repository.github.repository']?has_content]
@@ -36,6 +36,8 @@
 
 <script type="text/javascript">
     var gh_repositoryKey = "com.atlassian.bamboo.plugins.atlassian-bamboo-plugin-git:gh",
+        gh_baseActionUrl = BAMBOO.contextPath + "/ajax/loadGitHubRepositories.action",
+        gh_actionUrl = gh_baseActionUrl[#if planKey?has_content] + "?planKey=${planKey}"[/#if],
         gh_repositoryBranchFilter,
         gh_selectedRepository,
         gh_selectedBranch;
@@ -48,7 +50,7 @@
     [/#if]
 
     var $gh_username = AJS.$("input[name=repository.github.username]"),
-        $gh_password = AJS.$("input[name=temporary.github.password]"),
+        $gh_password = AJS.$("input[name=repository.github.temporary.password]"),
         $gh_repositories = AJS.$("#repository_github_repository").hide(),
         $gh_repositories_desc = AJS.$("#repository_github_repository_description").hide(),
         $gh_branches = AJS.$("select[name=repository.github.branch]"),
@@ -71,11 +73,10 @@
     }
 
     function gh_loadGitHubRepositories(e) {
-        e.preventDefault();
         gh_startFetching();
         AJS.$.ajax({
             type: "POST",
-            url: BAMBOO.contextPath + "/ajax/loadGitHubRepositories.action",
+            url: gh_actionUrl,
             data: { username: $gh_username.val(), password: $gh_password.val() },
             success: function (json) {
                 $gh_form.find(".error:not(.aui-message)").remove();
@@ -158,14 +159,7 @@
     [#if buildConfiguration.getString('repository.github.repository')?has_content]
         if ($gh_selectedRepository.val() == gh_repositoryKey) {
             $gh_loadGitHubRepositoriesButton.click();
+            gh_actionUrl = gh_baseActionUrl;
         }
     [/#if]
-
-    $gh_selectedRepository.change(function() {
-        $gh_loadGitHubRepositoriesButton.unbind('click', gh_loadGitHubRepositories);
-        if ($gh_selectedRepository.val() == gh_repositoryKey) {
-            $gh_loadGitHubRepositoriesButton.bind('click', gh_loadGitHubRepositories);
-        }
-    })
-
 </script>

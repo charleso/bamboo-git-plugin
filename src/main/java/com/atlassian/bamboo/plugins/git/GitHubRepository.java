@@ -28,7 +28,7 @@ public class GitHubRepository extends AbstractRepository
     private static final String REPOSITORY_GITHUB_BRANCH = "repository.github.branch";
     private static final String REPOSITORY_GITHUB_USE_SHALLOW_CLONES = "repository.github.useShallowClones";
 
-    private static final String TEMPORARY_GITHUB_PASSWORD = "temporary.github.password";
+    private static final String REPOSITORY_GITHUB_TEMPORARY_PASSWORD = "repository.github.temporary.password";
     private static final String TEMPORARY_GITHUB_PASSWORD_CHANGE = "temporary.github.password.change";
 
     private static final String REPOSITORY_GITHUB_ERROR_MISSING_REPOSITORY = "repository.github.error.missingRepository";
@@ -105,7 +105,7 @@ public class GitHubRepository extends AbstractRepository
         buildConfiguration.setProperty(REPOSITORY_GITHUB_USERNAME, buildConfiguration.getString(REPOSITORY_GITHUB_USERNAME, "").trim());
         if (buildConfiguration.getBoolean(TEMPORARY_GITHUB_PASSWORD_CHANGE))
         {
-            buildConfiguration.setProperty(REPOSITORY_GITHUB_PASSWORD, new StringEncrypter().encrypt(buildConfiguration.getString(TEMPORARY_GITHUB_PASSWORD)));
+            buildConfiguration.setProperty(REPOSITORY_GITHUB_PASSWORD, new StringEncrypter().encrypt(buildConfiguration.getString(REPOSITORY_GITHUB_TEMPORARY_PASSWORD)));
         }
         buildConfiguration.setProperty(REPOSITORY_GITHUB_REPOSITORY, buildConfiguration.getString(REPOSITORY_GITHUB_REPOSITORY, "").trim());
         buildConfiguration.setProperty(REPOSITORY_GITHUB_BRANCH, buildConfiguration.getString(REPOSITORY_GITHUB_BRANCH, "").trim());
@@ -121,7 +121,7 @@ public class GitHubRepository extends AbstractRepository
         branch = config.getString(REPOSITORY_GITHUB_BRANCH);
         useShallowClones = config.getBoolean(REPOSITORY_GITHUB_USE_SHALLOW_CLONES);
 
-        gitRepository.accessData.repositoryUrl = "https://github.com/" + username + "/" + repository + ".git";
+        gitRepository.accessData.repositoryUrl = "https://github.com/" + repository + ".git";
         gitRepository.accessData.username = username;
         gitRepository.accessData.password = password;
         gitRepository.accessData.branch = branch;
@@ -199,4 +199,8 @@ public class GitHubRepository extends AbstractRepository
         return useShallowClones;
     }
 
+    String getPassword()
+    {
+        return password;
+    }
 }
