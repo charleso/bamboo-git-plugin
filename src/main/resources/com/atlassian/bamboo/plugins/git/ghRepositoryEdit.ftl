@@ -15,7 +15,7 @@
     <label for="repository_github_repository" >[@ww.text name='repository.github.repository'/]</label>
     <p id="loadGitHubRepositoriesSpinner" class="hidden" >[@ui.icon type="loading" /] [@ww.text name='repository.github.loadingRepositories'/]</p>
     <select class="select" id="repository_github_repository" name="repository.github.repository" ></select>
-    <button type="button" style="margin-top: 0px" id="loadGitHubRepositoriesButton" title="[@ww.text name='repository.github.loadRepositories'/]">
+    <button type="button" class="loadRepositoriesButton" id="loadGitHubRepositoriesButton" title="[@ww.text name='repository.github.loadRepositories'/]">
         [@ww.text name='repository.github.loadRepositories'/]
     </button>
     [#if fieldErrors?has_content && fieldErrors['repository.github.repository']?has_content]
