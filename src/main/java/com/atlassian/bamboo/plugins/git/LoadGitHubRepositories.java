@@ -174,7 +174,14 @@ public class LoadGitHubRepositories extends PlanActionSupport implements PlanEdi
             final JSONObject json = getJSONResponseFromUrl(GITHUB_API_BASE_URL + "repos/pushable");
             if (json.has("error") && json.getString("error").equals("not authorized"))
             {
-                addFieldError("temporary.password", getText("repository.github.error.notAuthorized"));
+                if (getPlan() != null)
+                {
+                    addFieldError("username", getText("repository.github.error.notAuthorized"));
+                }
+                else
+                {
+                    addFieldError("temporary.password", getText("repository.github.error.notAuthorized"));
+                }
                 return githubRepositories;
             }
             addRepositoriesFromJson(githubRepositories, json);

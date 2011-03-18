@@ -79,7 +79,9 @@
             url: gh_actionUrl,
             data: { username: $gh_username.val(), password: $gh_password.val() },
             success: function (json) {
-                $gh_form.find(".error:not(.aui-message)").remove();
+                if (!gh_selectedRepository) {
+                    $gh_form.find(".error:not(.aui-message)").remove();
+                }
                 if (json.status == "ERROR") {
                     if (json.fieldErrors) {
                         for (var fieldName in json.fieldErrors) {
