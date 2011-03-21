@@ -247,5 +247,22 @@ public class CheckingOutTagsTest extends GitAbstractTest
         String contents = FileUtils.readFileToString(srcRepo.getTextFile(src));
         Assert.assertEquals(contents, expectedContents);
     }
+
+    @Test
+    public void testShallowTagIsTheSecondCommit() throws Exception
+    {
+        //see BAM-8240
+        //this test is to check shallow fetching (with auto_follow tags) following structure:
+        // {commit A} (HEAD of branch)
+        // {commit B} (tag x.y.z)
+        // {rest of commits}
+
+        File src = createTempDirectory();
+        GitOperationHelper helper = createGitOperationHelper();
+        helper.fetch(src, createAccessData("https://github.com/github/git.git", "dup-post-receive-refs-patch"), true);
+        helper.checkout(null, src, "v1.7.0.2", null);
+        helper.checkout(null, src, "5565f47c", "v1.7.0.2");
+        helper.checkout(null, src, "8ed5bd96", "5565f47c");
+    }
 }
 
