@@ -54,10 +54,12 @@ public class LoadGitHubRepositories extends PlanActionSupport implements PlanEdi
     {
         Map<String, List<String>> gitHubRepositories = null;
 
-        if (getPlan() != null && getPlan().getBuildDefinition().getRepository() instanceof GitHubRepository)
+        if (getPlan() != null)
         {
             GitHubRepository ghRepository = Narrow.to(getPlan().getBuildDefinition().getRepository(), GitHubRepository.class);
-            password = new StringEncrypter().decrypt(ghRepository.getPassword());
+            if (ghRepository != null) {
+                password = new StringEncrypter().decrypt(ghRepository.getPassword());
+            }
         }
 
         if (StringUtils.isBlank(username))

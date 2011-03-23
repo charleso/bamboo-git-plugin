@@ -35,32 +35,34 @@
 </div>
 
 <script type="text/javascript">
-    var gh_repositoryKey = "com.atlassian.bamboo.plugins.atlassian-bamboo-plugin-git:gh",
-        gh_baseActionUrl = BAMBOO.contextPath + "/ajax/loadGitHubRepositories.action",
-        gh_actionUrl = gh_baseActionUrl[#if planKey?has_content] + "?planKey=${planKey}"[/#if],
-        gh_repositoryBranchFilter,
-        gh_selectedRepository,
-        gh_selectedBranch;
+
+var LoadGitHubRepositoriesAsynchronously = function() {
+    var repositoryKey = "${repository.key}",
+        baseActionUrl = BAMBOO.contextPath + "/ajax/loadGitHubRepositories.action",
+        actionUrl = baseActionUrl[#if planKey?has_content] + "?planKey=${planKey}"[/#if],
+        repositoryBranchFilter,
+        selectedRepository,
+        selectedBranch;
 
     [#if buildConfiguration.getString('repository.github.repository')?has_content]
-        gh_selectedRepository = "${buildConfiguration.getString('repository.github.repository')}";
+        selectedRepository = "${buildConfiguration.getString('repository.github.repository')}";
     [/#if]
     [#if buildConfiguration.getString('repository.github.branch')?has_content]
-        gh_selectedBranch = "${buildConfiguration.getString('repository.github.branch')}";
+        selectedBranch = "${buildConfiguration.getString('repository.github.branch')}";
     [/#if]
 
-    var $gh_username = AJS.$("input[name=repository.github.username]"),
-        $gh_password = AJS.$("input[name=repository.github.temporary.password]"),
-        $gh_repositories = AJS.$("#repository_github_repository").hide(),
-        $gh_repositories_desc = AJS.$("#repository_github_repository_description").hide(),
-        $gh_branches = AJS.$("select[name=repository.github.branch]"),
-        $gh_loadGitHubRepositoriesButton = AJS.$("#loadGitHubRepositoriesButton"),
-        $gh_loadGitHubRepositoriesSpinner = AJS.$("#loadGitHubRepositoriesSpinner"),
-        $gh_loadedGitHubRepositoriesDiv = AJS.$("#loadedGitHubRepositoriesDiv"),
-        $gh_form = $gh_username.closest("form"),
-        $gh_selectedRepository = AJS.$("#selectedRepository");
+    var $username = AJS.$("input[name=repository.github.username]"),
+        $password = AJS.$("input[name=repository.github.temporary.password]"),
+        $repositories = AJS.$("#repository_github_repository").hide(),
+        $repositories_desc = AJS.$("#repository_github_repository_description").hide(),
+        $branches = AJS.$("select[name=repository.github.branch]"),
+        $loadGitHubRepositoriesButton = AJS.$("#loadGitHubRepositoriesButton"),
+        $loadGitHubRepositoriesSpinner = AJS.$("#loadGitHubRepositoriesSpinner"),
+        $loadedGitHubRepositoriesDiv = AJS.$("#loadedGitHubRepositoriesDiv"),
+        $form = $username.closest("form"),
+        $selectedRepository = AJS.$("#selectedRepository");
 
-    function gh_showActionError(errorMessage) {
+    function showActionError(errorMessage) {
         var $field = AJS.$("#fieldArea_repository_github_repository"),
             $description = $field.find('.description'),
             $error = AJS.$('<div class="error"/>').html(errorMessage);
@@ -72,20 +74,20 @@
         }
     }
 
-    function gh_loadGitHubRepositories(e) {
-        gh_startFetching();
+    function loadGitHubRepositories(e) {
+        startFetching();
         AJS.$.ajax({
             type: "POST",
-            url: gh_actionUrl,
-            data: { username: $gh_username.val(), password: $gh_password.val() },
+            url: actionUrl,
+            data: { username: $username.val(), password: $password.val() },
             success: function (json) {
-                if (!gh_selectedRepository) {
-                    $gh_form.find(".error:not(.aui-message)").remove();
+                if (!selectedRepository) {
+                    $form.find(".error:not(.aui-message)").remove();
                 }
                 if (json.status == "ERROR") {
                     if (json.fieldErrors) {
                         for (var fieldName in json.fieldErrors) {
-                            var $field = AJS.$("#fieldArea_" + $gh_form.attr("id") + "_repository_github_" + fieldName.replace(".", "_")),
+                            var $field = AJS.$("#fieldArea_" + $form.attr("id") + "_repository_github_" + fieldName.replace(".", "_")),
                                 $description = $field.find('.description');
 
                             for (var i = 0, ii= json.fieldErrors[fieldName].length; i < ii; i++) {
@@ -100,68 +102,71 @@
                         }
                     }
                     if (json.errors) {
-                        gh_showActionError(json.errors.join(" "));
+                        showActionError(json.errors.join(" "));
                     }
-                    gh_readyForFetching();
+                    readyForFetching();
                 } else if (json.status == "OK") {
-                    $gh_loadedGitHubRepositoriesDiv.show();
-                    var options = $gh_repositories.attr("options");
+                    $loadedGitHubRepositoriesDiv.show();
+                    var options = $repositories.attr("options");
                     for (var repository in json.gitHubRepositories) {
                         options[options.length] = new Option(repository, repository);
                     }
-                    if (gh_selectedRepository) {
-                        $gh_repositories.val(gh_selectedRepository);
-                        gh_selectedRepository = null;
+                    if (selectedRepository) {
+                        $repositories.val(selectedRepository);
+                        selectedRepository = null;
                     }
-                    gh_repositoryBranchFilter = json.repositoryBranchFilter;
-                    $gh_repositories.show();
-                    $gh_repositories_desc.show();
-                    $gh_repositories.change();
-                    if (gh_selectedBranch) {
-                        $gh_branches.val(gh_selectedBranch);
-                        gh_selectedBranch = null;
+                    repositoryBranchFilter = json.repositoryBranchFilter;
+                    $repositories.show();
+                    $repositories_desc.show();
+                    $repositories.change();
+                    if (selectedBranch) {
+                        $branches.val(selectedBranch);
+                        selectedBranch = null;
                     }
-                    gh_readyForFetching();
+                    readyForFetching();
                 }
             },
             error : function (XMLHttpRequest) {
-                gh_showActionError("[@ww.text name='repository.github.ajaxError'/] ["+XMLHttpRequest.status+" "+XMLHttpRequest.statusText+"]");
-                gh_readyForFetching();
+                showActionError("[@ww.text name='repository.github.ajaxError'/] ["+XMLHttpRequest.status+" "+XMLHttpRequest.statusText+"]");
+                readyForFetching();
             },
             dataType: "json"
         });
     }
 
-    function gh_startFetching() {
-        gh_repositoryBranchFilter = null;
-        $gh_repositories.empty().hide();
-        $gh_repositories_desc.hide();
-        $gh_username.attr("disabled", "disabled");
-        $gh_password.attr("disabled", "disabled");
-        $gh_loadGitHubRepositoriesButton.hide();
-        $gh_loadGitHubRepositoriesSpinner.show();
-        $gh_loadedGitHubRepositoriesDiv.hide();
+    function startFetching() {
+        repositoryBranchFilter = null;
+        $repositories.empty().hide();
+        $repositories_desc.hide();
+        $username.attr("disabled", "disabled");
+        $password.attr("disabled", "disabled");
+        $loadGitHubRepositoriesButton.hide();
+        $loadGitHubRepositoriesSpinner.show();
+        $loadedGitHubRepositoriesDiv.hide();
     }
 
-    function gh_readyForFetching() {
-        $gh_username.removeAttr("disabled");
-        $gh_password.removeAttr("disabled");
-        $gh_loadGitHubRepositoriesButton.show();
-        $gh_loadGitHubRepositoriesSpinner.hide();
+    function readyForFetching() {
+        $username.removeAttr("disabled");
+        $password.removeAttr("disabled");
+        $loadGitHubRepositoriesButton.show();
+        $loadGitHubRepositoriesSpinner.hide();
     }
 
     AJS.$(function(){
-        $gh_repositories.change(function() {
-            mutateSelectListContent(AJS.$(this), $gh_branches, gh_repositoryBranchFilter);
+        $repositories.change(function() {
+            mutateSelectListContent(AJS.$(this), $branches, repositoryBranchFilter);
         });
     });
 
-    $gh_loadGitHubRepositoriesButton.click(gh_loadGitHubRepositories);
+    $loadGitHubRepositoriesButton.click(loadGitHubRepositories);
 
     [#if buildConfiguration.getString('repository.github.repository')?has_content]
-        if ($gh_selectedRepository.val() == gh_repositoryKey) {
-            $gh_loadGitHubRepositoriesButton.click();
-            gh_actionUrl = gh_baseActionUrl;
+        if ($selectedRepository.val() == repositoryKey) {
+            $loadGitHubRepositoriesButton.click();
+            actionUrl = baseActionUrl;
         }
     [/#if]
+
+}()
+
 </script>
