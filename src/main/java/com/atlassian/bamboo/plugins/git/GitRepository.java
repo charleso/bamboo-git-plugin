@@ -21,7 +21,6 @@ import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildChangesImpl;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.agent.remote.RemoteBuildDirectoryManager;
-import com.atlassian.bamboo.variable.CustomVariableContextThreadLocal;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.util.concurrent.LazyReference;
 import com.atlassian.util.concurrent.Supplier;
@@ -517,9 +516,9 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     GitRepositoryAccessData getSubstitutedAccessData()
     {
         GitRepositoryAccessData substituted = new GitRepositoryAccessData();
-        substituted.repositoryUrl = CustomVariableContextThreadLocal.get().substituteString(accessData.repositoryUrl);
-        substituted.branch = CustomVariableContextThreadLocal.get().substituteString(accessData.branch);
-        substituted.username = CustomVariableContextThreadLocal.get().substituteString(accessData.username);
+        substituted.repositoryUrl = substituteString(accessData.repositoryUrl);
+        substituted.branch = substituteString(accessData.branch);
+        substituted.username = substituteString(accessData.username);
         substituted.password = accessData.password;
         substituted.sshKey = accessData.sshKey;
         substituted.sshPassphrase = accessData.sshPassphrase;
