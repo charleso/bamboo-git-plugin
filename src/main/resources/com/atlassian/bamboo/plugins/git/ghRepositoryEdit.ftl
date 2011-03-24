@@ -36,7 +36,7 @@
 
 <script type="text/javascript">
 
-var LoadGitHubRepositoriesAsynchronously = function() {
+BAMBOO.LoadGitHubRepositoriesAsynchronously = function() {
     var repositoryKey = "${repository.key}",
         baseActionUrl = BAMBOO.contextPath + "/ajax/loadGitHubRepositories.action",
         actionUrl = baseActionUrl[#if planKey?has_content] + "?planKey=${planKey}"[/#if],
