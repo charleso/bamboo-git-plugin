@@ -1,5 +1,7 @@
 package com.atlassian.bamboo.plugins.git;
 
+import com.atlassian.bamboo.variable.CustomVariableContextImpl;
+import com.atlassian.bamboo.variable.CustomVariableContextThreadLocal;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -146,6 +148,7 @@ public class GitCacheDirectoryTest extends GitAbstractTest
             {
                 try
                 {
+                    CustomVariableContextThreadLocal.set(new CustomVariableContextImpl());
                     File cacheDirectory = repository1.getCacheDirectory();
                     GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Callable<Void>()
                     {
@@ -174,6 +177,7 @@ public class GitCacheDirectoryTest extends GitAbstractTest
             {
                 try
                 {
+                    CustomVariableContextThreadLocal.set(new CustomVariableContextImpl());
                     File cacheDirectory = repository2.getCacheDirectory();
                     GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Callable<Void>()
                     {

@@ -1,6 +1,8 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.build.BuildLoggerManager;
+import com.atlassian.bamboo.build.VariableSubstitutionBean;
+import com.atlassian.bamboo.build.VariableSubstitutionBeanImpl;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.plan.Plan;
@@ -15,6 +17,7 @@ import com.atlassian.bamboo.variable.CustomVariableContextThreadLocal;
 import com.atlassian.bamboo.ww2.TextProviderAdapter;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.plugin.PluginAccessor;
+import com.atlassian.util.concurrent.LazyReference;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -118,7 +121,6 @@ public class GitAbstractTest
 
     public GitRepository createGitRepository() throws Exception
     {
-        setupCustomVariableContext();
         File workingDirectory = createTempDirectory();
 
         final GitRepository gitRepository = new GitRepositoryFixture();
@@ -129,6 +131,15 @@ public class GitAbstractTest
         BuildDirectoryManager buildDirectoryManager = Mockito.mock(BuildDirectoryManager.class, new Returns(workingDirectory));
         gitRepository.setBuildDirectoryManager(buildDirectoryManager);
         gitRepository.setTextProvider(getTextProvider());
+        gitRepository.setVariableSubstitutionBean(new VariableSubstitutionBeanImpl());
+        try
+        {
+            CustomVariableContextThreadLocal.get();
+        }
+        catch (LazyReference.InitializationException e) //not set
+        {
+            CustomVariableContextThreadLocal.set(new CustomVariableContextImpl());
+        }
 
         return gitRepository;
     }
@@ -210,12 +221,6 @@ public class GitAbstractTest
         return new BuildContextImpl(plan, 1, null, null, null);
     }
 
-    @BeforeClass
-    void setupCustomVariableContext()
-    {
-         CustomVariableContextThreadLocal.set(new CustomVariableContextImpl());
-    }
-
     @AfterClass
     void cleanUpFiles()
     {
@@ -234,7 +239,7 @@ public class GitAbstractTest
         @Override
         public File getCacheDirectory()
         {
-            return GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), accessData);
+            return GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), getSubstitutedAccessData());
         }
     }
 }
