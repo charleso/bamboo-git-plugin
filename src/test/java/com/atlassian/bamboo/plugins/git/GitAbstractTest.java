@@ -1,8 +1,6 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.build.BuildLoggerManager;
-import com.atlassian.bamboo.build.VariableSubstitutionBean;
-import com.atlassian.bamboo.build.VariableSubstitutionBeanImpl;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.plan.Plan;
@@ -12,12 +10,13 @@ import com.atlassian.bamboo.util.BambooFileUtils;
 import com.atlassian.bamboo.utils.i18n.DefaultI18nBean;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.BuildContextImpl;
+import com.atlassian.bamboo.variable.CustomVariableContext;
 import com.atlassian.bamboo.variable.CustomVariableContextImpl;
-import com.atlassian.bamboo.variable.CustomVariableContextThreadLocal;
+import com.atlassian.bamboo.variable.VariableDefinitionContext;
 import com.atlassian.bamboo.ww2.TextProviderAdapter;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.plugin.PluginAccessor;
-import com.atlassian.util.concurrent.LazyReference;
+import com.google.common.collect.Maps;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -40,7 +39,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
-import org.testng.annotations.BeforeClass;
 
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.testng.Assert.assertEquals;
@@ -131,15 +129,10 @@ public class GitAbstractTest
         BuildDirectoryManager buildDirectoryManager = Mockito.mock(BuildDirectoryManager.class, new Returns(workingDirectory));
         gitRepository.setBuildDirectoryManager(buildDirectoryManager);
         gitRepository.setTextProvider(getTextProvider());
-        gitRepository.setVariableSubstitutionBean(new VariableSubstitutionBeanImpl());
-        try
-        {
-            CustomVariableContextThreadLocal.get();
-        }
-        catch (LazyReference.InitializationException e) //not set
-        {
-            CustomVariableContextThreadLocal.set(new CustomVariableContextImpl());
-        }
+
+        CustomVariableContext customVariableContext = new CustomVariableContextImpl();
+        customVariableContext.setVariables(Maps.<String, VariableDefinitionContext>newHashMap());
+        gitRepository.setCustomVariableContext(customVariableContext);
 
         return gitRepository;
     }

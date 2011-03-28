@@ -3,8 +3,10 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.build.BuildDefinition;
 import com.atlassian.bamboo.plan.Plan;
 import com.atlassian.bamboo.plan.PlanManager;
+import com.atlassian.bamboo.variable.CustomVariableContext;
 import com.atlassian.bamboo.variable.CustomVariableContextImpl;
-import com.atlassian.bamboo.variable.CustomVariableContextThreadLocal;
+import com.atlassian.bamboo.variable.VariableDefinitionContext;
+import com.google.common.collect.Maps;
 import org.apache.commons.io.FileUtils;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
@@ -45,17 +47,16 @@ public class DeleteGitCacheDirectoryActionTest extends GitAbstractTest
         Assert.assertFalse(cache.exists());
     }
 
-
-    //"A test case that checks if cache for a plan is properly deleted if the repository url contains a variable."
     @Test
     public void testIfCacheIsProperlyDeletedWhenRepositoryUrlContainsVariable() throws Exception
     {
-        CustomVariableContextImpl variableContext = new CustomVariableContextImpl();
-        variableContext.addCustomData("variable", "value");
-        CustomVariableContextThreadLocal.set(variableContext);
-
         GitRepository repository = createGitRepository();
         setRepositoryProperties(repository, "${bamboo.variable}");
+
+        CustomVariableContext customVariableContext = new CustomVariableContextImpl();
+        customVariableContext.setVariables(Maps.<String, VariableDefinitionContext>newHashMap());
+        customVariableContext.addCustomData("variable", "value");
+        repository.setCustomVariableContext(customVariableContext);
 
         File cache = repository.getCacheDirectory();
         cache.mkdirs();

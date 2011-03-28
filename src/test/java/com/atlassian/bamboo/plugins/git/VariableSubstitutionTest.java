@@ -3,8 +3,9 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.variable.CustomVariableContext;
 import com.atlassian.bamboo.variable.CustomVariableContextImpl;
-import com.atlassian.bamboo.variable.CustomVariableContextThreadLocal;
+import com.atlassian.bamboo.variable.VariableDefinitionContext;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
+import com.google.common.collect.Maps;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -26,9 +27,11 @@ public class VariableSubstitutionTest extends GitAbstractTest
         b.setWorkingDir(buildDir);
         setRepositoryProperties(b, "${bamboo.variable}");
 
-        CustomVariableContextImpl variableContext = new CustomVariableContextImpl();
-        variableContext.addCustomData("variable", "value");
-        CustomVariableContextThreadLocal.set(variableContext);
+        CustomVariableContext customVariableContext = new CustomVariableContextImpl();
+        customVariableContext.setVariables(Maps.<String, VariableDefinitionContext>newHashMap());
+        customVariableContext.addCustomData("variable", "value");
+        a.setCustomVariableContext(customVariableContext);
+        b.setCustomVariableContext(customVariableContext);
 
         Assert.assertEquals(a.getCacheDirectory(), b.getCacheDirectory());
     }
@@ -46,9 +49,10 @@ public class VariableSubstitutionTest extends GitAbstractTest
     {
         GitRepository repository = createGitRepository();
 
-        CustomVariableContext variableContext = new CustomVariableContextImpl();
-        variableContext.addCustomData("variable", variableValue);
-        CustomVariableContextThreadLocal.set(variableContext);
+        CustomVariableContext customVariableContext = new CustomVariableContextImpl();
+        customVariableContext.setVariables(Maps.<String, VariableDefinitionContext>newHashMap());
+        customVariableContext.addCustomData("variable", variableValue);
+        repository.setCustomVariableContext(customVariableContext);
 
         BuildConfiguration buildConfiguration = new BuildConfiguration();
         buildConfiguration.setProperty("repository.git.repositoryUrl", plainUrl);
