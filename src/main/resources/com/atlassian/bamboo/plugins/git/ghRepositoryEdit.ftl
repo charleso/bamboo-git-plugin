@@ -51,11 +51,11 @@ BAMBOO.LoadGitHubRepositoriesAsynchronously = function() {
         selectedBranch = "${buildConfiguration.getString('repository.github.branch')}";
     [/#if]
 
-    var $username = AJS.$("input[name=repository.github.username]"),
-        $password = AJS.$("input[name=repository.github.temporary.password]"),
+    var $username = AJS.$("input[name='repository.github.username']"),
+        $password = AJS.$("input[name='repository.github.temporary.password']"),
         $repositories = AJS.$("#repository_github_repository").hide(),
         $repositories_desc = AJS.$("#repository_github_repository_description").hide(),
-        $branches = AJS.$("select[name=repository.github.branch]"),
+        $branches = AJS.$("select[name='repository.github.branch']"),
         $loadGitHubRepositoriesButton = AJS.$("#loadGitHubRepositoriesButton"),
         $loadGitHubRepositoriesSpinner = AJS.$("#loadGitHubRepositoriesSpinner"),
         $loadedGitHubRepositoriesDiv = AJS.$("#loadedGitHubRepositoriesDiv"),
