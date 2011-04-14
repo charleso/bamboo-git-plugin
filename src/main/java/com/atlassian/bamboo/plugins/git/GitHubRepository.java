@@ -6,9 +6,11 @@ import com.atlassian.bamboo.repository.AbstractRepository;
 import com.atlassian.bamboo.repository.Repository;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
+import com.atlassian.bamboo.template.TemplateRenderer;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildContext;
+import com.atlassian.bamboo.variable.CustomVariableContext;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -62,6 +64,20 @@ public class GitHubRepository extends AbstractRepository
     public void setTextProvider(TextProvider textProvider) {
         super.setTextProvider(textProvider);
         gitRepository.setTextProvider(textProvider);
+    }
+
+    @Override
+    public void setCustomVariableContext(CustomVariableContext customVariableContext)
+    {
+        super.setCustomVariableContext(customVariableContext);
+        gitRepository.setCustomVariableContext(customVariableContext);
+    }
+
+    @Override
+    public void setTemplateRenderer(TemplateRenderer templateRenderer)
+    {
+        super.setTemplateRenderer(templateRenderer);
+        gitRepository.setTemplateRenderer(templateRenderer);
     }
 
     // ---------------------------------------------------------------------------------------------------- Constructors
