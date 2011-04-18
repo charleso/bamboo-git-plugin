@@ -37,7 +37,7 @@
 BAMBOO.LoadGitHubRepositoriesAsynchronously = function() {
     var repositoryKey = "${repository.key}",
         baseActionUrl = BAMBOO.contextPath + "/ajax/loadGitHubRepositories.action",
-        actionUrl = baseActionUrl[#if planKey?has_content] + "?planKey=${planKey}"[/#if],
+        actionUrl = baseActionUrl[#if plan?has_content] + "?planKey=${plan.key}"[/#if],
         repositoryBranchFilter,
         selectedRepository,
         selectedBranch;
