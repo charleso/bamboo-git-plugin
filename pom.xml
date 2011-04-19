@@ -135,7 +135,7 @@
     </build>
 
     <properties>
-        <bamboo.version>3.1-m3</bamboo.version>
+        <bamboo.version>3.1-SNAPSHOT</bamboo.version>
         <bamboo.data.version>2.6.1</bamboo.data.version>
     </properties>
 
