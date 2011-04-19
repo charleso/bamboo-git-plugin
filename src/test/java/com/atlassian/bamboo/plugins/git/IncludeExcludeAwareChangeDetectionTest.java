@@ -67,10 +67,13 @@ public class IncludeExcludeAwareChangeDetectionTest extends GitAbstractTest
         repository.close();
         String previousVcsRevisionKey = touchFiles(localRepository, Arrays.asList("file1.txt"));
 
+        BuildLoggerManager mockBuildLoggerManager = Mockito.mock(BuildLoggerManager.class, new Returns(new NullBuildLogger()));
+
         CustomVariableContextImpl customVariableContext = new CustomVariableContextImpl();
+        customVariableContext.setBuildLoggerManager(mockBuildLoggerManager);
         customVariableContext.setVariables(Maps.<String, VariableDefinitionContext>newHashMap());
         DefaultChangeDetectionManager changeDetectionManager = new DefaultChangeDetectionManager(
-                Mockito.mock(BuildLoggerManager.class, new Returns(new NullBuildLogger())),
+                mockBuildLoggerManager,
                 DefaultTextProvider.INSTANCE,
                 Mockito.mock(VariableDefinitionManager.class),
                 customVariableContext
@@ -79,6 +82,7 @@ public class IncludeExcludeAwareChangeDetectionTest extends GitAbstractTest
         setRepositoryProperties(gitRepository, localRepository);
         gitRepository.setFilterFilePatternOption(option);
         gitRepository.setFilterFilePatternRegex(pattern);
+        gitRepository.setCustomVariableContext(customVariableContext);
 
         for (Object[] objects : sequence)
         {
