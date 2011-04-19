@@ -13,7 +13,7 @@
     </organization>
 
     <name>Atlassian Bamboo Git Repository Plugin</name>
-    <description>This is the Git SCM plugin for Atlassian Bamboo.</description>
+    <description>Plugin to provide Git SCM support.</description>
     <packaging>atlassian-plugin</packaging>
     <scm>
         <connection>scm:git:git://github.com/atlassian/bamboo-git-plugin.git</connection>
