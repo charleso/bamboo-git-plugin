@@ -16,7 +16,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.dircache.DirCache;
+import org.eclipse.jgit.dircache.DirCacheBuildIterator;
+import org.eclipse.jgit.dircache.DirCacheBuilder;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.NotSupportedException;
@@ -39,6 +43,7 @@ import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
+import org.eclipse.jgit.treewalk.FileTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -307,20 +312,24 @@ public class GitOperationHelper
         buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.checkingOutRevision", Arrays.asList(targetRevision)));
         FileRepository localRepository = null;
         RevWalk revWalk = null;
+        DirCache dirCache = null;
         try
         {
             localRepository = createLocalRepository(sourceDirectory, cacheDirectory);
+
+            //try to clean .git/index.lock file prior to checkout, otherwise checkout would fail with Exception
+            File lck = new File(localRepository.getIndexFile().getParentFile(), localRepository.getIndexFile().getName() + ".lock");
+            FileUtils.deleteQuietly(lck);
+
+            dirCache = localRepository.lockDirCache();
+            
             revWalk = new RevWalk(localRepository);
             final RevCommit targetCommit = revWalk.parseCommit(localRepository.resolve(targetRevision));
             final RevCommit previousCommit = previousRevision == null ? null : revWalk.parseCommit(localRepository.resolve(previousRevision));
 
-            //clean .git/index.lock file prior to checkout, otherwise checkout would fail with Exception
-            File lck = new File(localRepository.getIndexFile().getParentFile(), localRepository.getIndexFile().getName() + ".lock");
-            FileUtils.deleteQuietly(lck);
-
             DirCacheCheckout dirCacheCheckout = new DirCacheCheckout(localRepository,
                     previousCommit == null ? null : previousCommit.getTree(),
-                    localRepository.lockDirCache(),
+                    dirCache,
                     targetCommit.getTree());
             dirCacheCheckout.setFailOnConflict(true);
             try
@@ -349,6 +358,10 @@ public class GitOperationHelper
             if (revWalk != null)
             {
                 revWalk.release();
+            }
+            if (dirCache != null)
+            {
+                dirCache.unlock();
             }
             if (localRepository != null)
             {
