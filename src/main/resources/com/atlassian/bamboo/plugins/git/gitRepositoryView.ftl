@@ -11,6 +11,6 @@
         [@ww.text name='repository.git.cacheDirectory.cleanMessage'/]
         <a class="requireConfirmation"
            title="[@ww.text name='repository.git.cacheDirectory.cleanTitle' /]"
-           href="[@ww.url action='deleteGitCacheDirectory' namespace='/build/admin' buildKey='${plan.key}'/]">[@ww.text name='global.buttons.delete' /]</a>
+           href="[@ww.url action='deleteGitCacheDirectory' namespace='/build/admin' buildKey=plan.key/]">[@ww.text name='global.buttons.delete' /]</a>
     </div>
 [/#if]
