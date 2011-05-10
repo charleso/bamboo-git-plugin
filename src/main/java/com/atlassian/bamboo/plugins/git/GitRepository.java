@@ -363,10 +363,10 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     {
         super.populateFromConfig(config);
         accessData.repositoryUrl = StringUtils.trimToEmpty(config.getString(REPOSITORY_GIT_REPOSITORY_URL));
-        accessData.username = config.getString(REPOSITORY_GIT_USERNAME);
+        accessData.username = config.getString(REPOSITORY_GIT_USERNAME, "");
         accessData.password = config.getString(REPOSITORY_GIT_PASSWORD);
-        accessData.branch = config.getString(REPOSITORY_GIT_BRANCH);
-        accessData.sshKey = config.getString(REPOSITORY_GIT_SSH_KEY);
+        accessData.branch = config.getString(REPOSITORY_GIT_BRANCH, "");
+        accessData.sshKey = config.getString(REPOSITORY_GIT_SSH_KEY, "");
         accessData.sshPassphrase = config.getString(REPOSITORY_GIT_SSH_PASSPHRASE);
         accessData.authenticationType = safeParseAuthenticationType(config.getString(REPOSITORY_GIT_AUTHENTICATION_TYPE));
         accessData.useShallowClones = config.getBoolean(REPOSITORY_GIT_USE_SHALLOW_CLONES);

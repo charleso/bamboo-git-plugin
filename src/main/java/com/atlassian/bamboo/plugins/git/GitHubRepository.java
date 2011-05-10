@@ -101,7 +101,7 @@ public class GitHubRepository extends AbstractRepository
             GitHubRepository ghRepo = (GitHubRepository) repository;
             return !new EqualsBuilder()
                     .append(this.repository, ghRepo.getRepository())
-                    .append(getBranch(), ghRepo.getBranch())
+                    .append(this.branch, ghRepo.getBranch())
                     .isEquals();
         }
         else
