@@ -15,7 +15,6 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -155,10 +154,19 @@ public class LoadGitHubRepositories extends PlanActionSupport implements PlanEdi
 
     private void addRepositoriesFromJson(@NotNull final Map<String, List<String>> repositories, @NotNull final JSONObject json) throws Exception
     {
+        addRepositoriesFromJson(repositories, json, false);
+    }
+
+    private void addRepositoriesFromJson(@NotNull final Map<String, List<String>> repositories, @NotNull final JSONObject json, boolean skipPublic) throws Exception
+    {
         final JSONArray jsonRepositories = json.getJSONArray("repositories");
         for (int index = 0; index < jsonRepositories.length(); index++)
         {
             final JSONObject jsonRepository = jsonRepositories.getJSONObject(index);
+            if (skipPublic && !jsonRepository.getBoolean("private"))
+            {
+                continue;
+            }
             final String owner = jsonRepository.getString("owner");
             final String name = jsonRepository.getString("name");
             final String repository = owner + "/" + name;
@@ -187,6 +195,21 @@ public class LoadGitHubRepositories extends PlanActionSupport implements PlanEdi
                 return githubRepositories;
             }
             addRepositoriesFromJson(githubRepositories, json);
+
+            final JSONObject organizationJson = getJSONResponseFromUrl(GITHUB_API_BASE_URL + "organizations/repositories?owned=1");
+            if (organizationJson.has("error") && organizationJson.getString("error").equals("not authorized"))
+            {
+                if (getPlan() != null)
+                {
+                    addFieldError("username", getText("repository.github.error.notAuthorized"));
+                }
+                else
+                {
+                    addFieldError("temporary.password", getText("repository.github.error.notAuthorized"));
+                }
+                return githubRepositories;
+            }
+            addRepositoriesFromJson(githubRepositories, organizationJson, true);
         }
 
         final JSONObject json = getJSONResponseFromUrl(GITHUB_API_BASE_URL + "repos/show/" + username);
