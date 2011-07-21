@@ -15,7 +15,7 @@
     </repository>
 
     <repository key="gh" name="GitHub repository" class="com.atlassian.bamboo.plugins.git.GitHubRepository">
-        <description>A Bitbucket Repository</description>
+        <description>A GitHub Repository</description>
         <resource type="freemarker" name="edit" location="/com/atlassian/bamboo/plugins/git/ghRepositoryEdit.ftl"/>
         <resource type="freemarker" name="view" location="/com/atlassian/bamboo/plugins/git/ghRepositoryView.ftl"/>
     </repository>
