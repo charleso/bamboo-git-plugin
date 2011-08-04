@@ -281,10 +281,8 @@ public class GitOperationHelper
 
         if (cacheGitDir != null && cacheGitDir.isDirectory())
         {
-            // copy tags from the cache repository
+            // copy tags and branches heads from the cache repository
             FileUtils.copyDirectoryToDirectory(new File(cacheGitDir, Constants.R_TAGS), new File(localRepository.getDirectory(), Constants.R_REFS));
-
-            // copy tags from the cache repository
             FileUtils.copyDirectoryToDirectory(new File(cacheGitDir, Constants.R_HEADS), new File(localRepository.getDirectory(), Constants.R_REFS));
 
             File shallow = new File(cacheGitDir, "shallow");
