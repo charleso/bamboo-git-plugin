@@ -206,7 +206,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             }
             else
             {
-                return new BuildRepositoryChangesImpl(-1, targetRevision, Collections.singletonList((Commit) CommitImpl.builder()
+                return new BuildRepositoryChangesImpl(targetRevision, Collections.singletonList((Commit) CommitImpl.builder()
                         .author(Author.UNKNOWN_AUTHOR)
                         .comment(textProvider.getText("repository.git.messages.unknownChanges", Arrays.asList(lastVcsRevisionKey, targetRevision)))
                         .date(new Date())
