@@ -186,11 +186,6 @@ public class GitHubRepository extends AbstractRepository
         return gitRepository.retrieveSourceCode(buildContext, vcsRevision);
     }
 
-    public String retrieveSourceCode(@NotNull String planKey, @Nullable String vcsRevisionKey) throws RepositoryException
-    {
-        return gitRepository.retrieveSourceCode(planKey, vcsRevisionKey);
-    }
-
     // -------------------------------------------------------------------------------------------------- Public Methods
     // -------------------------------------------------------------------------------------------------- Helper Methods
     // -------------------------------------------------------------------------------------- Basic Accessors / Mutators
