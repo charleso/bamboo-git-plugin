@@ -4,8 +4,10 @@ import com.atlassian.bamboo.build.BuildLoggerManager;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.plan.Plan;
 import com.atlassian.bamboo.plan.PlanKeys;
+import com.atlassian.bamboo.plan.vcsRevision.PlanVcsRevisionHistoryService;
 import com.atlassian.bamboo.repository.IncludeExcludeAwareRepository;
-import com.atlassian.bamboo.v2.build.BuildChanges;
+import com.atlassian.bamboo.repository.RepositoryDefinition;
+import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.trigger.DefaultChangeDetectionManager;
 import com.atlassian.bamboo.variable.CustomVariableContextImpl;
 import com.atlassian.bamboo.variable.VariableDefinitionContext;
@@ -76,13 +78,18 @@ public class IncludeExcludeAwareChangeDetectionTest extends GitAbstractTest
                 mockBuildLoggerManager,
                 DefaultTextProvider.INSTANCE,
                 Mockito.mock(VariableDefinitionManager.class),
-                customVariableContext
+                customVariableContext,
+                Mockito.mock(PlanVcsRevisionHistoryService.class)
         );
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, localRepository);
         gitRepository.setFilterFilePatternOption(option);
         gitRepository.setFilterFilePatternRegex(pattern);
         gitRepository.setCustomVariableContext(customVariableContext);
+
+        RepositoryDefinition repositoryDefinition = Mockito.mock(RepositoryDefinition.class);
+        Mockito.when(repositoryDefinition.getRepository()).thenReturn(gitRepository);
+        Mockito.when(repositoryDefinition.getId()).thenReturn((long) 1);
 
         for (Object[] objects : sequence)
         {
@@ -92,9 +99,9 @@ public class IncludeExcludeAwareChangeDetectionTest extends GitAbstractTest
             String newRevision = touchFiles(localRepository, filesToTouch);
 
             Plan plan = Mockito.mock(Plan.class);
-            Mockito.when(plan.getKey()).thenReturn(PLAN_KEY);
-            Mockito.when(plan.getPlanKey()).thenReturn(PlanKeys.getPlanKey(PLAN_KEY));
-            BuildChanges changes = changeDetectionManager.collectChangesSinceLastBuild(plan, gitRepository, previousVcsRevisionKey);
+            Mockito.when(plan.getKey()).thenReturn(PLAN_KEY.getKey());
+            Mockito.when(plan.getPlanKey()).thenReturn(PlanKeys.getPlanKey(PLAN_KEY.getKey()));
+            BuildRepositoryChanges changes = changeDetectionManager.collectChangesSinceLastBuild(plan, repositoryDefinition, previousVcsRevisionKey, null);
             Assert.assertEquals(!changes.getChanges().isEmpty(), shouldTrigger, "Build should " + (shouldTrigger ? "" : "not ") + "trigger for " + option + " pattern '" + pattern + "' and files " + filesToTouch);
             previousVcsRevisionKey = newRevision;
         }

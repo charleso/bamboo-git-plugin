@@ -1,8 +1,8 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.plugins.git.testutils.ExtractComments;
-import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildContext;
+import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.testtools.ZipResourceDirectory;
 import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
@@ -67,7 +67,7 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, source);
 
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
+        BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
         String vcsRevisionKey = changes.getVcsRevisionKey();
         Assert.assertNotNull(vcsRevisionKey);
         Assert.assertEquals(vcsRevisionKey, expectedHead);
@@ -92,7 +92,7 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
         gitRepository.setWorkingDir(workingDir);
         setRepositoryProperties(gitRepository, singleSource);
 
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
+        BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
         String vcsRevisionKey = changes.getVcsRevisionKey();
         Assert.assertNotNull(vcsRevisionKey);
         Assert.assertEquals(vcsRevisionKey, expectedHead);
@@ -114,13 +114,13 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
 
         // feed the cache or the detached change won't be known
         FileUtils.copyDirectory(detachedSrc, singleSource);
-        BuildChanges initialChanges = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", CHG_2); // initial build does not fetch to cache - maybe it should?
+        BuildRepositoryChanges initialChanges = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", CHG_2); // initial build does not fetch to cache - maybe it should?
         Assert.assertEquals(initialChanges.getVcsRevisionKey(), CHG_3);
 
         FileUtils.cleanDirectory(singleSource);
         FileUtils.copyDirectory(nextSrc, singleSource);
 
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", CHG_3);
+        BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", CHG_3);
 
         Assert.assertEquals(changes.getVcsRevisionKey(), CHG_4);
         List<String> comments = Lists.transform(changes.getChanges(), new ExtractComments());

@@ -2,14 +2,17 @@ package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.plugins.git.testutils.ExtractComments;
 import com.atlassian.bamboo.repository.RepositoryException;
-import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildContext;
+import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.testtools.ZipResourceDirectory;
 import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.Nullable;
 import org.mockito.Mockito;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -78,13 +81,13 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
     }
 
     @Test(dataProvider = "subsequentChangeDetectionsData")
-    public void testSubsequentChangeDetections(String branch, String previousChangeset, String srcRepo, String expectedHead, List<String> expectedComments) throws Exception
+    public void testSubsequentChangeDetections(String branch, String previousChangeset, String srcRepo, @Nullable String expectedHead, List<String> expectedComments) throws Exception
     {
         File source = new File(sourceRepositoriesBase, srcRepo);
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, source, branch);
 
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
+        BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
         String vcsRevisionKey = changes.getVcsRevisionKey();
         Assert.assertEquals(vcsRevisionKey, expectedHead);
 
@@ -108,7 +111,7 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
     }
 
     @Test(dataProvider = "subsequentChangeDetectionsData")
-    public void testSubsequentChangeDetectionsWithCache(String branch, String previousChangeset, String srcRepo, String expectedHead, List<String> expectedComments) throws Exception
+    public void testSubsequentChangeDetectionsWithCache(String branch, String previousChangeset, String srcRepo, @Nullable String expectedHead, List<String> expectedComments) throws Exception
     {
         File source = new File(sourceRepositoriesBase, srcRepo);
         File singleSource = new File(sourceRepositoriesBase, "testSubsequentChangeDetectionsWithCache_Repo");
@@ -123,7 +126,7 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
         gitRepository.setWorkingDir(workingDir);
         setRepositoryProperties(gitRepository, singleSource, branch);
 
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
+        BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
         String vcsRevisionKey = changes.getVcsRevisionKey();
         Assert.assertEquals(vcsRevisionKey, expectedHead);
 
@@ -156,11 +159,11 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
         setRepositoryProperties(gitRepository, repoSrc, prevBranch);
 
         // feed the cache or the detached change won't be known
-        BuildChanges initialChanges = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", CHG_M_1); // initial build does not fetch to cache - maybe it should?
+        BuildRepositoryChanges initialChanges = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", CHG_M_1); // initial build does not fetch to cache - maybe it should?
         Assert.assertEquals(initialChanges.getVcsRevisionKey(), prevRev);
 
         setRepositoryProperties(gitRepository, repoSrc, newBranch);
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", prevRev);
+        BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", prevRev);
 
         Assert.assertEquals(changes.getVcsRevisionKey(), expectedRev);
 

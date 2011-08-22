@@ -1,7 +1,7 @@
 package com.atlassian.bamboo.plugins.git;
 
-
 import com.atlassian.bamboo.plan.Plan;
+import com.atlassian.bamboo.repository.RepositoryDefinition;
 import com.atlassian.bamboo.v2.build.repository.RepositoryV2;
 import com.atlassian.bamboo.ww2.actions.PlanActionSupport;
 import com.atlassian.bamboo.ww2.aware.permissions.PlanEditSecurityAware;
@@ -29,43 +29,49 @@ public class DeleteGitCacheDirectoryAction extends PlanActionSupport implements 
             addActionError(message);
             return ERROR;
         }
-        RepositoryV2 repository = plan.getBuildDefinition().getRepositoryV2();
-        if (!(repository instanceof GitRepository))
-        {
-            String message = getText("repository.git.messages.cache.notGit", Arrays.asList(buildKey));
-            log.error(message);
-            addActionError(message);
-            return ERROR;
-        }
 
-        final GitRepository gitRepository = (GitRepository) repository;
-        final File cacheDirectoryFile = gitRepository.getCacheDirectory();
-        return GitCacheDirectory.getCacheLock(cacheDirectoryFile).withLock(new Supplier<String>()
+        boolean success = true;
+        for (RepositoryDefinition repositoryDefinition : plan.getRepositoryDefinitions())
         {
-            public String get()
+            RepositoryV2 repository = repositoryDefinition.getRepository();
+            if (!(repository instanceof GitRepository))
             {
-                if (cacheDirectoryFile.exists())
-                {
-                    log.info(getText("repository.git.messages.cache.cleaning", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath())));
-                    try
-                    {
-                        FileUtils.forceDelete(cacheDirectoryFile);
-                    }
-                    catch (IOException e)
-                    {
-                        String message = getText("repository.git.messages.cache.cleanFailed", Arrays.asList(buildKey));
-                        log.error(message, e);
-                        addActionError(message);
-                        return ERROR;
-                    }
-                }
-                else
-                {
-                    String message = getText("repository.git.messages.cache.notExist", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath()));
-                    log.info(message);
-                }
-                return SUCCESS;
+                String message = getText("repository.git.messages.cache.notGit", Arrays.asList(buildKey));
+                log.error(message);
+                addActionError(message);
+                return ERROR;
             }
-        });
+
+            final GitRepository gitRepository = (GitRepository) repository;
+            final File cacheDirectoryFile = gitRepository.getCacheDirectory();
+            success = success && SUCCESS.equals(GitCacheDirectory.getCacheLock(cacheDirectoryFile).withLock(new Supplier<String>()
+            {
+                public String get()
+                {
+                    if (cacheDirectoryFile.exists())
+                    {
+                        log.info(getText("repository.git.messages.cache.cleaning", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath())));
+                        try
+                        {
+                            FileUtils.forceDelete(cacheDirectoryFile);
+                        }
+                        catch (IOException e)
+                        {
+                            String message = getText("repository.git.messages.cache.cleanFailed", Arrays.asList(buildKey));
+                            log.error(message, e);
+                            addActionError(message);
+                            return ERROR;
+                        }
+                    }
+                    else
+                    {
+                        String message = getText("repository.git.messages.cache.notExist", Arrays.asList(buildKey, cacheDirectoryFile.getAbsolutePath()));
+                        log.info(message);
+                    }
+                    return SUCCESS;
+                }
+            }));
+        }
+        return (success ? SUCCESS : ERROR);
     }
 }

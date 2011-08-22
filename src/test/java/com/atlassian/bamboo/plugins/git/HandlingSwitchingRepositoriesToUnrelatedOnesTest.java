@@ -1,14 +1,16 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.plugins.git.testutils.ExtractComments;
-import com.atlassian.bamboo.v2.build.BuildChanges;
 import com.atlassian.bamboo.v2.build.BuildContext;
+import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.testtools.ZipResourceDirectory;
 import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.mockito.Mockito;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.util.Arrays;
@@ -53,7 +55,7 @@ public class HandlingSwitchingRepositoriesToUnrelatedOnesTest extends GitAbstrac
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, source);
 
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", previousChangeset);
+        BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), previousChangeset);
         String vcsRevisionKey = changes.getVcsRevisionKey();
 
         Assert.assertEquals(vcsRevisionKey, CHG_M_4);
@@ -70,14 +72,14 @@ public class HandlingSwitchingRepositoriesToUnrelatedOnesTest extends GitAbstrac
         setRepositoryProperties(gitRepository, commonSource);
 
         FileUtils.copyDirectory(new File(sourceRepositoriesBaseDetached, "5"), commonSource);
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", CHG_1); // feed cache
+        BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), CHG_1); // feed cache
         String vcsRevisionKey = changes.getVcsRevisionKey();
         Assert.assertEquals(vcsRevisionKey, CHG_5, "Precondition");
 
         FileUtils.cleanDirectory(commonSource);
         FileUtils.copyDirectory(new File(sourceRepositoriesBaseHeads, "5"), commonSource);
 
-        BuildChanges newChanges = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", CHG_5); // now unrelated
+        BuildRepositoryChanges newChanges = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), CHG_5); // now unrelated
         String newVcsRevisionKey = newChanges.getVcsRevisionKey();
         Assert.assertEquals(newVcsRevisionKey, CHG_M_4);
 
@@ -93,15 +95,15 @@ public class HandlingSwitchingRepositoriesToUnrelatedOnesTest extends GitAbstrac
         setRepositoryProperties(gitRepository, new File(sourceRepositoriesBaseDetached, "5"));
 
         BuildContext buildContext = Mockito.mock(BuildContext.class);
-        Mockito.when(buildContext.getPlanKey()).thenReturn("GIT-PLAN");
+        Mockito.when(buildContext.getPlanKey()).thenReturn(PLAN_KEY.getKey());
 
         gitRepository.retrieveSourceCode(buildContext, CHG_5);
-        verifyContents(gitRepository.getSourceCodeDirectory("GIT-PLAN"), "detached-git-repos-contents/5.zip"); // precondition
+        verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), "detached-git-repos-contents/5.zip"); // precondition
 
         setRepositoryProperties(gitRepository, new File(sourceRepositoriesBaseHeads, "5"));
         String retrieved = gitRepository.retrieveSourceCode(buildContext, CHG_M_4);
 
         Assert.assertEquals(retrieved, CHG_M_4);
-        verifyContents(gitRepository.getSourceCodeDirectory("GIT-PLAN"), "multiple-branches-with-conflicts-contents/master-5.zip");
+        verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), "multiple-branches-with-conflicts-contents/master-5.zip");
     }
 }

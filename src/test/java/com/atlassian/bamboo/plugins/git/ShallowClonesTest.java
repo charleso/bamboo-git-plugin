@@ -1,7 +1,7 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.repository.RepositoryException;
-import com.atlassian.bamboo.v2.build.BuildChanges;
+import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.google.common.collect.Iterables;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
@@ -296,7 +296,7 @@ public class ShallowClonesTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, "git://github.com/pstefaniak/7.git", Collections.singletonMap("repository.git.useShallowClones", true));
 
-        BuildChanges buildChanges = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
+        BuildRepositoryChanges buildChanges = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
         gitRepository.retrieveSourceCode(mockBuildContext(), buildChanges.getVcsRevisionKey());
 
         File sourceCodeDirectory = gitRepository.getSourceCodeDirectory(PLAN_KEY);

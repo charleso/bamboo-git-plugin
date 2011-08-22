@@ -1,11 +1,10 @@
 package com.atlassian.bamboo.plugins.git;
 
-import com.atlassian.bamboo.author.AuthorImpl;
 import com.atlassian.bamboo.commit.Commit;
 import com.atlassian.bamboo.commit.CommitFile;
 import com.atlassian.bamboo.commit.CommitFileImpl;
 import com.atlassian.bamboo.commit.CommitImpl;
-import com.atlassian.bamboo.v2.build.BuildChanges;
+import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.testtools.ZipResourceDirectory;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.transport.Transport;
@@ -14,6 +13,7 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.testng.Assert.assertEquals;
@@ -88,14 +88,14 @@ public class GitOperationHelperTest extends GitAbstractTest
 
     static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss' 'Z"); //rfc3339date, see hg.style file
 
-    CommitImpl createCommitImpl(String author, String comment, String date, CommitFileImpl[] commitFiles) throws Exception
+    CommitImpl createCommitImpl(String author, String comment, String date, CommitFile[] commitFiles) throws Exception
     {
-        CommitImpl commitImpl = new CommitImpl(new AuthorImpl(author), comment, dateFormat.parse(date));
-        for(CommitFileImpl file : commitFiles)
-        {
-            commitImpl.addFile(file);
-        }
-        return commitImpl;
+        return CommitImpl.builder()
+                .author(author)
+                .comment(comment)
+                .date(dateFormat.parse(date))
+                .files(Arrays.asList(commitFiles))
+                .build();
     }
 
     @DataProvider(parallel = true)
@@ -280,7 +280,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         File tmp = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory("150changes.zip", tmp);
 
-        BuildChanges buildChanges = createGitOperationHelper().extractCommits(tmp, null, "HEAD"); 
+        BuildRepositoryChanges buildChanges = createGitOperationHelper().extractCommits(tmp, null, "HEAD");
         assertEquals(buildChanges.getChanges().size(), 100);
         assertEquals(buildChanges.getSkippedCommitsCount(), 50);
 

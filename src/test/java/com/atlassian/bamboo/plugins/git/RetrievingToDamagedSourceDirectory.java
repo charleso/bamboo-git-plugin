@@ -9,7 +9,8 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -140,7 +141,7 @@ public class RetrievingToDamagedSourceDirectory extends GitAbstractTest
         setRepositoryProperties(gitRepository, gtr.srcDir.getAbsolutePath(), Collections.singletonMap("repository.git.useShallowClones", (Object)useShallow));
         if (useCache)
         {
-            gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
+            gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
         }
         Assert.assertEquals(new File(gitRepository.getCacheDirectory(), Constants.DOT_GIT).isDirectory(), useCache, "Precondition");
         Assert.assertEquals(gitRepository.getCacheDirectory().isDirectory(), useCache, "Precondition");
@@ -157,7 +158,7 @@ public class RetrievingToDamagedSourceDirectory extends GitAbstractTest
         if (gitRepository.getCacheDirectory().isDirectory())
         {
             // we used cache when preparing this test case
-            String collectedRevision = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null).getVcsRevisionKey();
+            String collectedRevision = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null).getVcsRevisionKey();
             Assert.assertEquals(collectedRevision, target);
         }
         String actualTarget = gitRepository.retrieveSourceCode(mockBuildContext(), target);

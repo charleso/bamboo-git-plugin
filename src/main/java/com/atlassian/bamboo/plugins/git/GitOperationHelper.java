@@ -9,8 +9,8 @@ import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.utils.SystemProperty;
-import com.atlassian.bamboo.v2.build.BuildChanges;
-import com.atlassian.bamboo.v2.build.BuildChangesImpl;
+import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
+import com.atlassian.bamboo.v2.build.BuildRepositoryChangesImpl;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -368,7 +368,7 @@ public class GitOperationHelper
         }
     }
 
-    BuildChanges extractCommits(@NotNull final File directory, @Nullable final String previousRevision, @Nullable final String targetRevision)
+    BuildRepositoryChanges extractCommits(@NotNull final File directory, @Nullable final String previousRevision, @Nullable final String targetRevision)
             throws RepositoryException
     {
         List<Commit> commits = new ArrayList<Commit>();
@@ -454,7 +454,7 @@ public class GitOperationHelper
                 localRepository.close();
             }
         }
-        BuildChanges buildChanges = new BuildChangesImpl(targetRevision, commits);
+        BuildRepositoryChanges buildChanges = new BuildRepositoryChangesImpl(targetRevision, commits);
         buildChanges.setSkippedCommitsCount(skippedCommits);
         return buildChanges;
     }

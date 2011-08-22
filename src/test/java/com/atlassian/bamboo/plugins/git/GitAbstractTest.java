@@ -4,6 +4,8 @@ import com.atlassian.bamboo.build.BuildLoggerManager;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.plan.Plan;
+import com.atlassian.bamboo.plan.PlanKey;
+import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.project.Project;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.util.BambooFileUtils;
@@ -21,6 +23,7 @@ import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.eclipse.jgit.lib.Repository;
+import org.jetbrains.annotations.Nullable;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
 import org.testng.annotations.AfterClass;
@@ -45,7 +48,7 @@ import static org.testng.Assert.assertEquals;
 
 public class GitAbstractTest
 {
-    public static final String PLAN_KEY = "PLAN-KEY";
+    public static final PlanKey PLAN_KEY = PlanKeys.getPlanKey("PLAN-KEY");
     private final Collection<File> filesToCleanUp = Collections.synchronizedCollection(new ArrayList<File>());
     private final Collection<Repository> repositoriesToCleanUp = Collections.synchronizedCollection(new ArrayList<Repository>());
     private static final ResourceBundle resourceBundle = ResourceBundle.getBundle("com.atlassian.bamboo.plugins.git.i18n", Locale.US);
@@ -60,7 +63,7 @@ public class GitAbstractTest
         setRepositoryProperties(gitRepository, repositoryUrl, branch, null, null);
     }
 
-    public static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, String branch, String sshKey, String sshPassphrase) throws Exception
+    public static void setRepositoryProperties(GitRepository gitRepository, String repositoryUrl, String branch, @Nullable String sshKey, @Nullable String sshPassphrase) throws Exception
     {
         setRepositoryProperties(gitRepository, repositoryUrl, branch, sshKey, sshPassphrase, Collections.<String, String>emptyMap());
     }
@@ -188,12 +191,12 @@ public class GitAbstractTest
         return createAccessData(repositoryFile.getAbsolutePath(), branch);
     }
 
-    protected static GitRepositoryAccessData createAccessData(String repositoryUrl, String branch)
+    protected static GitRepositoryAccessData createAccessData(String repositoryUrl, @Nullable String branch)
     {
         return createAccessData(repositoryUrl, branch, null, null, null, null);
     }
 
-    protected static GitRepositoryAccessData createAccessData(String repositoryUrl, String branch, String username, String password, String sshKey, String sshPassphrase)
+    protected static GitRepositoryAccessData createAccessData(String repositoryUrl, String branch, @Nullable String username, @Nullable String password, @Nullable String sshKey, @Nullable String sshPassphrase)
     {
         GitRepositoryAccessData accessData = new GitRepositoryAccessData();
         accessData.repositoryUrl = repositoryUrl;
@@ -208,7 +211,7 @@ public class GitAbstractTest
     protected static BuildContext mockBuildContext()
     {
         Plan plan = Mockito.mock(Plan.class);
-        Mockito.when(plan.getKey()).thenReturn(PLAN_KEY);
+        Mockito.when(plan.getKey()).thenReturn(PLAN_KEY.toString());
         Project project = Mockito.mock(Project.class);
         Mockito.when(plan.getProject()).thenReturn(project);
         return new BuildContextImpl(plan, 1, null, null, null);

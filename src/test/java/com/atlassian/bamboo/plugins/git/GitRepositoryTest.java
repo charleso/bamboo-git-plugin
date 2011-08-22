@@ -3,12 +3,13 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.repository.NameValuePair;
 import com.atlassian.bamboo.security.StringEncrypter;
-import com.atlassian.bamboo.v2.build.BuildChanges;
+import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.build.agent.remote.RemoteBuildDirectoryManager;
 import com.atlassian.testtools.ZipResourceDirectory;
 import org.apache.commons.io.FileUtils;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,7 +27,7 @@ public class GitRepositoryTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, "git://github.com/cixot/test.git", "master");
 
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
+        BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
 
         gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
     }
@@ -91,7 +92,7 @@ public class GitRepositoryTest extends GitAbstractTest
         String sshKey = FileUtils.readFileToString(new File(Thread.currentThread().getContextClassLoader().getResource(sshKeyfile).toURI()));
         setRepositoryProperties(gitRepository, repositoryUrl, "master", sshKey, sshPassphrase);
 
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
+        BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
         gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
     }
 
@@ -149,7 +150,7 @@ public class GitRepositoryTest extends GitAbstractTest
         GitRepository repository = createGitRepository();
         setRepositoryProperties(repository, tmp);
 
-        BuildChanges buildChanges = repository.collectChangesSinceLastBuild(PLAN_KEY, "1fea1bc1ff3a0a2a2ad5b15dc088323b906e81d7");
+        BuildRepositoryChanges buildChanges = repository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), "1fea1bc1ff3a0a2a2ad5b15dc088323b906e81d7");
 
         assertEquals(buildChanges.getChanges().size(), 100);
         assertEquals(buildChanges.getSkippedCommitsCount(), 49);
@@ -169,7 +170,7 @@ public class GitRepositoryTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, testRepository, "master");
 
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
+        BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
         assertEquals(changes.getChanges().size(), 0);
     }
 }

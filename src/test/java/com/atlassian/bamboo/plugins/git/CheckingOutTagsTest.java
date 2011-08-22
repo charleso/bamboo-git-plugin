@@ -1,13 +1,16 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.repository.RepositoryException;
-import com.atlassian.bamboo.v2.build.BuildChanges;
+import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -88,7 +91,7 @@ public class CheckingOutTagsTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, srcDir, ref);
 
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
+        BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
         gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
 
         File result = srcRepo.getTextFile(gitRepository.getSourceCodeDirectory(PLAN_KEY));
@@ -114,7 +117,7 @@ public class CheckingOutTagsTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, srcDir, ref);
 
-        gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
+        gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
     }
 
     @DataProvider(parallel = true)
@@ -139,7 +142,7 @@ public class CheckingOutTagsTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, srcDir, ref);
 
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
+        BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
         gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
 
         verifyCurrentBranch(localBranch, expectedContents, gitRepository);
@@ -163,13 +166,13 @@ public class CheckingOutTagsTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, srcDir, "master");
 
-        BuildChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, null);
+        BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
         gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
 
         verifyCurrentBranch("refs/heads/master", "Master top", gitRepository);
 
         setRepositoryProperties(gitRepository, srcDir, "branch");
-        BuildChanges changes2 = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, changes.getVcsRevisionKey());
+        BuildRepositoryChanges changes2 = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), changes.getVcsRevisionKey());
         gitRepository.retrieveSourceCode(mockBuildContext(), changes2.getVcsRevisionKey());
 
         verifyCurrentBranch("refs/heads/branch", "Branch top", gitRepository);

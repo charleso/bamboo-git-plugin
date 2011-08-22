@@ -1,7 +1,6 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.author.Author;
-import com.atlassian.bamboo.author.AuthorImpl;
 import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.commit.Commit;
 import com.atlassian.bamboo.commit.CommitImpl;
@@ -17,9 +16,9 @@ import com.atlassian.bamboo.repository.SelectableAuthenticationRepository;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
-import com.atlassian.bamboo.v2.build.BuildChanges;
-import com.atlassian.bamboo.v2.build.BuildChangesImpl;
 import com.atlassian.bamboo.v2.build.BuildContext;
+import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
+import com.atlassian.bamboo.v2.build.BuildRepositoryChangesImpl;
 import com.atlassian.bamboo.v2.build.agent.remote.RemoteBuildDirectoryManager;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.util.concurrent.LazyReference;
@@ -132,7 +131,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     }
 
     @NotNull
-    public BuildChanges collectChangesSinceLastBuild(@NotNull String planKey, @Nullable final String lastVcsRevisionKey) throws RepositoryException
+    public BuildRepositoryChanges collectChangesSinceLastBuild(@NotNull String planKey, @Nullable final String lastVcsRevisionKey) throws RepositoryException
     {
         try
         {
@@ -144,7 +143,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
             if (targetRevision.equals(lastVcsRevisionKey))
             {
-                return new BuildChangesImpl(targetRevision);
+                return new BuildRepositoryChangesImpl(targetRevision);
             }
 
             final File cacheDirectory = getCacheDirectory();
@@ -167,12 +166,12 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                 {
                     throw new RepositoryException(e.getMessage(), e);
                 }
-                return new BuildChangesImpl(targetRevision);
+                return new BuildRepositoryChangesImpl(targetRevision);
             }
 
-            final BuildChanges buildChanges = GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Supplier<BuildChanges>()
+            final BuildRepositoryChanges buildChanges = GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Supplier<BuildRepositoryChanges>()
             {
-                public BuildChanges get()
+                public BuildRepositoryChanges get()
                 {
                     try
                     {
@@ -188,7 +187,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.cleanedCacheDirectory", Arrays.asList(cacheDirectory)));
                             helper.fetch(cacheDirectory, substitutedAccessData, false);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.fetchedRemoteRepository", Arrays.asList(cacheDirectory)));
-                            BuildChanges extractedChanges = helper.extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
+                            BuildRepositoryChanges extractedChanges = helper.extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.completed"));
                             return extractedChanges;
                         }
@@ -207,8 +206,11 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             }
             else
             {
-                return new BuildChangesImpl(targetRevision, Collections.singletonList((Commit) new CommitImpl(new AuthorImpl(Author.UNKNOWN_AUTHOR),
-                        textProvider.getText("repository.git.messages.unknownChanges", Arrays.asList(lastVcsRevisionKey, targetRevision)), new Date())));
+                return new BuildRepositoryChangesImpl(-1, targetRevision, Collections.singletonList((Commit) CommitImpl.builder()
+                        .author(Author.UNKNOWN_AUTHOR)
+                        .comment(textProvider.getText("repository.git.messages.unknownChanges", Arrays.asList(lastVcsRevisionKey, targetRevision)))
+                        .date(new Date())
+                        .build()));
             }
         }
         catch (RuntimeException e)
@@ -224,8 +226,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         {
             final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(buildContext.getPlanResultKey());
-            final String planKey = buildContext.getPlanKey();
-            final File sourceDirectory = getSourceCodeDirectory(planKey);
+            final File sourceDirectory = getSourceCodeDirectory(PlanKeys.getPlanKey(buildContext.getPlanKey()));
             final boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones;
             final boolean isOnLocalAgent = !(buildDirectoryManager instanceof RemoteBuildDirectoryManager);
             final GitOperationHelper helper = new GitOperationHelper(buildLogger, textProvider);
@@ -299,14 +300,6 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         {
             throw new RepositoryException(textProvider.getText("repository.git.messages.runtimeException"), e);
         }
-    }
-
-    @Deprecated
-    @NotNull
-    public String retrieveSourceCode(@NotNull String planKey, @Nullable String vcsRevisionKey) throws RepositoryException
-    {
-        //deprecated!
-        throw new UnsupportedOperationException();
     }
 
     @Override

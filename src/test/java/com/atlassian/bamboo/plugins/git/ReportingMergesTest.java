@@ -2,7 +2,7 @@ package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.commit.Commit;
 import com.atlassian.bamboo.commit.CommitFile;
-import com.atlassian.bamboo.v2.build.BuildChanges;
+import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.google.common.collect.Sets;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
@@ -107,7 +107,7 @@ public class ReportingMergesTest extends GitAbstractTest
         setRepositoryProperties(gitRepository, localRepository);
         for (String prevRevision : prevRevisions)
         {
-            BuildChanges buildChanges = gitRepository.collectChangesSinceLastBuild(PLAN_KEY, prevRevision);
+            BuildRepositoryChanges buildChanges = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), prevRevision);
             Assert.assertEquals(buildChanges.getVcsRevisionKey(), mergeRevision);
             Set<String> filesAggregate = Sets.newHashSet();
             for (Commit commit : buildChanges.getChanges())

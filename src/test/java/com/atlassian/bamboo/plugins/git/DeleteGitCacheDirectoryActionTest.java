@@ -1,8 +1,8 @@
 package com.atlassian.bamboo.plugins.git;
 
-import com.atlassian.bamboo.build.BuildDefinition;
 import com.atlassian.bamboo.plan.Plan;
 import com.atlassian.bamboo.plan.PlanManager;
+import com.atlassian.bamboo.repository.RepositoryDefinition;
 import com.atlassian.bamboo.variable.CustomVariableContext;
 import com.atlassian.bamboo.variable.CustomVariableContextImpl;
 import com.atlassian.bamboo.variable.VariableDefinitionContext;
@@ -14,6 +14,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.List;
 
 public class DeleteGitCacheDirectoryActionTest extends GitAbstractTest
 {
@@ -76,10 +78,10 @@ public class DeleteGitCacheDirectoryActionTest extends GitAbstractTest
     {
         DeleteGitCacheDirectoryAction action = new DeleteGitCacheDirectoryAction();
         action.setBuildKey("BUILD-KEY-1");
-        BuildDefinition buildDefinition = Mockito.mock(BuildDefinition.class, new Returns(repository));
-
+        RepositoryDefinition repositoryDefinition = Mockito.mock(RepositoryDefinition.class, new Returns(repository));
+        List<RepositoryDefinition> repositoryDefinitions = Collections.singletonList(repositoryDefinition);
         Plan plan = Mockito.mock(Plan.class);
-        Mockito.when(plan.getBuildDefinition()).thenReturn(buildDefinition);
+        Mockito.when(plan.getRepositoryDefinitions()).thenReturn(repositoryDefinitions);
         PlanManager planManager = Mockito.mock(PlanManager.class);
         Mockito.when(planManager.getPlanByKey(action.getBuildKey())).thenReturn(plan);
         action.setPlanManager(planManager);

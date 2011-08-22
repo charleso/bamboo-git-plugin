@@ -8,7 +8,9 @@ import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jgit.errors.TransportException;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.transport.Transport;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
