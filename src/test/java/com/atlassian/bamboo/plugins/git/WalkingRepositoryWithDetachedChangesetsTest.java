@@ -8,7 +8,9 @@ import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.mockito.Mockito;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -155,16 +157,15 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
         BuildContext buildContext = Mockito.mock(BuildContext.class);
         Mockito.when(buildContext.getPlanKey()).thenReturn("GIT-PLAN");
 
-        gitRepository.retrieveSourceCode(buildContext, prevRev);
+        gitRepository.retrieveSourceCode(buildContext, prevRev, getCheckoutDir(gitRepository));
 
         File next = new File(sourceRepositoriesBase, newRepo);
         setRepositoryProperties(gitRepository, next);
 
         String newRev = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", null).getVcsRevisionKey();
 
-        gitRepository.retrieveSourceCode(buildContext, newRev);
-        File retrievedSources = new File(gitRepository.getWorkingDirectory(), "GIT-PLAN");
-        verifyContents(retrievedSources, "detached-git-repos-contents/" + newRepo + ".zip");
+        gitRepository.retrieveSourceCode(buildContext, newRev, getCheckoutDir(gitRepository));
+        verifyContents(getCheckoutDir(gitRepository), "detached-git-repos-contents/" + newRepo + ".zip");
     }
 
     @DataProvider
@@ -190,9 +191,10 @@ public class WalkingRepositoryWithDetachedChangesetsTest extends GitAbstractTest
         BuildContext buildContext = Mockito.mock(BuildContext.class);
         Mockito.when(buildContext.getPlanKey()).thenReturn("GIT-PLAN");
 
-        gitRepository.retrieveSourceCode(buildContext, revision);
+        File checkoutDir = new File(gitRepository.getWorkingDirectory(), "checkout");
 
-        File retrievedSources = new File(gitRepository.getWorkingDirectory(), "GIT-PLAN");
-        verifyContents(retrievedSources, "detached-git-repos-contents/" + contents + ".zip");
+        gitRepository.retrieveSourceCode(buildContext, revision, checkoutDir);
+
+        verifyContents(checkoutDir, "detached-git-repos-contents/" + contents + ".zip");
     }
 }

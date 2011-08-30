@@ -3,7 +3,7 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.build.BuildLoggerManager;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
-import com.atlassian.bamboo.plan.Plan;
+import com.atlassian.bamboo.chains.Chain;
 import com.atlassian.bamboo.plan.PlanKey;
 import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.project.Project;
@@ -210,11 +210,17 @@ public class GitAbstractTest
 
     protected static BuildContext mockBuildContext()
     {
-        Plan plan = Mockito.mock(Plan.class);
-        Mockito.when(plan.getKey()).thenReturn(PLAN_KEY.toString());
+        Chain chain = Mockito.mock(Chain.class);
+        Mockito.when(chain.getKey()).thenReturn(PLAN_KEY.toString());
+
         Project project = Mockito.mock(Project.class);
-        Mockito.when(plan.getProject()).thenReturn(project);
-        return new BuildContextImpl(plan, 1, null, null, null);
+        Mockito.when(chain.getProject()).thenReturn(project);
+        return new BuildContextImpl(chain, 1, null, null, null);
+    }
+
+    protected static File getCheckoutDir(GitRepository gitRepository)
+    {
+        return new File(gitRepository.getWorkingDirectory(), "checkoutDir");
     }
 
     @AfterClass

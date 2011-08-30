@@ -97,13 +97,13 @@ public class HandlingSwitchingRepositoriesToUnrelatedOnesTest extends GitAbstrac
         BuildContext buildContext = Mockito.mock(BuildContext.class);
         Mockito.when(buildContext.getPlanKey()).thenReturn(PLAN_KEY.getKey());
 
-        gitRepository.retrieveSourceCode(buildContext, CHG_5);
-        verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), "detached-git-repos-contents/5.zip"); // precondition
+        gitRepository.retrieveSourceCode(buildContext, CHG_5, getCheckoutDir(gitRepository));
+        verifyContents(getCheckoutDir(gitRepository), "detached-git-repos-contents/5.zip"); // precondition
 
         setRepositoryProperties(gitRepository, new File(sourceRepositoriesBaseHeads, "5"));
-        String retrieved = gitRepository.retrieveSourceCode(buildContext, CHG_M_4);
+        String retrieved = gitRepository.retrieveSourceCode(buildContext, CHG_M_4, getCheckoutDir(gitRepository));
 
         Assert.assertEquals(retrieved, CHG_M_4);
-        verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), "multiple-branches-with-conflicts-contents/master-5.zip");
+        verifyContents(getCheckoutDir(gitRepository), "multiple-branches-with-conflicts-contents/master-5.zip");
     }
 }

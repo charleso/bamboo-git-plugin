@@ -92,9 +92,10 @@ public class CheckingOutTagsTest extends GitAbstractTest
         setRepositoryProperties(gitRepository, srcDir, ref);
 
         BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
-        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
+        File checkoutDir = new File(gitRepository.getWorkingDirectory(), "checkout");
+        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey(), checkoutDir);
 
-        File result = srcRepo.getTextFile(gitRepository.getSourceCodeDirectory(PLAN_KEY));
+        File result = srcRepo.getTextFile(checkoutDir);
         String contents = FileUtils.readFileToString(result);
 
         Assert.assertEquals(contents, expectedContents);
@@ -143,7 +144,7 @@ public class CheckingOutTagsTest extends GitAbstractTest
         setRepositoryProperties(gitRepository, srcDir, ref);
 
         BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
-        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
+        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey(), getCheckoutDir(gitRepository));
 
         verifyCurrentBranch(localBranch, expectedContents, gitRepository);
     }
@@ -155,7 +156,7 @@ public class CheckingOutTagsTest extends GitAbstractTest
         setRepositoryProperties(gitRepository, srcDir, ref);
 
         String expectedRevision = srcRepo.srcRepo.getRefDatabase().getRef(ref).getObjectId().name();
-        gitRepository.retrieveSourceCode(mockBuildContext(), expectedRevision);
+        gitRepository.retrieveSourceCode(mockBuildContext(), expectedRevision, getCheckoutDir(gitRepository));
 
         verifyCurrentBranch(localBranch, expectedContents, gitRepository);
     }
@@ -167,13 +168,13 @@ public class CheckingOutTagsTest extends GitAbstractTest
         setRepositoryProperties(gitRepository, srcDir, "master");
 
         BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
-        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
+        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey(), getCheckoutDir(gitRepository));
 
         verifyCurrentBranch("refs/heads/master", "Master top", gitRepository);
 
         setRepositoryProperties(gitRepository, srcDir, "branch");
         BuildRepositoryChanges changes2 = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), changes.getVcsRevisionKey());
-        gitRepository.retrieveSourceCode(mockBuildContext(), changes2.getVcsRevisionKey());
+        gitRepository.retrieveSourceCode(mockBuildContext(), changes2.getVcsRevisionKey(), getCheckoutDir(gitRepository));
 
         verifyCurrentBranch("refs/heads/branch", "Branch top", gitRepository);
     }
@@ -185,13 +186,13 @@ public class CheckingOutTagsTest extends GitAbstractTest
         setRepositoryProperties(gitRepository, srcDir, "master");
 
         final String masterHead = srcRepo.srcRepo.getRefDatabase().getRef("refs/heads/master").getObjectId().name();
-        gitRepository.retrieveSourceCode(mockBuildContext(), masterHead);
+        gitRepository.retrieveSourceCode(mockBuildContext(), masterHead, getCheckoutDir(gitRepository));
 
         verifyCurrentBranch("refs/heads/master", "Master top", gitRepository);
 
         setRepositoryProperties(gitRepository, srcDir, "branch");
         final String branchHead = srcRepo.srcRepo.getRefDatabase().getRef("refs/heads/branch").getObjectId().name();
-        gitRepository.retrieveSourceCode(mockBuildContext(), branchHead);
+        gitRepository.retrieveSourceCode(mockBuildContext(), branchHead, getCheckoutDir(gitRepository));
 
         verifyCurrentBranch("refs/heads/branch", "Branch top", gitRepository);
     }
@@ -199,7 +200,7 @@ public class CheckingOutTagsTest extends GitAbstractTest
     private void verifyCurrentBranch(String localBranch, String expectedContents, GitRepository gitRepository)
             throws RepositoryException, IOException
     {
-        File targetDir = gitRepository.getSourceCodeDirectory(PLAN_KEY);
+        File targetDir = getCheckoutDir(gitRepository);
         File result = srcRepo.getTextFile(targetDir);
         String contents = FileUtils.readFileToString(result);
 

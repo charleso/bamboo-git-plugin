@@ -1,6 +1,7 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.plan.Plan;
+import com.atlassian.bamboo.plan.PlanHelper;
 import com.atlassian.bamboo.repository.RepositoryDefinition;
 import com.atlassian.bamboo.v2.build.repository.RepositoryV2;
 import com.atlassian.bamboo.ww2.actions.PlanActionSupport;
@@ -31,7 +32,7 @@ public class DeleteGitCacheDirectoryAction extends PlanActionSupport implements 
         }
 
         boolean success = true;
-        for (RepositoryDefinition repositoryDefinition : plan.getRepositoryDefinitions())
+        for (RepositoryDefinition repositoryDefinition : PlanHelper.getRepositoryDefinitions(plan))
         {
             RepositoryV2 repository = repositoryDefinition.getRepository();
             if (!(repository instanceof GitRepository))

@@ -212,16 +212,16 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
         BuildContext buildContext = Mockito.mock(BuildContext.class);
         Mockito.when(buildContext.getPlanKey()).thenReturn("GIT-PLAN");
 
-        gitRepository.retrieveSourceCode(buildContext, prevRev);
+        File checkoutDir = new File(gitRepository.getWorkingDirectory(), "checkout");
+        gitRepository.retrieveSourceCode(buildContext, prevRev, checkoutDir);
 
         File next = new File(sourceRepositoriesBase, newRepo);
         setRepositoryProperties(gitRepository, next, newBranch);
 
         String newRev = gitRepository.collectChangesSinceLastBuild("GIT-PLAN", null).getVcsRevisionKey();
 
-        gitRepository.retrieveSourceCode(buildContext, newRev);
-        File retrievedSources = new File(gitRepository.getWorkingDirectory(), "GIT-PLAN");
-        verifyContents(retrievedSources, "multiple-branches-with-conflicts-contents/" + newBranch + "-" + newRepo + ".zip");
+        gitRepository.retrieveSourceCode(buildContext, newRev, checkoutDir);
+        verifyContents(checkoutDir, "multiple-branches-with-conflicts-contents/" + newBranch + "-" + newRepo + ".zip");
     }
 
     @DataProvider
@@ -248,9 +248,8 @@ public class WalkingRepositoryWithMultipleBranchesTest extends GitAbstractTest
         BuildContext buildContext = Mockito.mock(BuildContext.class);
         Mockito.when(buildContext.getPlanKey()).thenReturn("GIT-PLAN");
 
-        gitRepository.retrieveSourceCode(buildContext, revision);
+        gitRepository.retrieveSourceCode(buildContext, revision, getCheckoutDir(gitRepository));
 
-        File retrievedSources = new File(gitRepository.getWorkingDirectory(), "GIT-PLAN");
-        verifyContents(retrievedSources, "multiple-branches-with-conflicts-contents/" + branch + "-" + contents + ".zip");
+        verifyContents(getCheckoutDir(gitRepository), "multiple-branches-with-conflicts-contents/" + branch + "-" + contents + ".zip");
     }
 }

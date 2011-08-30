@@ -29,7 +29,7 @@ public class GitRepositoryTest extends GitAbstractTest
 
         BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
 
-        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
+        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey(), getCheckoutDir(gitRepository));
     }
 
     @DataProvider(parallel = false)
@@ -52,8 +52,8 @@ public class GitRepositoryTest extends GitAbstractTest
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, testRepository, branch);
 
-        gitRepository.retrieveSourceCode(mockBuildContext(), targetRevision);
-        verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), expectedContentsInZip);
+        gitRepository.retrieveSourceCode(mockBuildContext(), targetRevision, getCheckoutDir(gitRepository));
+        verifyContents(getCheckoutDir(gitRepository), expectedContentsInZip);
     }
 
     @Test(dataProvider = "testSourceCodeRetrievalData")
@@ -70,8 +70,8 @@ public class GitRepositoryTest extends GitAbstractTest
 
         setRepositoryProperties(gitRepository, testRepository, branch);
 
-        gitRepository.retrieveSourceCode(mockBuildContext(), targetRevision);
-        verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), expectedContentsInZip);
+        gitRepository.retrieveSourceCode(mockBuildContext(), targetRevision, getCheckoutDir(gitRepository));
+        verifyContents(getCheckoutDir(gitRepository), expectedContentsInZip);
     }
 
 
@@ -93,7 +93,7 @@ public class GitRepositoryTest extends GitAbstractTest
         setRepositoryProperties(gitRepository, repositoryUrl, "master", sshKey, sshPassphrase);
 
         BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
-        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey());
+        gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey(), getCheckoutDir(gitRepository));
     }
 
     @Test

@@ -219,14 +219,19 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         }
     }
 
+    @Deprecated
     @NotNull
-    public String retrieveSourceCode(@NotNull BuildContext buildContext, @Nullable final String nullableTargetRevision) throws RepositoryException
+    public String retrieveSourceCode(@NotNull final BuildContext buildContext, @Nullable final String vcsRevisionKey) throws RepositoryException {
+        return retrieveSourceCode(buildContext, vcsRevisionKey, getSourceCodeDirectory(buildContext.getPlanResultKey().getPlanKey()));
+    }
+
+    @NotNull
+    public String retrieveSourceCode(@NotNull final BuildContext buildContext, @Nullable final String nullableTargetRevision, @NotNull final File sourceDirectory) throws RepositoryException
     {
         try
         {
             final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(buildContext.getPlanResultKey());
-            final File sourceDirectory = getSourceCodeDirectory(PlanKeys.getPlanKey(buildContext.getPlanKey()));
             final boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones;
             final boolean isOnLocalAgent = !(buildDirectoryManager instanceof RemoteBuildDirectoryManager);
             final GitOperationHelper helper = new GitOperationHelper(buildLogger, textProvider);
