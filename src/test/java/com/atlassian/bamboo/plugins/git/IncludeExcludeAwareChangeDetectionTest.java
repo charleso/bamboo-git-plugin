@@ -2,6 +2,7 @@ package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.build.BuildLoggerManager;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
+import com.atlassian.bamboo.chains.BuildContextFactory;
 import com.atlassian.bamboo.plan.Plan;
 import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.plan.vcsRevision.PlanVcsRevisionHistoryService;
@@ -76,6 +77,7 @@ public class IncludeExcludeAwareChangeDetectionTest extends GitAbstractTest
         customVariableContext.setBuildLoggerManager(mockBuildLoggerManager);
         customVariableContext.setVariables(Maps.<String, VariableDefinitionContext>newHashMap());
         DefaultChangeDetectionManager changeDetectionManager = new DefaultChangeDetectionManager(
+                Mockito.mock(BuildContextFactory.class),
                 mockBuildLoggerManager,
                 DefaultTextProvider.INSTANCE,
                 Mockito.mock(VariableDefinitionManager.class),

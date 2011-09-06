@@ -2,8 +2,8 @@ package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.author.Author;
 import com.atlassian.bamboo.build.logger.BuildLogger;
-import com.atlassian.bamboo.commit.Commit;
-import com.atlassian.bamboo.commit.CommitImpl;
+import com.atlassian.bamboo.commit.CommitContext;
+import com.atlassian.bamboo.commit.CommitContextImpl;
 import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.repository.AbstractRepository;
 import com.atlassian.bamboo.repository.CustomVariableProviderRepository;
@@ -206,7 +206,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             }
             else
             {
-                return new BuildRepositoryChangesImpl(targetRevision, Collections.singletonList((Commit) CommitImpl.builder()
+                return new BuildRepositoryChangesImpl(targetRevision, Collections.singletonList((CommitContext) CommitContextImpl.builder()
                         .author(Author.UNKNOWN_AUTHOR)
                         .comment(textProvider.getText("repository.git.messages.unknownChanges", Arrays.asList(lastVcsRevisionKey, targetRevision)))
                         .date(new Date())

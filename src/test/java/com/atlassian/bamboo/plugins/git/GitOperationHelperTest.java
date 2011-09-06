@@ -1,9 +1,9 @@
 package com.atlassian.bamboo.plugins.git;
 
-import com.atlassian.bamboo.commit.Commit;
+import com.atlassian.bamboo.commit.CommitContext;
+import com.atlassian.bamboo.commit.CommitContextImpl;
 import com.atlassian.bamboo.commit.CommitFile;
 import com.atlassian.bamboo.commit.CommitFileImpl;
-import com.atlassian.bamboo.commit.CommitImpl;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.testtools.ZipResourceDirectory;
 import org.eclipse.jgit.storage.file.FileRepository;
@@ -88,9 +88,9 @@ public class GitOperationHelperTest extends GitAbstractTest
 
     static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss' 'Z"); //rfc3339date, see hg.style file
 
-    CommitImpl createCommitImpl(String author, String comment, String date, CommitFile[] commitFiles) throws Exception
+    CommitContextImpl createCommitImpl(String author, String comment, String date, CommitFile[] commitFiles) throws Exception
     {
-        return CommitImpl.builder()
+        return CommitContextImpl.builder()
                 .author(author)
                 .comment(comment)
                 .date(dateFormat.parse(date))
@@ -103,7 +103,7 @@ public class GitOperationHelperTest extends GitAbstractTest
     {
         return new Object[][]{
                 {"bamboo-git-plugin-repo.zip", "8c1010ac20da59bde61b16062445727c700ea14f", "56c986bf4aa952590e147023d2bc0dbe835d2633",
-                        new Commit[] {
+                        new CommitContext[] {
                                 createCommitImpl("Piotr Stefaniak", "readme, license updates\n", "2010-12-07 16:55:13 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("56c986bf4aa952590e147023d2bc0dbe835d2633", "LICENSE.TXT"),
                                         new CommitFileImpl("56c986bf4aa952590e147023d2bc0dbe835d2633", "README.TXT"),
@@ -111,7 +111,7 @@ public class GitOperationHelperTest extends GitAbstractTest
                         }
                 },
                 {"bamboo-git-plugin-repo.zip", "9b66e227a34a8aceef0bed9f567b5391cf975c14", "2e396c5ff8a668df4d224e6e5632d82a5c01e0ba",
-                        new Commit[] {
+                        new CommitContext[] {
                                 createCommitImpl(SLAWOMIR_GINTER, "Clean up working directories after test.\nThe forceDeleteOnExit does not work if the VM does not exit\n", "2010-12-09 16:19:35 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("2e396c5ff8a668df4d224e6e5632d82a5c01e0ba", "src/test/java/com/atlassian/bamboo/plugins/git/GitRepositoryTest.java"),
                                 }),
@@ -131,7 +131,7 @@ public class GitOperationHelperTest extends GitAbstractTest
                         }
                 },
                 {"bamboo-git-plugin-repo.zip", "8f50a6fb639d3e7500d4180993f9ee083fd339d3", "7ffea3f46b8cd9c5b5d626528c0bea4e31aec705",
-                        new Commit[] {
+                        new CommitContext[] {
                                 createCommitImpl(SLAWOMIR_GINTER, "BAM-7454 - Use jGit insteat of command line git also for tests (remove constant)\n", "2010-12-13 21:12:57 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("7ffea3f46b8cd9c5b5d626528c0bea4e31aec705", "src/test/java/com/atlassian/bamboo/plugins/git/GitMavenPomAccessorTest.java"),
                                 }),
@@ -159,7 +159,7 @@ public class GitOperationHelperTest extends GitAbstractTest
                         }
                 },
                 {"bamboo-git-plugin-repo.zip", null, "8c1010ac20da59bde61b16062445727c700ea14f",
-                        new Commit[] {
+                        new CommitContext[] {
                                 createCommitImpl("Piotr Stefaniak", "Backporting Git plugin to 2.7 + separating it from bamboo-trunk\n", "2010-12-07 16:50:24 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "pom.xml"),
                                         new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/java/com/atlassian/bamboo/plugins/ExampleServlet.java"),
@@ -185,7 +185,7 @@ public class GitOperationHelperTest extends GitAbstractTest
                         }
                 },
                 {"repo-with-merges.zip", null, "1cfce5981b1186ed8aba90184cc8a171127dd1fa",
-                        new Commit[] {
+                        new CommitContext[] {
                                 createCommitImpl("Piotr Stefaniak", "Merge branch 'master' into slave\n\nConflicts:\n\tshared.txt\n", "2010-12-17 16:20:36 +0100", new CommitFileImpl[] {
                                 }),
                                 createCommitImpl("Piotr Stefaniak", "shared-master\n", "2010-12-17 16:19:25 +0100", new CommitFileImpl[] {
@@ -208,7 +208,7 @@ public class GitOperationHelperTest extends GitAbstractTest
                         }
                 },
                 {"octopus.zip", null, "a85ff76e781c7013eebe89dad233e993ad0d1095",
-                        new Commit[] {
+                        new CommitContext[] {
                                 createCommitImpl("Piotr Stefaniak", "Merge branches 'head' and 'leg' into HEAD\n", "2010-12-28 17:24:10 +0100", new CommitFileImpl[] {
                                 }),
                                 createCommitImpl("Piotr Stefaniak", "severed arm\n", "2010-12-28 17:24:04 +0100", new CommitFileImpl[] {
@@ -232,7 +232,7 @@ public class GitOperationHelperTest extends GitAbstractTest
                         }
                 },
                 {"octopus.zip", "030259bf27a48d9a947d12e1cc2acf9d8949b081", "adebaf56be9673aec1d75ba9e11553da23f41a8a",
-                        new Commit[] {
+                        new CommitContext[] {
                                 createCommitImpl("Piotr Stefaniak", "Merge branches 'arm', 'leg' and 'head'\n", "2010-12-28 17:20:59 +0100", new CommitFileImpl[] {
                                 }),
                                 createCommitImpl("Piotr Stefaniak", "this is a leg commit\n", "2010-12-28 17:20:47 +0100", new CommitFileImpl[] {
@@ -247,18 +247,18 @@ public class GitOperationHelperTest extends GitAbstractTest
     }
 
     @Test(dataProvider = "testExtractCommitsData")
-    public void testExtractCommits(String repositoryZip, String previousRevision, String targetRevision, Commit[] expectedCommits) throws Exception
+    public void testExtractCommits(String repositoryZip, String previousRevision, String targetRevision, CommitContext[] expectedCommits) throws Exception
     {
         File tmp = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory(repositoryZip, tmp);
 
-        List<Commit> commits = createGitOperationHelper().extractCommits(tmp, previousRevision, targetRevision).getChanges();
+        List<CommitContext> commits = createGitOperationHelper().extractCommits(tmp, previousRevision, targetRevision).getChanges();
 
         assertEquals(commits.size(), expectedCommits.length);
         for (int i = 0; i < commits.size(); i++)
         {
-            Commit actualCommit = commits.get(i);
-            Commit expectedCommit = expectedCommits[i];
+            CommitContext actualCommit = commits.get(i);
+            CommitContext expectedCommit = expectedCommits[i];
             assertEquals(actualCommit.getComment(), expectedCommit.getComment());
             assertEquals(actualCommit.getAuthor().getName(), expectedCommit.getAuthor().getName());
             assertEquals(actualCommit.getDate(), expectedCommit.getDate());
