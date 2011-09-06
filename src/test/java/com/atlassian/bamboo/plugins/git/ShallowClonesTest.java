@@ -191,8 +191,8 @@ public class ShallowClonesTest extends GitAbstractTest
             for (String[] currentFetch : successiveFetches)
             {
                 setRepositoryProperties(gitRepository, protocol + currentFetch[0]);
-                gitRepository.retrieveSourceCode(mockBuildContext(), currentFetch[1]);
-                verifyContents(gitRepository.getSourceCodeDirectory(PLAN_KEY), currentFetch[2]);
+                gitRepository.retrieveSourceCode(mockBuildContext(), currentFetch[1], getCheckoutDir(gitRepository));
+                verifyContents(getCheckoutDir(gitRepository), currentFetch[2]);
             }
         }
     }
@@ -217,8 +217,8 @@ public class ShallowClonesTest extends GitAbstractTest
         params.put("repository.git.useShallowClones", shallow);
         setRepositoryProperties(gitRepository, repositoryUrl, params);
 
-        gitRepository.retrieveSourceCode(mockBuildContext(), targetRevision);
-        assertEquals(createGitOperationHelper().extractCommits(gitRepository.getSourceCodeDirectory(PLAN_KEY), null, targetRevision).getChanges().size(), expectedChangesetCount);
+        gitRepository.retrieveSourceCode(mockBuildContext(), targetRevision, getCheckoutDir(gitRepository));
+        assertEquals(createGitOperationHelper().extractCommits(getCheckoutDir(gitRepository), null, targetRevision).getChanges().size(), expectedChangesetCount);
     }
 
     @Test
@@ -297,11 +297,9 @@ public class ShallowClonesTest extends GitAbstractTest
         setRepositoryProperties(gitRepository, "git://github.com/pstefaniak/7.git", Collections.singletonMap("repository.git.useShallowClones", true));
 
         BuildRepositoryChanges buildChanges = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
-        gitRepository.retrieveSourceCode(mockBuildContext(), buildChanges.getVcsRevisionKey());
+        gitRepository.retrieveSourceCode(mockBuildContext(), buildChanges.getVcsRevisionKey(), getCheckoutDir(gitRepository));
 
-        File sourceCodeDirectory = gitRepository.getSourceCodeDirectory(PLAN_KEY);
-
-        FileRepository repository = register(new FileRepositoryBuilder().setWorkTree(sourceCodeDirectory).build());
+        FileRepository repository = register(new FileRepositoryBuilder().setWorkTree(getCheckoutDir(gitRepository)).build());
         Git git = new Git(repository);
         Iterable<RevCommit> commits = git.log().call();
         assertEquals(Iterables.size(commits), 2);

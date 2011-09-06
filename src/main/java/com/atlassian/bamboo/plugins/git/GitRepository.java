@@ -20,6 +20,7 @@ import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChangesImpl;
 import com.atlassian.bamboo.v2.build.agent.remote.RemoteBuildDirectoryManager;
+import com.atlassian.bamboo.v2.build.repository.CustomSourceDirectoryAwareRepository;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.util.concurrent.LazyReference;
 import com.atlassian.util.concurrent.Supplier;
@@ -30,6 +31,7 @@ import com.opensymphony.xwork.TextProvider;
 import com.opensymphony.xwork.util.LocalizedTextUtil;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.log4j.Logger;
@@ -48,7 +50,8 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.Map;
 
-public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository, SelectableAuthenticationRepository, CustomVariableProviderRepository
+public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository, SelectableAuthenticationRepository, CustomVariableProviderRepository,
+        CustomSourceDirectoryAwareRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -222,7 +225,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     @Deprecated
     @NotNull
     public String retrieveSourceCode(@NotNull final BuildContext buildContext, @Nullable final String vcsRevisionKey) throws RepositoryException {
-        return retrieveSourceCode(buildContext, vcsRevisionKey, getSourceCodeDirectory(buildContext.getPlanResultKey().getPlanKey()));
+        throw new NotImplementedException("Not implemented - use instead retrieveSourceCode(bctx, rev, src)");
     }
 
     @NotNull
