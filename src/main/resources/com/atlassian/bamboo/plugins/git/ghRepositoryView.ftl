@@ -3,4 +3,4 @@
 [#assign repository=plan.buildDefinition.repository /]
 [@ww.label labelKey='repository.github.repository' value=repository.repository /]
 [@ww.label labelKey='repository.github.branch' value=repository.branch! hideOnNull=true /]
-[@ww.label labelKey='repository.git.useShallowClones' value=repository.useShallowClones?string hideOnNull=true /]
+[@ww.label labelKey='repository.github.useShallowClones' value=repository.useShallowClones?string hideOnNull=true /]
