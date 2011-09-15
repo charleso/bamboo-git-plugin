@@ -396,7 +396,7 @@ public class GitOperationHelper
             treeWalk = new TreeWalk(localRepository);
             treeWalk.setRecursive(true);
 
-            for (final RevCommit commit : revWalk)
+            for (final RevCommit jgitCommit : revWalk)
             {
                 if (commits.size() >= CHANGESET_LIMIT)
                 {
@@ -404,25 +404,26 @@ public class GitOperationHelper
                     continue;
                 }
 
-                CommitImpl curr = new CommitImpl();
-                curr.setComment(commit.getFullMessage());
-                curr.setAuthor(new AuthorImpl(commit.getAuthorIdent().getName()));
-                curr.setDate(commit.getAuthorIdent().getWhen());
-                commits.add(curr);
+                CommitImpl commit = new CommitImpl();
+                commit.setComment(jgitCommit.getFullMessage());
+                commit.setAuthor(new AuthorImpl(jgitCommit.getAuthorIdent().getName()));
+                commit.setDate(jgitCommit.getAuthorIdent().getWhen());
+                commit.setChangeSetId(jgitCommit.getName());
+                commits.add(commit);
 
-                if (commit.getParentCount() >= 2) //merge commit
+                if (jgitCommit.getParentCount() >= 2) //merge commit
                 {
                     continue;
                 }
 
-                if (localRepository.getShallows().contains(commit.getId()))
+                if (localRepository.getShallows().contains(jgitCommit.getId()))
                 {
                     continue;
                 }
 
                 treeWalk.reset();
-                int treePosition = commit.getParentCount() > 0 ? treeWalk.addTree(commit.getParent(0).getTree()) : treeWalk.addTree(new EmptyTreeIterator());
-                treeWalk.addTree(commit.getTree());
+                int treePosition = jgitCommit.getParentCount() > 0 ? treeWalk.addTree(jgitCommit.getParent(0).getTree()) : treeWalk.addTree(new EmptyTreeIterator());
+                treeWalk.addTree(jgitCommit.getTree());
 
                 for (final DiffEntry entry : DiffEntry.scan(treeWalk))
                 {
@@ -430,7 +431,7 @@ public class GitOperationHelper
                     {
                         continue;
                     }
-                    curr.addFile(new CommitFileImpl(commit.getId().getName(), entry.getChangeType() == DiffEntry.ChangeType.DELETE ? entry.getOldPath() : entry.getNewPath()));
+                    commit.addFile(new CommitFileImpl(jgitCommit.getId().getName(), entry.getChangeType() == DiffEntry.ChangeType.DELETE ? entry.getOldPath() : entry.getNewPath()));
                 }
             }
         }
