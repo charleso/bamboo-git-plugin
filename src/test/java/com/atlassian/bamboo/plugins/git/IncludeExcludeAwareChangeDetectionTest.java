@@ -5,6 +5,7 @@ import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.chains.BuildContextFactory;
 import com.atlassian.bamboo.plan.Plan;
 import com.atlassian.bamboo.plan.PlanKeys;
+import com.atlassian.bamboo.plan.vcsRevision.PlanVcsRevisionData;
 import com.atlassian.bamboo.plan.vcsRevision.PlanVcsRevisionHistoryService;
 import com.atlassian.bamboo.repository.IncludeExcludeAwareRepository;
 import com.atlassian.bamboo.repository.RepositoryDefinition;
@@ -105,7 +106,7 @@ public class IncludeExcludeAwareChangeDetectionTest extends GitAbstractTest
             Plan plan = Mockito.mock(Plan.class);
             Mockito.when(plan.getKey()).thenReturn(PLAN_KEY.getKey());
             Mockito.when(plan.getPlanKey()).thenReturn(PlanKeys.getPlanKey(PLAN_KEY.getKey()));
-            BuildRepositoryChanges changes = changeDetectionManager.collectChangesSinceLastBuild(plan, repositoryDefinition, previousVcsRevisionKey, null);
+            BuildRepositoryChanges changes = changeDetectionManager.collectChangesSinceLastBuild(plan, repositoryDefinition, new PlanVcsRevisionData(previousVcsRevisionKey, null), null);
             Assert.assertEquals(!changes.getChanges().isEmpty(), shouldTrigger, "Build should " + (shouldTrigger ? "" : "not ") + "trigger for " + option + " pattern '" + pattern + "' and files " + filesToTouch);
             previousVcsRevisionKey = newRevision;
         }
