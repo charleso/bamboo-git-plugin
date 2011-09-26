@@ -1,5 +1,10 @@
 package com.atlassian.bamboo.plugins.git;
 
+import com.atlassian.bamboo.repository.Repository;
+import com.atlassian.bamboo.repository.RepositoryDefinition;
+import com.atlassian.bamboo.repository.RepositoryDefinitionEntity;
+import com.atlassian.bamboo.repository.RepositoryDefinitionImpl;
+import com.atlassian.bamboo.repository.RepositoryDefinitionManager;
 import com.atlassian.bamboo.rest.util.Get;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.util.Narrow;
@@ -35,6 +40,11 @@ public class LoadGitHubRepositories extends PlanActionSupport implements PlanEdi
     // ------------------------------------------------------------------------------------------------- Type Properties
     private String username;
     private String password;
+    private long repositoryId;
+    private GitHubRepository githubRepository;
+    // ---------------------------------------------------------------------------------------------------- Dependencies
+    private RepositoryDefinitionManager repositoryDefinitionManager;
+
 
     // ---------------------------------------------------------------------------------------------------- Dependencies
     // ---------------------------------------------------------------------------------------------------- Constructors
@@ -53,11 +63,18 @@ public class LoadGitHubRepositories extends PlanActionSupport implements PlanEdi
     {
         Map<String, List<String>> gitHubRepositories = null;
 
-        if (getPlan() != null)
+        if (repositoryId > 0 && StringUtils.isBlank(password))
         {
-            GitHubRepository ghRepository = Narrow.to(getPlan().getBuildDefinition().getRepository(), GitHubRepository.class);
-            if (ghRepository != null) {
-                password = new StringEncrypter().decrypt(ghRepository.getPassword());
+            RepositoryDefinitionEntity repositoryDefinitionEntity = repositoryDefinitionManager.getRepositoryDefinitionEntity(repositoryId);
+            if (repositoryDefinitionEntity != null)
+            {
+                RepositoryDefinition repositoryDefinition = new RepositoryDefinitionImpl(repositoryDefinitionEntity);
+                Repository repository = repositoryDefinition.getRepository();
+                GitHubRepository ghRepository = Narrow.to(repository, GitHubRepository.class);
+                if (ghRepository != null)
+                {
+                    password = new StringEncrypter().decrypt(ghRepository.getPassword());
+                }
             }
         }
 
@@ -232,5 +249,15 @@ public class LoadGitHubRepositories extends PlanActionSupport implements PlanEdi
     public void setPassword(String password)
     {
         this.password = password;
+    }
+
+    public void setRepositoryId(final long repositoryId)
+    {
+        this.repositoryId = repositoryId;
+    }
+
+    public void setRepositoryDefinitionManager(final RepositoryDefinitionManager repositoryDefinitionManager)
+    {
+        this.repositoryDefinitionManager = repositoryDefinitionManager;
     }
 }

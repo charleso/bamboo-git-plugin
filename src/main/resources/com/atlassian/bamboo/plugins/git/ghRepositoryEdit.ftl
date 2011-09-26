@@ -36,6 +36,7 @@
 
 BAMBOO.LoadGitHubRepositoriesAsynchronously = function() {
     var repositoryKey = "${repository.key}",
+        repositoryId = "${repositoryId!0}",
         baseActionUrl = BAMBOO.contextPath + "/ajax/loadGitHubRepositories.action",
         actionUrl = baseActionUrl[#if plan?has_content] + "?planKey=${plan.key}"[/#if],
         repositoryBranchFilter,
@@ -77,7 +78,7 @@ BAMBOO.LoadGitHubRepositoriesAsynchronously = function() {
         AJS.$.ajax({
             type: "POST",
             url: actionUrl,
-            data: { username: $username.val(), password: $password.val() },
+            data: { username: $username.val(), password: $password.val(), repositoryId: repositoryId },
             success: function (json) {
                 if (!selectedRepository) {
                     $form.find(".error:not(.aui-message)").remove();
