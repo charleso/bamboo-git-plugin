@@ -10,6 +10,7 @@ import com.atlassian.bamboo.template.TemplateRenderer;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
+import com.atlassian.bamboo.v2.build.repository.CustomSourceDirectoryAwareRepository;
 import com.atlassian.bamboo.variable.CustomVariableContext;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.opensymphony.xwork.TextProvider;
@@ -20,7 +21,9 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class GitHubRepository extends AbstractRepository
+import java.io.File;
+
+public class GitHubRepository extends AbstractRepository implements CustomSourceDirectoryAwareRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -183,7 +186,13 @@ public class GitHubRepository extends AbstractRepository
     @NotNull
     public String retrieveSourceCode(@NotNull BuildContext buildContext, @Nullable final String vcsRevision) throws RepositoryException
     {
-        return gitRepository.retrieveSourceCode(buildContext, vcsRevision);
+        return gitRepository.retrieveSourceCode(buildContext, vcsRevision, getSourceCodeDirectory(buildContext.getPlanResultKey().getPlanKey()));
+    }
+
+    @NotNull
+    public String retrieveSourceCode(@NotNull final BuildContext buildContext, @Nullable final String vcsRevision, @NotNull final File sourceDirectory) throws RepositoryException
+    {
+        return gitRepository.retrieveSourceCode(buildContext, vcsRevision, sourceDirectory);
     }
 
     // -------------------------------------------------------------------------------------------------- Public Methods
