@@ -20,7 +20,9 @@ import static org.testng.Assert.assertEquals;
 
 public class GitOperationHelperTest extends GitAbstractTest
 {
-    static final String SLAWOMIR_GINTER = new String(new char[] {83, 322, 97, 119, 111, 109, 105, 114, 32, 71, 105, 110, 116, 101, 114}); //"Sławomir Ginter"
+    static final String SLAWOMIR_GINTER = "S\u0142awomir Ginter <sginter@sginter-lap.local>";
+    private static final String SLAWOMIR_GINTER_SQUAD = "Slawomir Ginter <sginter@squad.(none)>";
+    private static final String PIOTR_STEFANIAK = "Piotr Stefaniak <pstefaniak@atlassian.com>";
 
     @DataProvider(parallel = false)
     Object[][] testObtainLatestRevisionData()
@@ -104,7 +106,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         return new Object[][]{
                 {"bamboo-git-plugin-repo.zip", "8c1010ac20da59bde61b16062445727c700ea14f", "56c986bf4aa952590e147023d2bc0dbe835d2633",
                         new CommitContext[] {
-                                createCommitImpl("Piotr Stefaniak", "readme, license updates\n", "2010-12-07 16:55:13 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "readme, license updates\n", "2010-12-07 16:55:13 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("56c986bf4aa952590e147023d2bc0dbe835d2633", "LICENSE.TXT"),
                                         new CommitFileImpl("56c986bf4aa952590e147023d2bc0dbe835d2633", "README.TXT"),
                                 }),
@@ -138,20 +140,20 @@ public class GitOperationHelperTest extends GitAbstractTest
                                 createCommitImpl(SLAWOMIR_GINTER, "BAM-7454 - Use jGit insteat of command line git also for tests\n", "2010-12-13 21:09:50 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("3b53371d0d178c05b0927a95719ce90e3f60f52d", "src/test/java/com/atlassian/bamboo/plugins/git/GitMavenPomAccessorTest.java"),
                                 }),
-                                createCommitImpl("Slawomir Ginter", "BAM-7454- Importing Git Repository from maven\n", "2010-12-13 15:15:39 +0100", new CommitFileImpl[] {
+                                createCommitImpl(SLAWOMIR_GINTER_SQUAD, "BAM-7454- Importing Git Repository from maven\n", "2010-12-13 15:15:39 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("691a59145a2d61c3672c2c90d903fcfd0c95390e", "src/main/java/com/atlassian/bamboo/plugins/git/GitMavenPomAccessor.java"),
                                         new CommitFileImpl("691a59145a2d61c3672c2c90d903fcfd0c95390e", "src/main/java/com/atlassian/bamboo/plugins/git/GitRepository.java"),
                                         new CommitFileImpl("691a59145a2d61c3672c2c90d903fcfd0c95390e", "src/test/java/com/atlassian/bamboo/plugins/git/GitAbstractTest.java"),
                                         new CommitFileImpl("691a59145a2d61c3672c2c90d903fcfd0c95390e", "src/test/java/com/atlassian/bamboo/plugins/git/GitMavenPomAccessorTest.java"),
                                         new CommitFileImpl("691a59145a2d61c3672c2c90d903fcfd0c95390e", "src/test/java/com/atlassian/bamboo/plugins/git/GitRepositoryTest.java"),
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "BAM-7360 BAM-7397 - tests for Ssh connection to GitHub\nalso StrictHostKeyChecking=no\n", "2010-12-10 20:00:55 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "BAM-7360 BAM-7397 - tests for Ssh connection to GitHub\nalso StrictHostKeyChecking=no\n", "2010-12-10 20:00:55 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("41640582d7a719fd9c0f29de71f716c17768e3b0", "src/main/java/com/atlassian/bamboo/plugins/git/GitSshSessionFactory.java"),
                                         new CommitFileImpl("41640582d7a719fd9c0f29de71f716c17768e3b0", "src/test/java/com/atlassian/bamboo/plugins/git/GitRepositoryTest.java"),
                                         new CommitFileImpl("41640582d7a719fd9c0f29de71f716c17768e3b0", "src/test/resources/bamboo-git-plugin-tests-passphrased.id_rsa"),
                                         new CommitFileImpl("41640582d7a719fd9c0f29de71f716c17768e3b0", "src/test/resources/bamboo-git-plugin-tests-passphraseless.id_rsa"),
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "BAM-7397 Write tests for git plugin\nGitOperationHelper.checkout tests\n", "2010-12-10 19:00:22 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "BAM-7397 Write tests for git plugin\nGitOperationHelper.checkout tests\n", "2010-12-10 19:00:22 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("1de48d29183cfb86352196fc0fc0cd066d079642", "src/test/java/com/atlassian/bamboo/plugins/git/GitAbstractTest.java"),
                                         new CommitFileImpl("1de48d29183cfb86352196fc0fc0cd066d079642", "src/test/java/com/atlassian/bamboo/plugins/git/GitOperationHelperTest.java"),
                                         new CommitFileImpl("1de48d29183cfb86352196fc0fc0cd066d079642", "src/test/java/com/atlassian/bamboo/plugins/git/GitRepositoryTest.java"),
@@ -160,7 +162,7 @@ public class GitOperationHelperTest extends GitAbstractTest
                 },
                 {"bamboo-git-plugin-repo.zip", null, "8c1010ac20da59bde61b16062445727c700ea14f",
                         new CommitContext[] {
-                                createCommitImpl("Piotr Stefaniak", "Backporting Git plugin to 2.7 + separating it from bamboo-trunk\n", "2010-12-07 16:50:24 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "Backporting Git plugin to 2.7 + separating it from bamboo-trunk\n", "2010-12-07 16:50:24 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "pom.xml"),
                                         new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/java/com/atlassian/bamboo/plugins/ExampleServlet.java"),
                                         new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/java/com/atlassian/bamboo/plugins/GitCacheDirectory.java"),
@@ -172,7 +174,7 @@ public class GitOperationHelperTest extends GitAbstractTest
                                         new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/resources/com/atlassian/bamboo/plugins/git/gitRepositoryView.ftl"),
                                         new CommitFileImpl("8c1010ac20da59bde61b16062445727c700ea14f", "src/main/resources/com/atlassian/bamboo/plugins/git/i18n.properties"),
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "initial plugin skeleton, from SDK 3.2.3\n", "2010-12-07 14:43:25 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "initial plugin skeleton, from SDK 3.2.3\n", "2010-12-07 14:43:25 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "LICENSE.TXT"),
                                         new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "README.TXT"),
                                         new CommitFileImpl("27c3d98f8fc3841288b24c6228d68f4fc6dc1b59", "pom.xml"),
@@ -186,59 +188,59 @@ public class GitOperationHelperTest extends GitAbstractTest
                 },
                 {"repo-with-merges.zip", null, "1cfce5981b1186ed8aba90184cc8a171127dd1fa",
                         new CommitContext[] {
-                                createCommitImpl("Piotr Stefaniak", "Merge branch 'master' into slave\n\nConflicts:\n\tshared.txt\n", "2010-12-17 16:20:36 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "Merge branch 'master' into slave\n\nConflicts:\n\tshared.txt\n", "2010-12-17 16:20:36 +0100", new CommitFileImpl[] {
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "shared-master\n", "2010-12-17 16:19:25 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "shared-master\n", "2010-12-17 16:19:25 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("c1e199fec9007b63d8030f3e21bd8c890015829c", "shared.txt"),
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "shared slave\n", "2010-12-17 16:18:49 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "shared slave\n", "2010-12-17 16:18:49 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("5d09f997e79d3c3cc88246c79c92c22b700e9f46", "shared.txt"),
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "Merge branch 'slave'\n", "2010-12-17 16:14:05 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "Merge branch 'slave'\n", "2010-12-17 16:14:05 +0100", new CommitFileImpl[] {
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "master2\n", "2010-12-17 16:13:55 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "master2\n", "2010-12-17 16:13:55 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("374cee009df728f093bf0866b7c8377b256779ab", "master.txt"),
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "slave\n", "2010-12-17 16:08:23 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "slave\n", "2010-12-17 16:08:23 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("d277ed76406ca4b7bf4668d6ea627ad1a16544d3", "slave.txt"),
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "master commit\n", "2010-12-17 16:03:08 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "master commit\n", "2010-12-17 16:03:08 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("229b83e21d22b1bafeaabca886d24ad506c9cfc9", "master.txt"),
                                 }),
                         }
                 },
                 {"octopus.zip", null, "a85ff76e781c7013eebe89dad233e993ad0d1095",
                         new CommitContext[] {
-                                createCommitImpl("Piotr Stefaniak", "Merge branches 'head' and 'leg' into HEAD\n", "2010-12-28 17:24:10 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "Merge branches 'head' and 'leg' into HEAD\n", "2010-12-28 17:24:10 +0100", new CommitFileImpl[] {
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "severed arm\n", "2010-12-28 17:24:04 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "severed arm\n", "2010-12-28 17:24:04 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("eb20aade10d2fa90e60d0bbd2fdd85595b249e7b", "arm.txt"),
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "second arm commit\n", "2010-12-28 17:23:08 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "second arm commit\n", "2010-12-28 17:23:08 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("399ae6fbaaa10cd12c060431c5b0ed32104b4467", "arm.txt"),
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "second commit\n", "2010-12-28 17:22:30 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "second commit\n", "2010-12-28 17:22:30 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("8fd04f111f0a8739e4d0ae8475ab76d924bf2061", "readme.txt"),
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "this is a leg commit\n", "2010-12-28 17:20:47 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "this is a leg commit\n", "2010-12-28 17:20:47 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("cb5640907bee5ef66c9684d8abd733e5d3aa2616", "leg.txt"),
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "this is head commit\n", "2010-12-28 17:20:24 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "this is head commit\n", "2010-12-28 17:20:24 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("030259bf27a48d9a947d12e1cc2acf9d8949b081", "head.txt"),
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "initial commit\n", "2010-12-28 17:17:39 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "initial commit\n", "2010-12-28 17:17:39 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("8ea8cb1b8b89af27390e98f38c1ffef0ae8fbf97", "readme.txt"),
                                 }),
                         }
                 },
                 {"octopus.zip", "030259bf27a48d9a947d12e1cc2acf9d8949b081", "adebaf56be9673aec1d75ba9e11553da23f41a8a",
                         new CommitContext[] {
-                                createCommitImpl("Piotr Stefaniak", "Merge branches 'arm', 'leg' and 'head'\n", "2010-12-28 17:20:59 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "Merge branches 'arm', 'leg' and 'head'\n", "2010-12-28 17:20:59 +0100", new CommitFileImpl[] {
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "this is a leg commit\n", "2010-12-28 17:20:47 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "this is a leg commit\n", "2010-12-28 17:20:47 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("cb5640907bee5ef66c9684d8abd733e5d3aa2616", "leg.txt"),
                                 }),
-                                createCommitImpl("Piotr Stefaniak", "arm commit\n", "2010-12-28 17:19:046 +0100", new CommitFileImpl[] {
+                                createCommitImpl(PIOTR_STEFANIAK, "arm commit\n", "2010-12-28 17:19:046 +0100", new CommitFileImpl[] {
                                         new CommitFileImpl("20ab8c6d2f3f49929f7e328dcc446e75f9f458ec", "arm.txt"),
                                 }),
                         }

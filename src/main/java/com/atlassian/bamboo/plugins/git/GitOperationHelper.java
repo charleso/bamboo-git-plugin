@@ -24,6 +24,7 @@ import org.eclipse.jgit.errors.NotSupportedException;
 import org.eclipse.jgit.errors.TransportException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.RefUpdate;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -406,11 +407,10 @@ public class GitOperationHelper
 
                 CommitImpl commit = new CommitImpl();
                 commit.setComment(jgitCommit.getFullMessage());
-                commit.setAuthor(new AuthorImpl(jgitCommit.getAuthorIdent().getName()));
+                commit.setAuthor(getAuthor(jgitCommit));
                 commit.setDate(jgitCommit.getAuthorIdent().getWhen());
                 commit.setChangeSetId(jgitCommit.getName());
                 commits.add(commit);
-
                 if (jgitCommit.getParentCount() >= 2) //merge commit
                 {
                     continue;
@@ -458,6 +458,14 @@ public class GitOperationHelper
         BuildRepositoryChanges buildChanges = new BuildRepositoryChangesImpl(targetRevision, commits);
         buildChanges.setSkippedCommitsCount(skippedCommits);
         return buildChanges;
+    }
+
+    private AuthorImpl getAuthor(RevCommit commit)
+    {
+        PersonIdent gitPerson = commit.getAuthorIdent();
+        if (gitPerson == null)
+            return new AuthorImpl(AuthorImpl.UNKNOWN_AUTHOR);
+        return new AuthorImpl(String.format("%s <%s>", gitPerson.getName(), gitPerson.getEmailAddress()));
     }
 
     //user of this method has responsibility to finally .close() returned Transport!
