@@ -35,6 +35,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.log4j.Logger;
+import org.eclipse.jgit.errors.TransportException;
 import org.eclipse.jgit.transport.URIish;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -185,8 +186,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                     {
                         try
                         {
-                            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.failedToCollectChangesets", Arrays.asList(cacheDirectory)));
-                            FileUtils.deleteQuietly(cacheDirectory);
+                            rethrowOrRemoveDirectory(e, buildLogger, cacheDirectory, "repository.git.messages.ccRecover.failedToCollectChangesets");
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.cleanedCacheDirectory", Arrays.asList(cacheDirectory)));
                             helper.fetch(cacheDirectory, substitutedAccessData, false);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.fetchedRemoteRepository", Arrays.asList(cacheDirectory)));
@@ -254,8 +254,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                         }
                         catch (Exception e)
                         {
-                            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.failedToFetchCache", Arrays.asList(cacheDirectory)));
-                            FileUtils.deleteQuietly(cacheDirectory);
+                            rethrowOrRemoveDirectory(e, buildLogger, cacheDirectory, "repository.git.messages.rsRecover.failedToFetchCache");
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedCacheDirectory", Arrays.asList(cacheDirectory)));
                             helper.fetch(cacheDirectory, substitutedAccessData, doShallowFetch);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.fetchingCacheCompleted", Arrays.asList(cacheDirectory)));
@@ -267,10 +266,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                         }
                         catch (Exception e)
                         {
-                            final String errorLog = textProvider.getText("repository.git.messages.rsRecover.failedToCheckout", Arrays.asList(sourceDirectory));
-                            log.error(errorLog, e);
-                            buildLogger.addBuildLogEntry(errorLog);
-                            FileUtils.deleteQuietly(sourceDirectory);
+                            rethrowOrRemoveDirectory(e, buildLogger, sourceDirectory, "repository.git.messages.rsRecover.failedToCheckout");
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(sourceDirectory)));
                             String returnRevision = helper.checkout(cacheDirectory, sourceDirectory, targetRevision, null);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.checkoutCompleted"));
@@ -289,8 +285,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                 }
                 catch (Exception e)
                 {
-                    buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.failedToCheckout", Arrays.asList(sourceDirectory)));
-                    FileUtils.deleteQuietly(sourceDirectory);
+                    rethrowOrRemoveDirectory(e, buildLogger, sourceDirectory, "repository.git.messages.rsRecover.failedToCheckout");
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(sourceDirectory)));
                     helper.fetch(sourceDirectory, substitutedAccessData, false);
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.fetchingCompleted", Arrays.asList(sourceDirectory)));
@@ -307,6 +302,32 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         catch (Exception e)
         {
             throw new RepositoryException(textProvider.getText("repository.git.messages.runtimeException"), e);
+        }
+    }
+
+    private void rethrowOrRemoveDirectory(final Exception originalException, final BuildLogger buildLogger, final File directory, final String key) throws TransportException
+    {
+        Throwable e = originalException;
+        do
+        {
+            if (e instanceof TransportException)
+            {
+                throw (TransportException)e;
+            }
+            e = e.getCause();
+        } while (e!=null);
+
+        buildLogger.addBuildLogEntry(textProvider.getText(key, Arrays.asList(directory)));
+        log.warn("Deleting directory " + directory, e);
+
+        // This section does not really work on Windows (files open by antivirus software or leaked by jgit - and it does leak handles - will remain on the harddrive),
+        // so it should be entered if we know that the cache has to be blown away
+        FileUtils.deleteQuietly(directory);
+
+        final String[] filesInDirectory = directory.list();
+        if (filesInDirectory !=null)
+        {
+            log.error("Unable to delete files: " + Arrays.toString(filesInDirectory) + ", expect trouble");
         }
     }
 

@@ -15,13 +15,18 @@ import java.io.IOException;
 /**
  * Class used to handle git cache directory operations.
  */
-public class GitCacheDirectory {
+public class GitCacheDirectory
+{
 
     static final String GIT_REPOSITORY_CACHE_DIRECTORY = "_git-repositories-cache";
 
     static final Function<File, ManagedLock> cacheLockFactory = ManagedLocks.weakManagedLockFactory();
 
     private static final Logger log = Logger.getLogger(GitCacheDirectory.class);
+
+    private GitCacheDirectory()
+    {
+    }
 
     @NotNull
     static File getCacheDirectory(@NotNull final File workingDirectory, @NotNull final GitRepository.GitRepositoryAccessData repositoryData)

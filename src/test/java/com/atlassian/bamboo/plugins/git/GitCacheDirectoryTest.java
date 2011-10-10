@@ -86,15 +86,15 @@ public class GitCacheDirectoryTest extends GitAbstractTest
     @Test
     public void testShallowGetsDifferentCacheWithEmptyBranch() throws Exception
     {
-        GitRepository.GitRepositoryAccessData accessData = createSampleAccessData(false);
-        GitRepository.GitRepositoryAccessData accessData2 = createSampleAccessData(true);
+        GitRepository.GitRepositoryAccessData accessDataNonShallow = createSampleAccessData(false);
+        GitRepository.GitRepositoryAccessData accessDataShallow = createSampleAccessData(true);
 
-        accessData.branch = "";
-        accessData2.branch = "";
+        accessDataNonShallow.branch = "";
+        accessDataShallow.branch = "";
 
         File baseDir = createTempDirectory();
-        File cache1 = GitCacheDirectory.getCacheDirectory(baseDir, accessData);
-        File cache2 = GitCacheDirectory.getCacheDirectory(baseDir, accessData2);
+        File cache1 = GitCacheDirectory.getCacheDirectory(baseDir, accessDataNonShallow);
+        File cache2 = GitCacheDirectory.getCacheDirectory(baseDir, accessDataShallow);
 
         Assert.assertFalse(cache1.equals(cache2));
 

@@ -2,11 +2,13 @@ package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.repository.NameValuePair;
+import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.build.agent.remote.RemoteBuildDirectoryManager;
 import com.atlassian.testtools.ZipResourceDirectory;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.errors.TransportException;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -18,6 +20,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class GitRepositoryTest extends GitAbstractTest
 {
@@ -30,6 +34,33 @@ public class GitRepositoryTest extends GitAbstractTest
         BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
 
         gitRepository.retrieveSourceCode(mockBuildContext(), changes.getVcsRevisionKey(), getCheckoutDir(gitRepository));
+    }
+
+    @Test
+    public void testNetworkErrorsDontRemoveCache() throws Exception
+    {
+        GitRepository gitRepository = createGitRepository();
+        setRepositoryProperties(gitRepository, "git://localhost:3200/cixot/test.git", "master");
+
+        final File cacheDirectory = gitRepository.getCacheDirectory();
+        cacheDirectory.mkdirs();
+        final File file = File.createTempFile("git-plugin", null, cacheDirectory);
+        assertTrue(file.exists());
+        try
+        {
+            gitRepository.retrieveSourceCode(mockBuildContext(), "foobar", getCheckoutDir(gitRepository));
+        }
+        catch (Exception e)
+        {
+            if (e instanceof RepositoryException && e.getCause() instanceof TransportException)
+            {
+                assertTrue(file.exists());
+            }
+            else
+            {
+                fail("Unexpected exception", e);
+            }
+        }
     }
 
     @DataProvider(parallel = false)
