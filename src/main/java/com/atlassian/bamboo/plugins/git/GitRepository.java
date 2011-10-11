@@ -305,14 +305,14 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         }
     }
 
-    private void rethrowOrRemoveDirectory(final Exception originalException, final BuildLogger buildLogger, final File directory, final String key) throws TransportException
+    private void rethrowOrRemoveDirectory(final Exception originalException, final BuildLogger buildLogger, final File directory, final String key) throws Exception
     {
         Throwable e = originalException;
         do
         {
             if (e instanceof TransportException)
             {
-                throw (TransportException)e;
+                throw originalException;
             }
             e = e.getCause();
         } while (e!=null);
