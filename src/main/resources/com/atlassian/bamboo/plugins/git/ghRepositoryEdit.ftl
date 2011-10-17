@@ -34,10 +34,10 @@
 
 <script type="text/javascript">
 
-BAMBOO.LoadGitHubRepositoriesAsynchronously = function() {
+BAMBOO.LoadGitHubRepositoriesAsynchronously = function ($) {
     var repositoryKey = "${repository.key}",
         repositoryId = "${repositoryId!0}",
-        baseActionUrl = BAMBOO.contextPath + "/ajax/loadGitHubRepositories.action",
+        baseActionUrl = AJS.contextPath() + "/ajax/loadGitHubRepositories.action",
         actionUrl = baseActionUrl[#if plan?has_content] + "?planKey=${plan.key}"[/#if],
         repositoryBranchFilter,
         selectedRepository,
@@ -50,21 +50,21 @@ BAMBOO.LoadGitHubRepositoriesAsynchronously = function() {
         selectedBranch = "${buildConfiguration.getString('repository.github.branch')}";
     [/#if]
 
-    var $username = AJS.$("input[name='repository.github.username']"),
-        $password = AJS.$("input[name='repository.github.temporary.password']"),
-        $repositories = AJS.$("#repository_github_repository").hide(),
-        $repositories_desc = AJS.$("#repository_github_repository_description").hide(),
-        $branches = AJS.$("select[name='repository.github.branch']"),
-        $loadGitHubRepositoriesButton = AJS.$("#loadGitHubRepositoriesButton"),
-        $loadGitHubRepositoriesSpinner = AJS.$("#loadGitHubRepositoriesSpinner"),
-        $loadedGitHubRepositoriesDiv = AJS.$("#loadedGitHubRepositoriesDiv"),
+    var $username = $("input[name='repository.github.username']"),
+        $password = $("input[name='repository.github.temporary.password']"),
+        $repositories = $("#repository_github_repository").hide(),
+        $repositories_desc = $("#repository_github_repository_description").hide(),
+        $branches = $("select[name='repository.github.branch']"),
+        $loadGitHubRepositoriesButton = $("#loadGitHubRepositoriesButton"),
+        $loadGitHubRepositoriesSpinner = $("#loadGitHubRepositoriesSpinner"),
+        $loadedGitHubRepositoriesDiv = $("#loadedGitHubRepositoriesDiv"),
         $form = $username.closest("form"),
-        $selectedRepository = AJS.$("#selectedRepository");
+        $selectedRepository = $("#selectedRepository");
 
     function showActionError(errorMessage) {
-        var $field = AJS.$("#fieldArea_repository_github_repository"),
+        var $field = $("#fieldArea_repository_github_repository"),
             $description = $field.find('.description'),
-            $error = AJS.$('<div class="error"/>').html(errorMessage);
+            $error = $('<div class="error"/>').html(errorMessage);
 
         if ($description.length) {
             $description.before($error)
@@ -75,7 +75,7 @@ BAMBOO.LoadGitHubRepositoriesAsynchronously = function() {
 
     function loadGitHubRepositories(e) {
         startFetching();
-        AJS.$.ajax({
+        $.ajax({
             type: "POST",
             url: actionUrl,
             data: { username: $username.val(), password: $password.val(), repositoryId: repositoryId },
@@ -86,11 +86,11 @@ BAMBOO.LoadGitHubRepositoriesAsynchronously = function() {
                 if (json.status == "ERROR") {
                     if (json.fieldErrors) {
                         for (var fieldName in json.fieldErrors) {
-                            var $field = AJS.$("#fieldArea_" + $form.attr("id") + "_repository_github_" + fieldName.replace(".", "_")),
+                            var $field = $("#fieldArea_" + $form.attr("id") + "_repository_github_" + fieldName.replace(".", "_")),
                                 $description = $field.find('.description');
 
                             for (var i = 0, ii= json.fieldErrors[fieldName].length; i < ii; i++) {
-                                var $error = AJS.$('<div class="error"/>').html(json.fieldErrors[fieldName][i]);
+                                var $error = $('<div class="error"/>').html(json.fieldErrors[fieldName][i]);
 
                                 if ($description.length) {
                                     $description.before($error)
@@ -106,7 +106,7 @@ BAMBOO.LoadGitHubRepositoriesAsynchronously = function() {
                     readyForFetching();
                 } else if (json.status == "OK") {
                     $loadedGitHubRepositoriesDiv.show();
-                    var options = $repositories.attr("options");
+                    var options = $repositories.get(0).options;
                     for (var repository in json.gitHubRepositories) {
                         options[options.length] = new Option(repository, repository);
                     }
@@ -125,8 +125,8 @@ BAMBOO.LoadGitHubRepositoriesAsynchronously = function() {
                     readyForFetching();
                 }
             },
-            error : function (XMLHttpRequest) {
-                showActionError("[@ww.text name='repository.github.ajaxError'/] ["+XMLHttpRequest.status+" "+XMLHttpRequest.statusText+"]");
+            error: function (jqXHR) {
+                showActionError("[@ww.text name='repository.github.ajaxError'/] ["+jqXHR.status+" "+jqXHR.statusText+"]");
                 readyForFetching();
             },
             dataType: "json"
@@ -151,9 +151,9 @@ BAMBOO.LoadGitHubRepositoriesAsynchronously = function() {
         $loadGitHubRepositoriesSpinner.hide();
     }
 
-    AJS.$(function(){
+    $(function(){
         $repositories.change(function() {
-            mutateSelectListContent(AJS.$(this), $branches, repositoryBranchFilter);
+            mutateSelectListContent($(this), $branches, repositoryBranchFilter);
         });
     });
 
@@ -166,6 +166,6 @@ BAMBOO.LoadGitHubRepositoriesAsynchronously = function() {
         }
     [/#if]
 
-}()
+}(AJS.$);
 
 </script>
