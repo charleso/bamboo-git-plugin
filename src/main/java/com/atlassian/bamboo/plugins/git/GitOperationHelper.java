@@ -39,6 +39,7 @@ import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.transport.Transport;
+import org.eclipse.jgit.transport.TransportHttp;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
@@ -484,6 +485,16 @@ public class GitOperationHelper
             if (TransportAllTrustingHttps.canHandle(uri))
             {
                 transport = new TransportAllTrustingHttps(localRepository, uri);
+            }
+            else if ("http".equals(uri.getScheme()))
+            {
+                class TransportHttpHack extends TransportHttp {
+                    TransportHttpHack(FileRepository localRepository, URIish uri) throws NotSupportedException
+                    {
+                        super(localRepository, uri);
+                    }
+                }
+                transport = new TransportHttpHack(localRepository, uri);
             }
             else
             {
