@@ -5,11 +5,11 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.OpenSshConfig;
-import org.eclipse.jgit.transport.SshConfigSessionFactory;
+import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.util.FS;
 import org.jetbrains.annotations.Nullable;
 
-public class GitSshSessionFactory extends SshConfigSessionFactory
+public class GitSshSessionFactory extends JschConfigSessionFactory
 {
     final private String key;
     final private String passphrase;
