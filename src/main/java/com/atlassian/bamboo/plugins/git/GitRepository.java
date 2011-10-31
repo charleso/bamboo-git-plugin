@@ -19,14 +19,18 @@ import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChangesImpl;
+import com.atlassian.bamboo.v2.build.agent.capability.Requirement;
+import com.atlassian.bamboo.v2.build.agent.capability.RequirementImpl;
 import com.atlassian.bamboo.v2.build.agent.remote.RemoteBuildDirectoryManager;
 import com.atlassian.bamboo.v2.build.repository.CustomSourceDirectoryAwareRepository;
+import com.atlassian.bamboo.v2.build.repository.RequirementsAwareRepository;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
 import com.atlassian.util.concurrent.LazyReference;
 import com.atlassian.util.concurrent.Supplier;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.opensymphony.xwork.TextProvider;
 import com.opensymphony.xwork.util.LocalizedTextUtil;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -48,11 +52,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
 
-public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository, SelectableAuthenticationRepository, CustomVariableProviderRepository,
-        CustomSourceDirectoryAwareRepository
+public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository,
+                                                                 SelectableAuthenticationRepository,
+                                                                 CustomVariableProviderRepository,
+                                                                 CustomSourceDirectoryAwareRepository,
+                                                                 RequirementsAwareRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -587,4 +595,9 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         }
     }
 
+    @Override
+    public Set<Requirement> getRequirements()
+    {
+        return Sets.<Requirement>newHashSet(new RequirementImpl(GitCapabilityTypeModule.GIT_CAPABILITY, true, ".*", true));
+    }
 }

@@ -20,6 +20,11 @@
         <resource type="freemarker" name="view" location="/com/atlassian/bamboo/plugins/git/ghRepositoryView.ftl"/>
     </repository>
 
+    <capabilityType key="system.git.executable" name="Git" class="com.atlassian.bamboo.plugins.git.GitCapabilityTypeModule" sortOrder="2000">
+        <description>The Git capability type</description>
+        <resource type="freemarker" name="edit" location="/com/atlassian/bamboo/plugins/git/editGitCapability.ftl"/>
+    </capabilityType>
+
     <xwork key="GitXWork" name="GitXWork" class="java.lang.Void">
       <package name="gitPluginBuildAdmin" extends="buildAdmin">
         <action name="deleteGitCacheDirectory" class="com.atlassian.bamboo.plugins.git.DeleteGitCacheDirectoryAction">
