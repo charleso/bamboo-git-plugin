@@ -7,7 +7,10 @@ import com.atlassian.bamboo.plugins.git.GitOperationHelper;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.opensymphony.xwork.TextProvider;
 import org.mockito.Mockito;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -80,7 +83,7 @@ public class TimeoutsTest extends GitAbstractTest
                     System.out.println(logString);
                     return null;
                 }
-            }, Mockito.mock(TextProvider.class));
+            }, Mockito.mock(TextProvider.class), null);
     }
 
     @Test

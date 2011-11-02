@@ -7,6 +7,7 @@ import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.Arrays;
@@ -18,12 +19,15 @@ public class GitMavenPomAccessor extends MavenPomAccessorAbstract
     private final GitRepository repository;
     private String pathToPom = POM_XML;
     private final TextProvider textProvider;
+    @Nullable
+    private final String gitCapability;
 
-    protected GitMavenPomAccessor(GitRepository repository, @NotNull final TextProvider textProvider)
+    protected GitMavenPomAccessor(GitRepository repository, @NotNull final TextProvider textProvider, @Nullable String gitCapability)
     {
         super(repository);
         this.repository = repository;
         this.textProvider = textProvider;
+        this.gitCapability = gitCapability;
     }
 
     GitMavenPomAccessor withPath(String pathToProjectRoot)
@@ -54,7 +58,7 @@ public class GitMavenPomAccessor extends MavenPomAccessorAbstract
     public File checkoutMavenPom(@NotNull File destinationPath) throws RepositoryException
     {
         log.info("checkoutMavenPom to: " + destinationPath);
-        GitOperationHelper helper = new GitOperationHelper(new NullBuildLogger(), textProvider);
+        GitOperationHelper helper = new GitOperationHelper(new NullBuildLogger(), textProvider, gitCapability);
         GitRepository.GitRepositoryAccessData substitutedAccessData = repository.getSubstitutedAccessData();
         String targetRevision = helper.obtainLatestRevision(substitutedAccessData);
         helper.fetch(destinationPath, substitutedAccessData, true);

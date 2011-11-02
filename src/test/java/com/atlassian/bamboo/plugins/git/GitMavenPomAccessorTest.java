@@ -126,7 +126,7 @@ public class GitMavenPomAccessorTest extends GitAbstractTest
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testRejectPathWithDots() throws Exception
     {
-        new GitMavenPomAccessor(Mockito.mock(GitRepository.class), Mockito.mock(TextProvider.class)).withPath("..");
+        new GitMavenPomAccessor(Mockito.mock(GitRepository.class), Mockito.mock(TextProvider.class), null).withPath("..");
     }
 
 }

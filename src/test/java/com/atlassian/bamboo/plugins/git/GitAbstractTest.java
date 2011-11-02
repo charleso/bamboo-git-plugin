@@ -6,6 +6,7 @@ import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.chains.Chain;
 import com.atlassian.bamboo.plan.PlanKey;
 import com.atlassian.bamboo.plan.PlanKeys;
+import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
 import com.atlassian.bamboo.project.Project;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.util.BambooFileUtils;
@@ -40,8 +41,6 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
 
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.testng.Assert.assertEquals;
@@ -117,7 +116,7 @@ public class GitAbstractTest
     public GitOperationHelper createGitOperationHelper()
     {
         TextProvider textProvider = Mockito.mock(TextProvider.class);
-        return new GitOperationHelper(new NullBuildLogger(), textProvider);
+        return new GitOperationHelper(new NullBuildLogger(), textProvider, null);
     }
 
     public GitRepository createGitRepository() throws Exception

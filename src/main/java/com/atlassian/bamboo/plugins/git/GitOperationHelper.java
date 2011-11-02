@@ -69,11 +69,14 @@ public class GitOperationHelper
 
     private final BuildLogger buildLogger;
     private final TextProvider textProvider;
+    @Nullable
+    private final String gitCapability;
 
-    public GitOperationHelper(final @NotNull BuildLogger buildLogger, final @NotNull TextProvider textProvider)
+    public GitOperationHelper(final @NotNull BuildLogger buildLogger, final @NotNull TextProvider textProvider, final @Nullable String gitCapability)
     {
         this.buildLogger = buildLogger;
         this.textProvider = textProvider;
+        this.gitCapability = gitCapability;
     }
 
     @NotNull
