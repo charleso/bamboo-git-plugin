@@ -13,6 +13,7 @@ import com.atlassian.bamboo.util.BambooFileUtils;
 import com.atlassian.bamboo.utils.i18n.DefaultI18nBean;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.BuildContextImpl;
+import com.atlassian.bamboo.v2.build.agent.capability.CapabilityContext;
 import com.atlassian.bamboo.variable.CustomVariableContext;
 import com.atlassian.bamboo.variable.CustomVariableContextImpl;
 import com.atlassian.bamboo.variable.VariableDefinitionContext;
@@ -43,6 +44,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import static org.apache.commons.io.FileUtils.listFiles;
+import static org.mockito.Mockito.mock;
 import static org.testng.Assert.assertEquals;
 
 public class GitAbstractTest
@@ -135,6 +137,8 @@ public class GitAbstractTest
         CustomVariableContext customVariableContext = new CustomVariableContextImpl();
         customVariableContext.setVariables(Maps.<String, VariableDefinitionContext>newHashMap());
         gitRepository.setCustomVariableContext(customVariableContext);
+        
+        gitRepository.setCapabilityContext(mock(CapabilityContext.class));
 
         return gitRepository;
     }
