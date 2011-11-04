@@ -23,18 +23,6 @@
     <dependencies>
         <dependency>
             <groupId>com.atlassian.bamboo</groupId>
-            <artifactId>atlassian-bamboo-api</artifactId>
-            <version>${bamboo.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.bamboo</groupId>
-            <artifactId>atlassian-bamboo-core</artifactId>
-            <version>${bamboo.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.bamboo</groupId>
             <artifactId>atlassian-bamboo-web</artifactId>
             <version>${bamboo.version}</version>
             <scope>provided</scope>
@@ -102,8 +90,8 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
+                    <source>1.6</source>
+                    <target>1.6</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -156,7 +144,7 @@
     </build>
 
     <properties>
-        <bamboo.version>3.3-rc1.pre1</bamboo.version>
+        <bamboo.version>3.4-SNAPSHOT</bamboo.version>
         <bamboo.data.version>3.2.2</bamboo.data.version>
     </properties>
 

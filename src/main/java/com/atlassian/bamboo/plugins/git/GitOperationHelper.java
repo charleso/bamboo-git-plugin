@@ -8,6 +8,7 @@ import com.atlassian.bamboo.commit.CommitImpl;
 import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
+import com.atlassian.bamboo.ssh.SshProxy;
 import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChangesImpl;
@@ -189,6 +190,9 @@ public class GitOperationHelper
 
     public void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
     {
+        SshProxy.getRunningInstance();
+
+        Transport transport = null;
         FileRepository localRepository = null;
         String branchDescription = "(unresolved) " + accessData.branch;
         try

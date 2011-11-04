@@ -52,7 +52,7 @@ public class GitMavenPomAccessorTest extends GitAbstractTest
         git.commit().setMessage("testPoms").setCommitter("testUser", "testUser@testDomain").call();
     }
 
-    @DataProvider(parallel = true)
+    @DataProvider(parallel = false)
     Object[][] pomPaths()
     {
         return new String[][]{
