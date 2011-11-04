@@ -8,6 +8,8 @@ import com.atlassian.bamboo.commit.CommitImpl;
 import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
+import com.atlassian.bamboo.ssh.ProxyConnectionData;
+import com.atlassian.bamboo.ssh.ProxyConnectionDataBuilder;
 import com.atlassian.bamboo.ssh.SshProxy;
 import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
@@ -46,12 +48,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Class used for issuing various git operations. We don't want to hold this logic in
@@ -70,6 +74,9 @@ public class GitOperationHelper
     @Nullable
     private final String gitCapability;
     private final GitOperationStrategy gitOperationStrategy;
+
+    private SshProxy sshProxy;
+    private String proxyUserHandle;
 
     public GitOperationHelper(final @NotNull BuildLogger buildLogger, final @NotNull TextProvider textProvider, final @Nullable String gitCapability)
     {
@@ -188,6 +195,98 @@ public class GitOperationHelper
         }
     }
 
+    private GitRepositoryAccessData wooBooDooBoo(@NotNull final GitRepositoryAccessData accessData) throws RepositoryException
+    {
+        if (accessData.authenticationType == GitAuthenticationType.SSH_KEYPAIR)
+        {
+            GitRepositoryAccessData wooBooDooBooed = new GitRepositoryAccessData();
+            wooBooDooBooed.repositoryUrl = accessData.repositoryUrl;
+            wooBooDooBooed.branch = accessData.branch;
+            wooBooDooBooed.username = accessData.username;
+            wooBooDooBooed.password = accessData.password;
+            wooBooDooBooed.sshKey = accessData.sshKey;
+            wooBooDooBooed.sshPassphrase = accessData.sshPassphrase;
+            wooBooDooBooed.authenticationType = accessData.authenticationType;
+            wooBooDooBooed.useShallowClones = accessData.useShallowClones;
+
+            if (!StringUtils.contains(wooBooDooBooed.repositoryUrl, "://"))
+            {
+                wooBooDooBooed.repositoryUrl = "ssh://" + wooBooDooBooed.repositoryUrl.replaceFirst(":", "/");
+            }
+
+            URI repositoryUri = URI.create(wooBooDooBooed.repositoryUrl);
+            if ("git".equals(repositoryUri.getScheme()) || "ssh".equals(repositoryUri.getScheme()))
+            {
+                sshProxy = SshProxy.getRunningInstance();
+                if (sshProxy == null)
+                {
+                    throw new RepositoryException("Cannot start SshProxy");
+                }
+                if (sshProxy.getClientInitializationException() != null)
+                {
+                    throw new RepositoryException("SshProxy failed to initialize client properly. Is your remote agent updated? " +
+                            "For more information please see " + textProvider.getText("help.prefix") + textProvider.getText("mercurial.upgrade.bootstrap"), sshProxy.getClientInitializationException());
+                }
+
+                String proxyUserName = UUID.randomUUID().toString();
+
+                ProxyConnectionData connectionData;
+                try
+                {
+                    connectionData = new ProxyConnectionDataBuilder()
+                            .withRemoteAddress(repositoryUri.getHost(), repositoryUri.getPort() == -1 ? 22 : repositoryUri.getPort())
+                            .withRemoteUserName(wooBooDooBooed.username)
+                            //.withErrorReceiver(hgCommandProcessor)
+                            .withKeyFromString(wooBooDooBooed.sshKey, wooBooDooBooed.sshPassphrase)
+                            .build();
+                }
+                catch (IOException e)
+                {
+                    if (e.getMessage().contains("exception using cipher - please check password and data."))
+                    {
+                        throw new RepositoryException(buildLogger.addErrorLogEntry("Encryption exception - please check ssh keyfile passphrase."), e);
+                    }
+                    else
+                    {
+                        throw new RepositoryException("Cannot decode connection params", e);
+                    }
+                }
+
+                URI cooked;
+                try
+                {
+                    cooked = new URI(repositoryUri.getScheme(),
+                            proxyUserName,
+                            sshProxy.getHost(),
+                            sshProxy.getPort(),
+                            repositoryUri.getRawPath(),
+                            repositoryUri.getRawQuery(),
+                            repositoryUri.getRawFragment());
+                }
+                catch (URISyntaxException e)
+                {
+                    throw new RepositoryException("Remote repository URL invalid", e);
+                }
+
+                sshProxy.add(proxyUserName, connectionData);
+                this.proxyUserHandle = proxyUserName;
+
+                wooBooDooBooed.repositoryUrl = cooked.toString();
+                return wooBooDooBooed;
+            }
+        }
+
+        return accessData;
+    }
+
+    public void close()
+    {
+        if (sshProxy != null && proxyUserHandle != null)
+        {
+            sshProxy.remove(proxyUserHandle);
+        }
+    }
+
     public void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
     {
         SshProxy.getRunningInstance();
@@ -211,6 +310,7 @@ public class GitOperationHelper
                 localRepository.close();
             }
         }
+        //gitOperationStrategy.fetch(sourceDirectory, wooBooDooBoo(accessData), useShallow);
         gitOperationStrategy.fetch(sourceDirectory, accessData, useShallow);
     }
 

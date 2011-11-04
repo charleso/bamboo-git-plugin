@@ -79,7 +79,7 @@
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>
                 <artifactId>maven-bamboo-plugin</artifactId>
-                <version>3.2.3</version>
+                <version>3.7</version>
                 <extensions>true</extensions>
                 <configuration>
                     <productVersion>${bamboo.version}</productVersion>

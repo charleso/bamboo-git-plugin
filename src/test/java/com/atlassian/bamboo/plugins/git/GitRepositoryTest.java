@@ -107,7 +107,7 @@ public class GitRepositoryTest extends GitAbstractTest
 
 
 
-    @DataProvider(parallel = true)
+    @DataProvider(parallel = false)
     Object[][] testSshConnectionToGitHubData()
     {
         return new Object[][]{
