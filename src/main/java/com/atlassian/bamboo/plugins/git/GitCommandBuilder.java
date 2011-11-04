@@ -91,7 +91,7 @@ public class GitCommandBuilder
         return this;
     }
 
-    public GitCommandBuilder verbose(Boolean debug)
+    public GitCommandBuilder verbose(Boolean verbose)
     {
         this.verbose = verbose;
         return this;
@@ -154,7 +154,7 @@ public class GitCommandBuilder
         }
         if (verbose || maxVerboseOutput)
         {
-            commandArgs.add("-v");
+            commandArgs.add("--verbose");
         }
 
         if (style != null)

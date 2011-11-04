@@ -11,6 +11,7 @@ import com.atlassian.utils.process.OutputHandler;
 import com.atlassian.utils.process.PluggableProcessHandler;
 import com.atlassian.utils.process.StringOutputHandler;
 import org.apache.log4j.Logger;
+import org.eclipse.jgit.transport.RefSpec;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,7 +33,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
 
     // ------------------------------------------------------------------------------------------------------- Constants
 
-    static final Pattern hgVersionPattern = Pattern.compile("^Mercurial Distributed SCM \\(version (.*)\\)");
+    static final Pattern gitVersionPattern = Pattern.compile("^git version (.*)");
 
     // ------------------------------------------------------------------------------------------------- Type Properties
 
@@ -66,12 +67,12 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
     // -------------------------------------------------------------------------------------------------- Public Methods
 
     /**
-     * Checks whether mercurial exist in current system.
+     * Checks whether git exist in current system.
      *
      * @param workingDirectory specifies arbitrary directory.
-     * @throws RepositoryException when mercurial wasn't found in current system.
+     * @throws RepositoryException when git wasn't found in current system.
      */
-    public void checkHgExistenceInSystem(@NotNull final File workingDirectory) throws RepositoryException
+    public void checkGitExistenceInSystem(@NotNull final File workingDirectory) throws RepositoryException
     {
         GitCommandBuilder commandBuilder = createCommandBuilder("version");
 
@@ -81,10 +82,10 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         {
             runCommand(commandBuilder.build(), workingDirectory, outputHandler);
             String output = outputHandler.getOutput();
-            Matcher matcher = hgVersionPattern.matcher(output);
+            Matcher matcher = gitVersionPattern.matcher(output);
             if (!matcher.find())
             {
-                String errorMessage = "Mercurial Executable capability `" + gitExecutable + "' does not seem to be a hg client. Is it properly set?";
+                String errorMessage = "Git Executable capability `" + gitExecutable + "' does not seem to be a git client. Is it properly set?";
                 log.error(errorMessage + " Output:\n" + output);
                 throw new RepositoryException(errorMessage);
             }
@@ -107,10 +108,13 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         runCommand(commandBuilder.build(), workingDirectory, new LoggingOutputHandler(buildLogger));
     }
 
-    public void runFetchCommand(@NotNull final File workingDirectory, @NotNull final String repoUrl, @Nullable final String branch) throws RepositoryException
+    public void runFetchCommand(@NotNull final File workingDirectory, @NotNull final GitRepository.GitRepositoryAccessData accessData, RefSpec refSpec, boolean useShallow) throws RepositoryException
     {
-        GitCommandBuilder commandBuilder = createCommandBuilder("fetch", repoUrl);
-          //      .shallowClone();
+        GitCommandBuilder commandBuilder = createCommandBuilder("fetch", accessData.repositoryUrl, refSpec.getDestination());
+        if (useShallow)
+        {
+            commandBuilder.shallowClone();
+        }
         runCommand(commandBuilder.build(), workingDirectory, new LoggingOutputHandler(buildLogger));
     }
 

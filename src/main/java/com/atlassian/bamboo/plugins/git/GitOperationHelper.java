@@ -34,6 +34,7 @@ import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.storage.file.RefDirectory;
 import org.eclipse.jgit.transport.FetchConnection;
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
@@ -198,6 +199,40 @@ public class GitOperationHelper
         try
         {
             localRepository = createLocalRepository(sourceDirectory, null);
+
+            transport = open(localRepository, accessData);
+            final String resolvedBranch;
+            if (StringUtils.startsWithAny(accessData.branch, FQREF_PREFIXES))
+            {
+                resolvedBranch = accessData.branch;
+            }
+            else
+            {
+                final FetchConnection fetchConnection = transport.openFetch();
+                try
+                {
+                    resolvedBranch = resolveRefSpec(accessData, fetchConnection).getName();
+                }
+                finally
+                {
+                    fetchConnection.close();
+                }
+            }
+            branchDescription = resolvedBranch;
+
+            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.fetchingBranch", Arrays.asList(branchDescription, accessData.repositoryUrl))
+                    + (useShallow ? " " + textProvider.getText("repository.git.messages.doingShallowFetch") : ""));
+            RefSpec refSpec = new RefSpec()
+                    .setForceUpdate(true)
+                    .setSource(resolvedBranch)
+                    .setDestination(resolvedBranch);
+
+            gitOperationStrategy.fetch(sourceDirectory, accessData, refSpec, useShallow);
+
+            if (resolvedBranch.startsWith(Constants.R_HEADS))
+            {
+                localRepository.updateRef(Constants.HEAD).link(resolvedBranch);
+            }
         }
         catch (IOException e)
         {
@@ -210,8 +245,11 @@ public class GitOperationHelper
             {
                 localRepository.close();
             }
+            if (transport != null)
+            {
+                transport.close();
+            }
         }
-        gitOperationStrategy.fetch(sourceDirectory, accessData, useShallow);
     }
 
     private FileRepository createLocalRepository(File workingDirectory, @Nullable File cacheDirectory)
