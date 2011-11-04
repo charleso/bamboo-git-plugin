@@ -19,9 +19,7 @@ import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import static org.testng.Assert.*;
 
 public class GitRepositoryTest extends GitAbstractTest
 {
@@ -107,7 +105,7 @@ public class GitRepositoryTest extends GitAbstractTest
 
 
 
-    @DataProvider(parallel = true)
+    @DataProvider(parallel = false)
     Object[][] testSshConnectionToGitHubData()
     {
         return new Object[][]{
