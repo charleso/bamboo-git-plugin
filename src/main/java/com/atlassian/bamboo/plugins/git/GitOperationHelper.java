@@ -33,11 +33,8 @@ import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.storage.file.RefDirectory;
 import org.eclipse.jgit.transport.FetchConnection;
-import org.eclipse.jgit.transport.FetchResult;
-import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
-import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.transport.TransportHttp;
 import org.eclipse.jgit.transport.URIish;
@@ -71,12 +68,22 @@ public class GitOperationHelper
     private final TextProvider textProvider;
     @Nullable
     private final String gitCapability;
+    private final GitOperationStrategy gitOperationStrategy;
 
     public GitOperationHelper(final @NotNull BuildLogger buildLogger, final @NotNull TextProvider textProvider, final @Nullable String gitCapability)
     {
         this.buildLogger = buildLogger;
         this.textProvider = textProvider;
         this.gitCapability = gitCapability;
+
+        if (gitCapability != null)
+        {
+            gitOperationStrategy = new NativeGitOperationStrategy(buildLogger, textProvider, gitCapability);
+        }
+        else
+        {
+            gitOperationStrategy = new JGitOperationStrategy(buildLogger, textProvider);
+        }
     }
 
     @NotNull
@@ -182,49 +189,11 @@ public class GitOperationHelper
 
     public void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
     {
-        Transport transport = null;
         FileRepository localRepository = null;
         String branchDescription = "(unresolved) " + accessData.branch;
         try
         {
             localRepository = createLocalRepository(sourceDirectory, null);
-
-            transport = open(localRepository, accessData);
-            final String resolvedBranch;
-            if (StringUtils.startsWithAny(accessData.branch, FQREF_PREFIXES))
-            {
-                resolvedBranch = accessData.branch;
-            }
-            else
-            {
-                final FetchConnection fetchConnection = transport.openFetch();
-                try
-                {
-                    resolvedBranch = resolveRefSpec(accessData, fetchConnection).getName();
-                }
-                finally
-                {
-                    fetchConnection.close();
-                }
-            }
-            branchDescription = resolvedBranch;
-
-            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.fetchingBranch", Arrays.asList(branchDescription, accessData.repositoryUrl))
-                    + (useShallow ? " " + textProvider.getText("repository.git.messages.doingShallowFetch") : ""));
-            RefSpec refSpec = new RefSpec()
-                    .setForceUpdate(true)
-                    .setSource(resolvedBranch)
-                    .setDestination(resolvedBranch);
-
-            transport.setTagOpt(TagOpt.AUTO_FOLLOW);
-
-            FetchResult fetchResult = transport.fetch(new BuildLoggerProgressMonitor(buildLogger), Arrays.asList(refSpec), useShallow ? 1 : 0);
-            buildLogger.addBuildLogEntry("Git: " + fetchResult.getMessages());
-
-            if (resolvedBranch.startsWith(Constants.R_HEADS))
-            {
-                localRepository.updateRef(Constants.HEAD).link(resolvedBranch);
-            }
         }
         catch (IOException e)
         {
@@ -237,11 +206,8 @@ public class GitOperationHelper
             {
                 localRepository.close();
             }
-            if (transport != null)
-            {
-                transport.close();
-            }
         }
+        gitOperationStrategy.fetch(sourceDirectory, accessData, useShallow);
     }
 
     private FileRepository createLocalRepository(File workingDirectory, @Nullable File cacheDirectory)
