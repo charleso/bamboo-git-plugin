@@ -21,7 +21,6 @@ import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChangesImpl;
 import com.atlassian.bamboo.v2.build.agent.capability.CapabilityContext;
 import com.atlassian.bamboo.v2.build.agent.capability.Requirement;
-import com.atlassian.bamboo.v2.build.agent.capability.RequirementImpl;
 import com.atlassian.bamboo.v2.build.agent.remote.RemoteBuildDirectoryManager;
 import com.atlassian.bamboo.v2.build.repository.CustomSourceDirectoryAwareRepository;
 import com.atlassian.bamboo.v2.build.repository.RequirementsAwareRepository;
@@ -597,10 +596,11 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         }
     }
 
+    // Git capability is optional, so we don't enforce it here
     @Override
     public Set<Requirement> getRequirements()
     {
-        return Sets.<Requirement>newHashSet(new RequirementImpl(GitCapabilityTypeModule.GIT_CAPABILITY, true, ".*", true));
+        return Sets.newHashSet();
     }
 
     public boolean isGitExecutableSet()

@@ -34,7 +34,7 @@ public class GitCapabilityTypeModule extends AbstractCapabilityTypeModule implem
     private static final Logger log = Logger.getLogger(GitCapabilityTypeModule.class);
 
     // should match the names of the fields in ftl
-    public static final String EXECUTABLE_KIND_FIELD = "executableKind";
+    public static final String EXECUTABLE_KIND_FIELD = "gitExecutableKind";
 
     public static final String DEFAULT_SSH_COMMAND = "ssh -o StrictHostKeyChecking=no -o BatchMode=yes";
 
