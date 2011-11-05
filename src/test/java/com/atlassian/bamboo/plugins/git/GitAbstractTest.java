@@ -118,7 +118,7 @@ public class GitAbstractTest
     public GitOperationHelper createGitOperationHelper()
     {
         TextProvider textProvider = Mockito.mock(TextProvider.class);
-        return new GitOperationHelper(new NullBuildLogger(), textProvider, null);
+        return new JGitOperationHelper(new NullBuildLogger(), textProvider);
     }
 
     public GitRepository createGitRepository() throws Exception

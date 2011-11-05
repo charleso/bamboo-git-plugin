@@ -4,6 +4,7 @@ package com.atlassian.bamboo.plugins.git.timeouts;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.plugins.git.GitAbstractTest;
 import com.atlassian.bamboo.plugins.git.GitOperationHelper;
+import com.atlassian.bamboo.plugins.git.JGitOperationHelper;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.opensymphony.xwork.TextProvider;
 import org.mockito.Mockito;
@@ -74,7 +75,7 @@ public class TimeoutsTest extends GitAbstractTest
 
     public GitOperationHelper createGitOperationHelper()
     {
-        return new GitOperationHelper(
+        return new JGitOperationHelper(
             new NullBuildLogger()
             {
                 @Override
@@ -83,7 +84,7 @@ public class TimeoutsTest extends GitAbstractTest
                     System.out.println(logString);
                     return null;
                 }
-            }, Mockito.mock(TextProvider.class), null);
+            }, Mockito.mock(TextProvider.class));
     }
 
     @Test

@@ -20,16 +20,12 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.dircache.DirCache;
-import org.eclipse.jgit.dircache.DirCacheCheckout;
-import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.NotSupportedException;
 import org.eclipse.jgit.errors.TransportException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.lib.RefUpdate;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepository;
@@ -62,7 +58,7 @@ import java.util.UUID;
  * Class used for issuing various git operations. We don't want to hold this logic in
  * GitRepository class.
  */
-public class GitOperationHelper
+public abstract class GitOperationHelper
 {
     private static final int DEFAULT_TRANSFER_TIMEOUT = new SystemProperty(false, "atlassian.bamboo.git.timeout", "GIT_TIMEOUT").getValue(10 * 60);
     private static final int CHANGESET_LIMIT = new SystemProperty(false, "atlassian.bamboo.git.changeset.limit", "GIT_CHANGESET_LIMIT").getValue(100);
@@ -70,30 +66,21 @@ public class GitOperationHelper
     private static final Logger log = Logger.getLogger(GitOperationHelper.class);
     private static final String[] FQREF_PREFIXES = {Constants.R_HEADS, Constants.R_REFS};
 
-    private final BuildLogger buildLogger;
-    private final TextProvider textProvider;
-    @Nullable
-    private final String gitCapability;
-    private final GitOperationStrategy gitOperationStrategy;
+    protected final BuildLogger buildLogger;
+    protected final TextProvider textProvider;
 
     private SshProxy sshProxy;
     private String proxyUserHandle;
 
-    public GitOperationHelper(final @NotNull BuildLogger buildLogger, final @NotNull TextProvider textProvider, final @Nullable String gitCapability)
+    public GitOperationHelper(final @NotNull BuildLogger buildLogger, final @NotNull TextProvider textProvider)
     {
         this.buildLogger = buildLogger;
         this.textProvider = textProvider;
-        this.gitCapability = gitCapability;
-
-        if (gitCapability != null)
-        {
-            gitOperationStrategy = new NativeGitOperationStrategy(buildLogger, textProvider, gitCapability);
-        }
-        else
-        {
-            gitOperationStrategy = new JGitOperationStrategy(buildLogger, textProvider);
-        }
     }
+
+    protected abstract void doFetch(@NotNull final Transport transport, @NotNull final File sourceDirectory, @NotNull final GitRepository.GitRepositoryAccessData accessData, RefSpec refSpec, boolean useShallow) throws RepositoryException;
+
+    protected abstract String doCheckout(@NotNull final FileRepository localRepository, @NotNull File sourceDirectory, @NotNull String targetRevision, @Nullable String previousRevision) throws RepositoryException;
 
     @NotNull
     public String obtainLatestRevision(@NotNull final GitRepositoryAccessData repositoryData) throws RepositoryException
@@ -140,7 +127,7 @@ public class GitOperationHelper
     }
 
     @Nullable
-    static Ref resolveRefSpec(GitRepositoryAccessData repositoryData, FetchConnection fetchConnection)
+    protected static Ref resolveRefSpec(GitRepositoryAccessData repositoryData, FetchConnection fetchConnection)
     {
         final Collection<String> candidates;
         if (StringUtils.isBlank(repositoryData.branch))
@@ -326,7 +313,7 @@ public class GitOperationHelper
                     .setSource(resolvedBranch)
                     .setDestination(resolvedBranch);
 
-            gitOperationStrategy.fetch(sourceDirectory, accessData, refSpec, useShallow);
+            doFetch(transport, sourceDirectory, accessData, refSpec, useShallow);
 
             if (resolvedBranch.startsWith(Constants.R_HEADS))
             {
@@ -351,7 +338,7 @@ public class GitOperationHelper
         }
     }
 
-    private FileRepository createLocalRepository(File workingDirectory, @Nullable File cacheDirectory)
+    protected FileRepository createLocalRepository(File workingDirectory, @Nullable File cacheDirectory)
             throws IOException
     {
         File gitDirectory = new File(workingDirectory, Constants.DOT_GIT);
@@ -420,65 +407,22 @@ public class GitOperationHelper
     {
         // would be cool to store lastCheckoutedRevision in the localRepository somehow - so we don't need to specify it
         buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.checkingOutRevision", Arrays.asList(targetRevision)));
-        FileRepository localRepository = null;
-        RevWalk revWalk = null;
-        DirCache dirCache = null;
+
         try
         {
-            localRepository = createLocalRepository(sourceDirectory, cacheDirectory);
+            FileRepository localRepository = createLocalRepository(sourceDirectory, cacheDirectory);
 
             //try to clean .git/index.lock file prior to checkout, otherwise checkout would fail with Exception
             File lck = new File(localRepository.getIndexFile().getParentFile(), localRepository.getIndexFile().getName() + ".lock");
             FileUtils.deleteQuietly(lck);
 
-            dirCache = localRepository.lockDirCache();
-            
-            revWalk = new RevWalk(localRepository);
-            final RevCommit targetCommit = revWalk.parseCommit(localRepository.resolve(targetRevision));
-            final RevCommit previousCommit = previousRevision == null ? null : revWalk.parseCommit(localRepository.resolve(previousRevision));
-
-            DirCacheCheckout dirCacheCheckout = new DirCacheCheckout(localRepository,
-                    previousCommit == null ? null : previousCommit.getTree(),
-                    dirCache,
-                    targetCommit.getTree());
-            dirCacheCheckout.setFailOnConflict(true);
-            try
-            {
-                dirCacheCheckout.checkout();
-            }
-            catch (MissingObjectException e)
-            {
-                final String message = textProvider.getText("repository.git.messages.checkoutFailedMissingObject", Arrays.asList(targetRevision, e.getObjectId().getName()));
-                throw new RepositoryException(buildLogger.addErrorLogEntry(message));
-            }
-
-            final RefUpdate refUpdate = localRepository.updateRef(Constants.HEAD);
-            refUpdate.setNewObjectId(targetCommit);
-            refUpdate.forceUpdate();
-            // if new branch -> refUpdate.link() instead of forceUpdate()
-
-            return targetCommit.getId().getName();
+            return doCheckout(localRepository, sourceDirectory, targetRevision, previousRevision);
         }
         catch (IOException e)
         {
             throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.checkoutFailed", Arrays.asList(targetRevision))) + e.getMessage(), e);
         }
-        finally
-        {
-            if (revWalk != null)
-            {
-                revWalk.release();
-            }
-            if (dirCache != null)
-            {
-                dirCache.unlock();
-            }
-            if (localRepository != null)
-            {
-                localRepository.close();
-            }
-        }
-    }
+   }
 
     BuildRepositoryChanges extractCommits(@NotNull final File directory, @Nullable final String previousRevision, @Nullable final String targetRevision)
             throws RepositoryException

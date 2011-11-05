@@ -150,7 +150,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         {
             final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(PlanKeys.getPlanKey(planKey));
-            final GitOperationHelper helper = new GitOperationHelper(buildLogger, textProvider, getGitCapability());
+            final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(buildLogger, textProvider, getGitCapability());
 
             final String targetRevision = helper.obtainLatestRevision(substitutedAccessData);
 
@@ -246,7 +246,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(buildContext.getPlanResultKey());
             final boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones;
             final boolean isOnLocalAgent = !(buildDirectoryManager instanceof RemoteBuildDirectoryManager);
-            final GitOperationHelper helper = new GitOperationHelper(buildLogger, textProvider, getGitCapability());
+            final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(buildLogger, textProvider, getGitCapability());
             final String targetRevision = nullableTargetRevision != null ? nullableTargetRevision : helper.obtainLatestRevision(substitutedAccessData);
             final String previousRevision = helper.getCurrentRevision(sourceDirectory);
 

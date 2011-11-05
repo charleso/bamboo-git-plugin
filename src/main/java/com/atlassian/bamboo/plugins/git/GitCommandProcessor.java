@@ -110,11 +110,17 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
 
     public void runFetchCommand(@NotNull final File workingDirectory, @NotNull final GitRepository.GitRepositoryAccessData accessData, RefSpec refSpec, boolean useShallow) throws RepositoryException
     {
-        GitCommandBuilder commandBuilder = createCommandBuilder("fetch", accessData.repositoryUrl, refSpec.getDestination());
+        GitCommandBuilder commandBuilder = createCommandBuilder("fetch", accessData.repositoryUrl, refSpec.getDestination()).verbose(true);
         if (useShallow)
         {
             commandBuilder.shallowClone();
         }
+        runCommand(commandBuilder.build(), workingDirectory, new LoggingOutputHandler(buildLogger));
+    }
+
+    public void runCheckoutCommand(@NotNull final File workingDirectory, String revision) throws RepositoryException
+    {
+        GitCommandBuilder commandBuilder = createCommandBuilder("checkout", revision);
         runCommand(commandBuilder.build(), workingDirectory, new LoggingOutputHandler(buildLogger));
     }
 
@@ -124,7 +130,6 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
     {
         return new GitCommandBuilder(commands)
                 .executable(gitExecutable)
-                .verbose(true)
                 .sshCommand(sshCommand)
                 .sshKeyFile(sshKeyFile)
                 .sshCompression(sshCompression);
