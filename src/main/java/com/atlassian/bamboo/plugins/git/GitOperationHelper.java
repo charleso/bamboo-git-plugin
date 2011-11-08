@@ -300,35 +300,35 @@ public abstract class GitOperationHelper
         return null;
     }
 
-    protected GitRepositoryAccessData wooBooDooBoo(@NotNull final GitRepositoryAccessData accessData) throws RepositoryException
+    protected GitRepositoryAccessData proxifyAccessData(@NotNull final GitRepositoryAccessData accessData) throws RepositoryException
     {
         if (accessData.authenticationType == GitAuthenticationType.SSH_KEYPAIR)
         {
-            GitRepositoryAccessData wooBooDooBooed = new GitRepositoryAccessData();
-            wooBooDooBooed.repositoryUrl = accessData.repositoryUrl;
-            wooBooDooBooed.branch = accessData.branch;
-            wooBooDooBooed.username = accessData.username;
-            wooBooDooBooed.password = accessData.password;
-            wooBooDooBooed.sshKey = accessData.sshKey;
-            wooBooDooBooed.sshPassphrase = accessData.sshPassphrase;
-            wooBooDooBooed.authenticationType = accessData.authenticationType;
-            wooBooDooBooed.useShallowClones = accessData.useShallowClones;
+            GitRepositoryAccessData proxyAccessData = new GitRepositoryAccessData();
+            proxyAccessData.repositoryUrl = accessData.repositoryUrl;
+            proxyAccessData.branch = accessData.branch;
+            proxyAccessData.username = accessData.username;
+            proxyAccessData.password = accessData.password;
+            proxyAccessData.sshKey = accessData.sshKey;
+            proxyAccessData.sshPassphrase = accessData.sshPassphrase;
+            proxyAccessData.authenticationType = accessData.authenticationType;
+            proxyAccessData.useShallowClones = accessData.useShallowClones;
 
-            if (!StringUtils.contains(wooBooDooBooed.repositoryUrl, "://"))
+            if (!StringUtils.contains(proxyAccessData.repositoryUrl, "://"))
             {
-                wooBooDooBooed.repositoryUrl = "ssh://" + wooBooDooBooed.repositoryUrl.replaceFirst(":", "/");
+                proxyAccessData.repositoryUrl = "ssh://" + proxyAccessData.repositoryUrl.replaceFirst(":", "/");
             }
 
-            URI repositoryUri = URI.create(wooBooDooBooed.repositoryUrl);
+            URI repositoryUri = URI.create(proxyAccessData.repositoryUrl);
             if ("git".equals(repositoryUri.getScheme()) || "ssh".equals(repositoryUri.getScheme()))
             {
                 try
                 {
                     ProxyConnectionData connectionData = new ProxyConnectionDataBuilder()
                             .withRemoteAddress(repositoryUri.getHost(), repositoryUri.getPort() == -1 ? 22 : repositoryUri.getPort())
-                            .withRemoteUserName(wooBooDooBooed.username)
+                            .withRemoteUserName(StringUtils.defaultIfEmpty(proxyAccessData.username, repositoryUri.getUserInfo()))
                             //.withErrorReceiver(hgCommandProcessor)
-                            .withKeyFromString(wooBooDooBooed.sshKey, wooBooDooBooed.sshPassphrase)
+                            .withKeyFromString(proxyAccessData.sshKey, proxyAccessData.sshPassphrase)
                             .build();
 
                     proxyRegistrationInfo = sshProxyService.register(connectionData);
@@ -341,7 +341,7 @@ public abstract class GitOperationHelper
                             repositoryUri.getRawQuery(),
                             repositoryUri.getRawFragment());
 
-                    wooBooDooBooed.repositoryUrl = cooked.toString();
+                    proxyAccessData.repositoryUrl = cooked.toString();
                 }
                 catch (IOException e)
                 {
@@ -363,7 +363,7 @@ public abstract class GitOperationHelper
                     throw new RepositoryException("Remote repository URL invalid", e);
                 }
 
-                return wooBooDooBooed;
+                return proxyAccessData;
             }
         }
 
@@ -535,7 +535,6 @@ public abstract class GitOperationHelper
     {
         try
         {
-            final StringEncrypter encrypter = new StringEncrypter();
             URIish uri = new URIish(accessData.repositoryUrl);
             if ("ssh".equals(uri.getScheme()) && accessData.authenticationType == GitAuthenticationType.PASSWORD
                     && StringUtils.isBlank(uri.getUser()) && StringUtils.isNotBlank(accessData.username))
@@ -566,8 +565,8 @@ public abstract class GitOperationHelper
             {
                 final boolean useKey = accessData.authenticationType == GitAuthenticationType.SSH_KEYPAIR;
 
-                final String sshKey = useKey ? encrypter.decrypt(accessData.sshKey) : null;
-                final String passphrase = useKey ? encrypter.decrypt(accessData.sshPassphrase) : null;
+                final String sshKey = useKey ? accessData.sshKey : null;
+                final String passphrase = useKey ? accessData.sshPassphrase : null;
 
                 SshSessionFactory factory = new GitSshSessionFactory(sshKey, passphrase);
                 ((SshTransport)transport).setSshSessionFactory(factory);
@@ -575,7 +574,7 @@ public abstract class GitOperationHelper
             if (accessData.authenticationType == GitAuthenticationType.PASSWORD)
             {
                 // username may be specified in the URL instead of in the text field, we may still need the password if it's set
-                transport.setCredentialsProvider(new TweakedUsernamePasswordCredentialsProvider(accessData.username, encrypter.decrypt(accessData.password)));
+                transport.setCredentialsProvider(new TweakedUsernamePasswordCredentialsProvider(accessData.username, accessData.password));
             }
             return transport;
         }

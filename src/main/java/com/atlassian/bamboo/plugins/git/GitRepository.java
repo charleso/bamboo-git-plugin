@@ -115,6 +115,14 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     private transient String pathToPom;
 
     //todo: Spring-inject StringEncrypter singleton, https://atlaseye.atlassian.com/cru/CR-BAM-2232#c37222
+    private final transient LazyReference<StringEncrypter> encrypterRef = new LazyReference<StringEncrypter>()
+    {
+        @Override
+        protected StringEncrypter create() throws Exception
+        {
+            return new StringEncrypter();
+        }
+    };
 
     // ---------------------------------------------------------------------------------------------------- Dependencies
     private transient CapabilityContext capabilityContext;
@@ -359,15 +367,6 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
     public void prepareConfigObject(@NotNull BuildConfiguration buildConfiguration)
     {
-        final LazyReference<StringEncrypter> encrypterRef = new LazyReference<StringEncrypter>()
-        {
-            @Override
-            protected StringEncrypter create() throws Exception
-            {
-                return new StringEncrypter();
-            }
-        };
-
         buildConfiguration.setProperty(REPOSITORY_GIT_COMMAND_TIMEOUT, buildConfiguration.getString(REPOSITORY_GIT_COMMAND_TIMEOUT, "").trim());
         if (buildConfiguration.getBoolean(TEMPORARY_GIT_PASSWORD_CHANGE))
         {
@@ -568,9 +567,9 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         substituted.repositoryUrl = substituteString(accessData.repositoryUrl);
         substituted.branch = substituteString(accessData.branch);
         substituted.username = substituteString(accessData.username);
-        substituted.password = accessData.password;
-        substituted.sshKey = accessData.sshKey;
-        substituted.sshPassphrase = accessData.sshPassphrase;
+        substituted.password = encrypterRef.get().decrypt(accessData.password);
+        substituted.sshKey = encrypterRef.get().decrypt(accessData.sshKey);
+        substituted.sshPassphrase = encrypterRef.get().decrypt(accessData.sshPassphrase);
         substituted.authenticationType = accessData.authenticationType;
         substituted.useShallowClones = accessData.useShallowClones;
         substituted.commandTimeout = accessData.commandTimeout;
