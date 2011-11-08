@@ -15,6 +15,7 @@ import com.atlassian.bamboo.repository.Repository;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.repository.SelectableAuthenticationRepository;
 import com.atlassian.bamboo.security.StringEncrypter;
+import com.atlassian.bamboo.ssh.SshProxyService;
 import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildContext;
@@ -117,7 +118,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
     // ---------------------------------------------------------------------------------------------------- Dependencies
     private transient CapabilityContext capabilityContext;
-
+    private transient SshProxyService sshProxyService;
     // ---------------------------------------------------------------------------------------------------- Constructors
 
     // ----------------------------------------------------------------------------------------------- Interface Methods
@@ -158,7 +159,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         {
             final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(PlanKeys.getPlanKey(planKey));
-            final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, buildLogger, textProvider);
+            final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
 
             final String targetRevision = helper.obtainLatestRevision(substitutedAccessData);
 
@@ -254,7 +255,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(buildContext.getPlanResultKey());
             final boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones;
             final boolean isOnLocalAgent = !(buildDirectoryManager instanceof RemoteBuildDirectoryManager);
-            final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, buildLogger, textProvider);
+            final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
             final String targetRevision = nullableTargetRevision != null ? nullableTargetRevision : helper.obtainLatestRevision(substitutedAccessData);
             final String previousRevision = helper.getCurrentRevision(sourceDirectory);
 
@@ -515,7 +516,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     @NotNull
     public MavenPomAccessor getMavenPomAccessor()
     {
-        return new GitMavenPomAccessor(this, textProvider, getGitCapability()).withPath(pathToPom);
+        return new GitMavenPomAccessor(this, sshProxyService, textProvider, getGitCapability()).withPath(pathToPom);
     }
 
     @NotNull
@@ -640,5 +641,10 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     public void setCapabilityContext(final CapabilityContext capabilityContext)
     {
         this.capabilityContext = capabilityContext;
+    }
+
+    public void setSshProxyService(SshProxyService sshProxyService)
+    {
+        this.sshProxyService = sshProxyService;
     }
 }

@@ -3,6 +3,7 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.repository.MavenPomAccessorAbstract;
 import com.atlassian.bamboo.repository.RepositoryException;
+import com.atlassian.bamboo.ssh.SshProxyService;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -12,20 +13,34 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.Arrays;
 
-public class GitMavenPomAccessor extends MavenPomAccessorAbstract
+public class GitMavenPomAccessor extends MavenPomAccessorAbstract<GitRepository>
 {
-    public static final String POM_XML = "pom.xml";
     private static final Logger log = Logger.getLogger(GitMavenPomAccessor.class);
+    // ------------------------------------------------------------------------------------------------------- Constants
+    public static final String POM_XML = "pom.xml";
+    // ------------------------------------------------------------------------------------------------- Type Properties
     private final GitRepository repository;
     private String pathToPom = POM_XML;
-    private final TextProvider textProvider;
+
     @Nullable
     private final String gitCapability;
+    // ---------------------------------------------------------------------------------------------------- Dependencies
+    private final SshProxyService sshProxyService;
+    private final TextProvider textProvider;
+    // ---------------------------------------------------------------------------------------------------- Constructors
+    // ----------------------------------------------------------------------------------------------- Interface Methods
+    // -------------------------------------------------------------------------------------------------- Action Methods
+    // -------------------------------------------------------------------------------------------------- Public Methods
+    // -------------------------------------------------------------------------------------- Basic Accessors / Mutators
 
-    protected GitMavenPomAccessor(GitRepository repository, @NotNull final TextProvider textProvider, @Nullable String gitCapability)
+    protected GitMavenPomAccessor(GitRepository repository,
+                                  @NotNull final SshProxyService sshProxyService,
+                                  @NotNull final TextProvider textProvider,
+                                  @Nullable String gitCapability)
     {
         super(repository);
         this.repository = repository;
+        this.sshProxyService = sshProxyService;
         this.textProvider = textProvider;
         this.gitCapability = gitCapability;
     }
@@ -58,7 +73,7 @@ public class GitMavenPomAccessor extends MavenPomAccessorAbstract
     public File checkoutMavenPom(@NotNull File destinationPath) throws RepositoryException
     {
         log.info("checkoutMavenPom to: " + destinationPath);
-        GitOperationHelper helper = new JGitOperationHelper(new NullBuildLogger(), textProvider);
+        GitOperationHelper helper = new JGitOperationHelper(new NullBuildLogger(), sshProxyService, textProvider);
         GitRepository.GitRepositoryAccessData substitutedAccessData = repository.getSubstitutedAccessData();
         String targetRevision = helper.obtainLatestRevision(substitutedAccessData);
         helper.fetch(destinationPath, substitutedAccessData, true);

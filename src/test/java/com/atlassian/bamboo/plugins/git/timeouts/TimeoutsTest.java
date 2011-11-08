@@ -6,6 +6,8 @@ import com.atlassian.bamboo.plugins.git.GitAbstractTest;
 import com.atlassian.bamboo.plugins.git.GitOperationHelper;
 import com.atlassian.bamboo.plugins.git.JGitOperationHelper;
 import com.atlassian.bamboo.repository.RepositoryException;
+import com.atlassian.bamboo.ssh.SshProxyService;
+import com.atlassian.bamboo.ssh.SshProxyServiceImpl;
 import com.opensymphony.xwork.TextProvider;
 import org.mockito.Mockito;
 import org.testng.annotations.AfterClass;
@@ -21,6 +23,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+
+import static org.mockito.Mockito.mock;
 
 /**
  * This test class is not intended to be run with other test classes - run it manually when solving timeout-related issues.
@@ -75,6 +79,9 @@ public class TimeoutsTest extends GitAbstractTest
 
     public GitOperationHelper createGitOperationHelper()
     {
+        TextProvider textProvider = mock(TextProvider.class);
+        SshProxyService sshProxyService = new SshProxyServiceImpl(textProvider);
+
         return new JGitOperationHelper(
             new NullBuildLogger()
             {
@@ -84,7 +91,9 @@ public class TimeoutsTest extends GitAbstractTest
                     System.out.println(logString);
                     return null;
                 }
-            }, Mockito.mock(TextProvider.class));
+            },
+            sshProxyService,
+            textProvider);
     }
 
     @Test

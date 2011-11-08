@@ -2,6 +2,8 @@ package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.repository.MavenPomAccessor;
 import com.atlassian.bamboo.repository.RepositoryException;
+import com.atlassian.bamboo.ssh.SshProxyService;
+import com.atlassian.bamboo.ssh.SshProxyServiceImpl;
 import com.atlassian.testtools.TempDirectory;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
@@ -20,6 +22,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import static org.mockito.Mockito.mock;
 
 public class GitMavenPomAccessorTest extends GitAbstractTest
 {
@@ -126,7 +130,10 @@ public class GitMavenPomAccessorTest extends GitAbstractTest
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testRejectPathWithDots() throws Exception
     {
-        new GitMavenPomAccessor(Mockito.mock(GitRepository.class), Mockito.mock(TextProvider.class), null).withPath("..");
+        GitRepository repository = mock(GitRepository.class);
+        TextProvider textProvider = mock(TextProvider.class);
+        SshProxyService sshProxyService = new SshProxyServiceImpl(textProvider);
+        new GitMavenPomAccessor(repository, sshProxyService, textProvider, null).withPath("..");
     }
 
 }
