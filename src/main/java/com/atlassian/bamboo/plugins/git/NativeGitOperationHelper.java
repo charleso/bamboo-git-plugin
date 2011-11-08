@@ -14,24 +14,25 @@ import java.io.File;
 public class NativeGitOperationHelper extends GitOperationHelper
 {
     private String gitCapability;
+    private GitCommandProcessor gitCommandProcessor;
 
-    public NativeGitOperationHelper(final @NotNull BuildLogger buildLogger, final @NotNull TextProvider textProvider, final @Nullable String gitCapability)
+    public NativeGitOperationHelper(final @NotNull GitRepository repository, final @NotNull GitRepository.GitRepositoryAccessData accessData, final @NotNull BuildLogger buildLogger, final @NotNull TextProvider textProvider, final @Nullable String gitCapability) throws RepositoryException
     {
         super(buildLogger, textProvider);
         this.gitCapability = gitCapability;
+        gitCommandProcessor = new GitCommandProcessor(gitCapability, buildLogger, accessData.commandTimeout, accessData.verboseLogs);
+        gitCommandProcessor.checkGitExistenceInSystem(repository.getWorkingDirectory());
     }
 
     @Override
     protected void doFetch(@NotNull final Transport transport, @NotNull final File sourceDirectory, @NotNull final GitRepository.GitRepositoryAccessData accessData, final RefSpec refSpec, final boolean useShallow) throws RepositoryException
     {
-        GitCommandProcessor gitCommandProcessor = new GitCommandProcessor(gitCapability, buildLogger, 1);
         gitCommandProcessor.runFetchCommand(sourceDirectory, accessData, refSpec, useShallow);
     }
 
     @Override
     protected String doCheckout(@NotNull FileRepository localRepository, @NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
     {
-        GitCommandProcessor gitCommandProcessor = new GitCommandProcessor(gitCapability, buildLogger, 1);
         gitCommandProcessor.runCheckoutCommand(sourceDirectory, targetRevision);
         return targetRevision;
     }

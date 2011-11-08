@@ -10,19 +10,14 @@ public class GitCommandBuilder
 {
     private final List<String> commands = new ArrayList<String>();
     private String executable;
-    private String style;
-    private String template;
     private String branch;
     private String revision;
-    private String pruneRevision;
     private String source;
     private String destination;
-    private Integer limit;
     private String sshKeyFile;
     private String sshCommand;
     private boolean sshCompression;
     private boolean verbose;
-    private boolean debug;
     private boolean maxVerboseOutput;
     private boolean shallowClone;
 
@@ -34,18 +29,6 @@ public class GitCommandBuilder
     public GitCommandBuilder executable(String executable)
     {
         this.executable = executable;
-        return this;
-    }
-
-    public GitCommandBuilder style(String style)
-    {
-        this.style = style;
-        return this;
-    }
-
-    public GitCommandBuilder template(String template)
-    {
-        this.template = template;
         return this;
     }
 
@@ -61,33 +44,15 @@ public class GitCommandBuilder
         return this;
     }
 
-    public GitCommandBuilder prune(String revision)
-    {
-        this.pruneRevision = revision;
-        return this;
-    }
-
     public GitCommandBuilder destination(String destination)
     {
         this.destination = destination;
         return this;
     }
 
-    public GitCommandBuilder limit(Integer limit)
-    {
-        this.limit = limit;
-        return this;
-    }
-
     public GitCommandBuilder source(String source)
     {
         this.source = source;
-        return this;
-    }
-
-    public GitCommandBuilder debug(Boolean debug)
-    {
-        this.debug = debug;
         return this;
     }
 
@@ -148,25 +113,9 @@ public class GitCommandBuilder
 
         commandArgs.addAll(commands);
 
-        if (debug || maxVerboseOutput)
-        {
-            commandArgs.add("--debug");
-        }
         if (verbose || maxVerboseOutput)
         {
             commandArgs.add("--verbose");
-        }
-
-        if (style != null)
-        {
-            commandArgs.add("--style");
-            commandArgs.add(style);
-        }
-
-        if (template != null)
-        {
-            commandArgs.add("--template");
-            commandArgs.add(template);
         }
 
         if (StringUtils.isNotBlank(branch))
@@ -179,12 +128,6 @@ public class GitCommandBuilder
         {
             commandArgs.add("--rev");
             commandArgs.add(revision);
-        }
-
-        if (pruneRevision != null)
-        {
-            commandArgs.add("--prune");
-            commandArgs.add(pruneRevision);
         }
 
         if (StringUtils.isNotBlank(sshCommand))
@@ -210,12 +153,6 @@ public class GitCommandBuilder
         if (destination != null)
         {
             commandArgs.add(destination);
-        }
-
-        if (limit != null)
-        {
-            commandArgs.add("--limit");
-            commandArgs.add(limit.toString());
         }
 
         if (shallowClone)
