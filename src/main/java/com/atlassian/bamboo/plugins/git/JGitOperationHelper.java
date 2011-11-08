@@ -3,7 +3,9 @@ package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.repository.RepositoryException;
+import com.atlassian.bamboo.ssh.SshProxyService;
 import com.opensymphony.xwork.TextProvider;
+import org.apache.log4j.Logger;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
 import org.eclipse.jgit.errors.MissingObjectException;
@@ -25,10 +27,21 @@ import java.util.Arrays;
 
 public class JGitOperationHelper extends GitOperationHelper
 {
-    public JGitOperationHelper(final @NotNull BuildLogger buildLogger, final @NotNull TextProvider textProvider)
+    @SuppressWarnings("UnusedDeclaration")
+    private static final Logger log = Logger.getLogger(JGitOperationHelper.class);
+    // ------------------------------------------------------------------------------------------------------- Constants
+    // ------------------------------------------------------------------------------------------------- Type Properties
+    // ---------------------------------------------------------------------------------------------------- Dependencies
+    // ---------------------------------------------------------------------------------------------------- Constructors
+
+    public JGitOperationHelper(final @NotNull BuildLogger buildLogger,
+                               final @NotNull SshProxyService sshProxyService,
+                               final @NotNull TextProvider textProvider)
     {
-        super(buildLogger, textProvider);
+        super(buildLogger, sshProxyService, textProvider);
     }
+
+    // ----------------------------------------------------------------------------------------------- Interface Methods
 
     @Override
     protected void doFetch(@NotNull final Transport transport, @NotNull final File sourceDirectory, @NotNull final GitRepository.GitRepositoryAccessData accessData, final RefSpec refSpec, final boolean useShallow) throws RepositoryException
@@ -110,4 +123,9 @@ public class JGitOperationHelper extends GitOperationHelper
             }
         }
     }
+
+    // -------------------------------------------------------------------------------------------------- Action Methods
+    // -------------------------------------------------------------------------------------------------- Public Methods
+    // -------------------------------------------------------------------------------------- Basic Accessors / Mutators
+
 }

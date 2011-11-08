@@ -10,7 +10,10 @@ import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.ssh.ProxyConnectionData;
 import com.atlassian.bamboo.ssh.ProxyConnectionDataBuilder;
+import com.atlassian.bamboo.ssh.ProxyException;
+import com.atlassian.bamboo.ssh.ProxyRegistrationInfo;
 import com.atlassian.bamboo.ssh.SshProxy;
+import com.atlassian.bamboo.ssh.SshProxyService;
 import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChangesImpl;
@@ -52,7 +55,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Class used for issuing various git operations. We don't want to hold this logic in
@@ -60,220 +62,72 @@ import java.util.UUID;
  */
 public abstract class GitOperationHelper
 {
+    private static final Logger log = Logger.getLogger(GitOperationHelper.class);
+    // ------------------------------------------------------------------------------------------------------- Constants
     private static final int DEFAULT_TRANSFER_TIMEOUT = new SystemProperty(false, "atlassian.bamboo.git.timeout", "GIT_TIMEOUT").getValue(10 * 60);
     private static final int CHANGESET_LIMIT = new SystemProperty(false, "atlassian.bamboo.git.changeset.limit", "GIT_CHANGESET_LIMIT").getValue(100);
 
-    private static final Logger log = Logger.getLogger(GitOperationHelper.class);
     private static final String[] FQREF_PREFIXES = {Constants.R_HEADS, Constants.R_REFS};
-
+    // ------------------------------------------------------------------------------------------------- Type Properties
+    private ProxyRegistrationInfo proxyRegistrationInfo;
+    // ---------------------------------------------------------------------------------------------------- Dependencies
     protected final BuildLogger buildLogger;
+    protected final SshProxyService sshProxyService;
     protected final TextProvider textProvider;
+    // ---------------------------------------------------------------------------------------------------- Constructors
 
-    private SshProxy sshProxy;
-    private String proxyUserHandle;
-
-    public GitOperationHelper(final @NotNull BuildLogger buildLogger, final @NotNull TextProvider textProvider)
+    public GitOperationHelper(final @NotNull BuildLogger buildLogger,
+                              final @NotNull SshProxyService sshProxyService,
+                              final @NotNull TextProvider textProvider)
     {
         this.buildLogger = buildLogger;
+        this.sshProxyService = sshProxyService;
         this.textProvider = textProvider;
     }
 
-    protected abstract void doFetch(@NotNull final Transport transport, @NotNull final File sourceDirectory, @NotNull final GitRepository.GitRepositoryAccessData accessData, RefSpec refSpec, boolean useShallow) throws RepositoryException;
+    // ----------------------------------------------------------------------------------------------- Interface Methods
 
-    protected abstract String doCheckout(@NotNull final FileRepository localRepository, @NotNull File sourceDirectory, @NotNull String targetRevision, @Nullable String previousRevision) throws RepositoryException;
+    protected abstract void doFetch(@NotNull final Transport transport,
+                                    @NotNull final File sourceDirectory,
+                                    @NotNull final GitRepository.GitRepositoryAccessData accessData,
+                                    RefSpec refSpec,
+                                    boolean useShallow) throws RepositoryException;
 
+    protected abstract String doCheckout(@NotNull final FileRepository localRepository,
+                                         @NotNull File sourceDirectory,
+                                         @NotNull String targetRevision,
+                                         @Nullable String previousRevision) throws RepositoryException;
+
+    // -------------------------------------------------------------------------------------------------- Action Methods
+    // -------------------------------------------------------------------------------------------------- Public Methods
+
+    /*
+     * returns revision found after checkout in sourceDirectory
+     */
     @NotNull
-    public String obtainLatestRevision(@NotNull final GitRepositoryAccessData repositoryData) throws RepositoryException
+    public String checkout(@Nullable File cacheDirectory,
+                           @NotNull final File sourceDirectory,
+                           @NotNull final String targetRevision,
+                           @Nullable final String previousRevision) throws RepositoryException
     {
-        Transport transport = null;
-        FetchConnection fetchConnection = null;
+        // would be cool to store lastCheckoutedRevision in the localRepository somehow - so we don't need to specify it
+        buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.checkingOutRevision", Arrays.asList(targetRevision)));
+
         try
         {
-            transport = open(new FileRepository(""), repositoryData);
-            fetchConnection = transport.openFetch();
-            Ref headRef = resolveRefSpec(repositoryData, fetchConnection);
-            if (headRef == null)
-            {
-                throw new RepositoryException(textProvider.getText("repository.git.messages.cannotDetermineHead", Arrays.asList(repositoryData.repositoryUrl, repositoryData.branch)));
-            }
-            else
-            {
-                return headRef.getObjectId().getName();
-            }
-        }
-        catch (NotSupportedException e)
-        {
-            throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.protocolUnsupported", Arrays.asList(repositoryData.repositoryUrl))), e);
-        }
-        catch (TransportException e)
-        {
-            throw new RepositoryException(buildLogger.addErrorLogEntry(e.getMessage()), e);
+            FileRepository localRepository = createLocalRepository(sourceDirectory, cacheDirectory);
+
+            //try to clean .git/index.lock file prior to checkout, otherwise checkout would fail with Exception
+            File lck = new File(localRepository.getIndexFile().getParentFile(), localRepository.getIndexFile().getName() + ".lock");
+            FileUtils.deleteQuietly(lck);
+
+            return doCheckout(localRepository, sourceDirectory, targetRevision, previousRevision);
         }
         catch (IOException e)
         {
-            throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.failedToCreateFileRepository")), e);
+            throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.checkoutFailed", Arrays.asList(targetRevision))) + e.getMessage(), e);
         }
-        finally
-        {
-            if (fetchConnection != null)
-            {
-                fetchConnection.close();
-            }
-            if (transport != null)
-            {
-                transport.close();
-            }
-        }
-    }
-
-    @Nullable
-    protected static Ref resolveRefSpec(GitRepositoryAccessData repositoryData, FetchConnection fetchConnection)
-    {
-        final Collection<String> candidates;
-        if (StringUtils.isBlank(repositoryData.branch))
-        {
-            candidates = Arrays.asList(Constants.R_HEADS + Constants.MASTER, Constants.HEAD);
-        }
-        else if (StringUtils.startsWithAny(repositoryData.branch, FQREF_PREFIXES))
-        {
-            candidates = Collections.singletonList(repositoryData.branch);
-        }
-        else
-        {
-            candidates = Arrays.asList(repositoryData.branch, Constants.R_HEADS + repositoryData.branch, Constants.R_TAGS + repositoryData.branch);
-        }
-
-        for (String candidate : candidates)
-        {
-            Ref headRef = fetchConnection.getRef(candidate);
-            if (headRef != null)
-            {
-                return headRef;
-            }
-        }
-        return null;
-    }
-
-    @Nullable
-    public String getCurrentRevision(@NotNull final File sourceDirectory)
-    {
-        File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);
-        if (!gitDirectory.exists())
-        {
-            return null;
-        }
-        FileRepository localRepository = null;
-        try
-        {
-            localRepository = new FileRepository(new File(sourceDirectory, Constants.DOT_GIT));
-            ObjectId objId = localRepository.resolve(Constants.HEAD);
-            return(objId != null ? objId.getName() : null);
-        }
-        catch (IOException e)
-        {
-            log.warn(buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.cannotDetermineRevision", Arrays.asList(sourceDirectory)) + " " + e.getMessage()), e);
-            return null;
-        }
-        finally
-        {
-            if (localRepository != null)
-            {
-                localRepository.close();
-            }
-        }
-    }
-
-    private GitRepositoryAccessData wooBooDooBoo(@NotNull final GitRepositoryAccessData accessData) throws RepositoryException
-    {
-        if (accessData.authenticationType == GitAuthenticationType.SSH_KEYPAIR)
-        {
-            GitRepositoryAccessData wooBooDooBooed = new GitRepositoryAccessData();
-            wooBooDooBooed.repositoryUrl = accessData.repositoryUrl;
-            wooBooDooBooed.branch = accessData.branch;
-            wooBooDooBooed.username = accessData.username;
-            wooBooDooBooed.password = accessData.password;
-            wooBooDooBooed.sshKey = accessData.sshKey;
-            wooBooDooBooed.sshPassphrase = accessData.sshPassphrase;
-            wooBooDooBooed.authenticationType = accessData.authenticationType;
-            wooBooDooBooed.useShallowClones = accessData.useShallowClones;
-
-            if (!StringUtils.contains(wooBooDooBooed.repositoryUrl, "://"))
-            {
-                wooBooDooBooed.repositoryUrl = "ssh://" + wooBooDooBooed.repositoryUrl.replaceFirst(":", "/");
-            }
-
-            URI repositoryUri = URI.create(wooBooDooBooed.repositoryUrl);
-            if ("git".equals(repositoryUri.getScheme()) || "ssh".equals(repositoryUri.getScheme()))
-            {
-                sshProxy = SshProxy.getRunningInstance();
-                if (sshProxy == null)
-                {
-                    throw new RepositoryException("Cannot start SshProxy");
-                }
-                if (sshProxy.getClientInitializationException() != null)
-                {
-                    throw new RepositoryException("SshProxy failed to initialize client properly. Is your remote agent updated? " +
-                            "For more information please see " + textProvider.getText("help.prefix") + textProvider.getText("mercurial.upgrade.bootstrap"), sshProxy.getClientInitializationException());
-                }
-
-                String proxyUserName = UUID.randomUUID().toString();
-
-                ProxyConnectionData connectionData;
-                try
-                {
-                    connectionData = new ProxyConnectionDataBuilder()
-                            .withRemoteAddress(repositoryUri.getHost(), repositoryUri.getPort() == -1 ? 22 : repositoryUri.getPort())
-                            .withRemoteUserName(wooBooDooBooed.username)
-                            //.withErrorReceiver(hgCommandProcessor)
-                            .withKeyFromString(wooBooDooBooed.sshKey, wooBooDooBooed.sshPassphrase)
-                            .build();
-                }
-                catch (IOException e)
-                {
-                    if (e.getMessage().contains("exception using cipher - please check password and data."))
-                    {
-                        throw new RepositoryException(buildLogger.addErrorLogEntry("Encryption exception - please check ssh keyfile passphrase."), e);
-                    }
-                    else
-                    {
-                        throw new RepositoryException("Cannot decode connection params", e);
-                    }
-                }
-
-                URI cooked;
-                try
-                {
-                    cooked = new URI(repositoryUri.getScheme(),
-                            proxyUserName,
-                            sshProxy.getHost(),
-                            sshProxy.getPort(),
-                            repositoryUri.getRawPath(),
-                            repositoryUri.getRawQuery(),
-                            repositoryUri.getRawFragment());
-                }
-                catch (URISyntaxException e)
-                {
-                    throw new RepositoryException("Remote repository URL invalid", e);
-                }
-
-                sshProxy.add(proxyUserName, connectionData);
-                this.proxyUserHandle = proxyUserName;
-
-                wooBooDooBooed.repositoryUrl = cooked.toString();
-                return wooBooDooBooed;
-            }
-        }
-
-        return accessData;
-    }
-
-    public void close()
-    {
-        if (sshProxy != null && proxyUserHandle != null)
-        {
-            sshProxy.remove(proxyUserHandle);
-        }
-    }
+   }
 
     public void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
     {
@@ -338,6 +192,184 @@ public abstract class GitOperationHelper
         }
     }
 
+    @Nullable
+    public String getCurrentRevision(@NotNull final File sourceDirectory)
+    {
+        File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);
+        if (!gitDirectory.exists())
+        {
+            return null;
+        }
+        FileRepository localRepository = null;
+        try
+        {
+            localRepository = new FileRepository(new File(sourceDirectory, Constants.DOT_GIT));
+            ObjectId objId = localRepository.resolve(Constants.HEAD);
+            return(objId != null ? objId.getName() : null);
+        }
+        catch (IOException e)
+        {
+            log.warn(buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.cannotDetermineRevision", Arrays.asList(sourceDirectory)) + " " + e.getMessage()), e);
+            return null;
+        }
+        finally
+        {
+            if (localRepository != null)
+            {
+                localRepository.close();
+            }
+        }
+    }
+
+    @NotNull
+    public String obtainLatestRevision(@NotNull final GitRepositoryAccessData repositoryData) throws RepositoryException
+    {
+        Transport transport = null;
+        FetchConnection fetchConnection = null;
+        try
+        {
+            transport = open(new FileRepository(""), repositoryData);
+            fetchConnection = transport.openFetch();
+            Ref headRef = resolveRefSpec(repositoryData, fetchConnection);
+            if (headRef == null)
+            {
+                throw new RepositoryException(textProvider.getText("repository.git.messages.cannotDetermineHead", Arrays.asList(repositoryData.repositoryUrl, repositoryData.branch)));
+            }
+            else
+            {
+                return headRef.getObjectId().getName();
+            }
+        }
+        catch (NotSupportedException e)
+        {
+            throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.protocolUnsupported", Arrays.asList(repositoryData.repositoryUrl))), e);
+        }
+        catch (TransportException e)
+        {
+            throw new RepositoryException(buildLogger.addErrorLogEntry(e.getMessage()), e);
+        }
+        catch (IOException e)
+        {
+            throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.failedToCreateFileRepository")), e);
+        }
+        finally
+        {
+            if (fetchConnection != null)
+            {
+                fetchConnection.close();
+            }
+            if (transport != null)
+            {
+                transport.close();
+            }
+        }
+    }
+
+    public void close()
+    {
+        sshProxyService.unregister(proxyRegistrationInfo);
+    }
+
+    // -------------------------------------------------------------------------------------- Basic Accessors / Mutators
+
+    @Nullable
+    protected static Ref resolveRefSpec(GitRepositoryAccessData repositoryData, FetchConnection fetchConnection)
+    {
+        final Collection<String> candidates;
+        if (StringUtils.isBlank(repositoryData.branch))
+        {
+            candidates = Arrays.asList(Constants.R_HEADS + Constants.MASTER, Constants.HEAD);
+        }
+        else if (StringUtils.startsWithAny(repositoryData.branch, FQREF_PREFIXES))
+        {
+            candidates = Collections.singletonList(repositoryData.branch);
+        }
+        else
+        {
+            candidates = Arrays.asList(repositoryData.branch, Constants.R_HEADS + repositoryData.branch, Constants.R_TAGS + repositoryData.branch);
+        }
+
+        for (String candidate : candidates)
+        {
+            Ref headRef = fetchConnection.getRef(candidate);
+            if (headRef != null)
+            {
+                return headRef;
+            }
+        }
+        return null;
+    }
+
+    private GitRepositoryAccessData wooBooDooBoo(@NotNull final GitRepositoryAccessData accessData) throws RepositoryException
+    {
+        if (accessData.authenticationType == GitAuthenticationType.SSH_KEYPAIR)
+        {
+            GitRepositoryAccessData wooBooDooBooed = new GitRepositoryAccessData();
+            wooBooDooBooed.repositoryUrl = accessData.repositoryUrl;
+            wooBooDooBooed.branch = accessData.branch;
+            wooBooDooBooed.username = accessData.username;
+            wooBooDooBooed.password = accessData.password;
+            wooBooDooBooed.sshKey = accessData.sshKey;
+            wooBooDooBooed.sshPassphrase = accessData.sshPassphrase;
+            wooBooDooBooed.authenticationType = accessData.authenticationType;
+            wooBooDooBooed.useShallowClones = accessData.useShallowClones;
+
+            if (!StringUtils.contains(wooBooDooBooed.repositoryUrl, "://"))
+            {
+                wooBooDooBooed.repositoryUrl = "ssh://" + wooBooDooBooed.repositoryUrl.replaceFirst(":", "/");
+            }
+
+            URI repositoryUri = URI.create(wooBooDooBooed.repositoryUrl);
+            if ("git".equals(repositoryUri.getScheme()) || "ssh".equals(repositoryUri.getScheme()))
+            {
+                try
+                {
+                    ProxyConnectionData connectionData = new ProxyConnectionDataBuilder()
+                            .withRemoteAddress(repositoryUri.getHost(), repositoryUri.getPort() == -1 ? 22 : repositoryUri.getPort())
+                            .withRemoteUserName(wooBooDooBooed.username)
+                            //.withErrorReceiver(hgCommandProcessor)
+                            .withKeyFromString(wooBooDooBooed.sshKey, wooBooDooBooed.sshPassphrase)
+                            .build();
+
+                    proxyRegistrationInfo = sshProxyService.register(connectionData);
+
+                    URI cooked = new URI(repositoryUri.getScheme(),
+                            proxyRegistrationInfo.getProxyUserName(),
+                            proxyRegistrationInfo.getProxyHost(),
+                            proxyRegistrationInfo.getProxyPort(),
+                            repositoryUri.getRawPath(),
+                            repositoryUri.getRawQuery(),
+                            repositoryUri.getRawFragment());
+
+                    wooBooDooBooed.repositoryUrl = cooked.toString();
+                }
+                catch (IOException e)
+                {
+                    if (e.getMessage().contains("exception using cipher - please check password and data."))
+                    {
+                        throw new RepositoryException(buildLogger.addErrorLogEntry("Encryption exception - please check ssh keyfile passphrase."), e);
+                    }
+                    else
+                    {
+                        throw new RepositoryException("Cannot decode connection params", e);
+                    }
+                }
+                catch (ProxyException e)
+                {
+                    throw new RepositoryException("Cannot create SSH proxy", e);
+                }
+                catch (URISyntaxException e)
+                {
+                    throw new RepositoryException("Remote repository URL invalid", e);
+                }
+
+                return wooBooDooBooed;
+            }
+        }
+
+        return accessData;
+    }
+
     protected FileRepository createLocalRepository(File workingDirectory, @Nullable File cacheDirectory)
             throws IOException
     {
@@ -398,31 +430,6 @@ public abstract class GitOperationHelper
 
         return localRepository;
     }
-
-    /*
-     * returns revision found after checkout in sourceDirectory
-     */
-    @NotNull
-    public String checkout(@Nullable File cacheDirectory, @NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
-    {
-        // would be cool to store lastCheckoutedRevision in the localRepository somehow - so we don't need to specify it
-        buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.checkingOutRevision", Arrays.asList(targetRevision)));
-
-        try
-        {
-            FileRepository localRepository = createLocalRepository(sourceDirectory, cacheDirectory);
-
-            //try to clean .git/index.lock file prior to checkout, otherwise checkout would fail with Exception
-            File lck = new File(localRepository.getIndexFile().getParentFile(), localRepository.getIndexFile().getName() + ".lock");
-            FileUtils.deleteQuietly(lck);
-
-            return doCheckout(localRepository, sourceDirectory, targetRevision, previousRevision);
-        }
-        catch (IOException e)
-        {
-            throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.checkoutFailed", Arrays.asList(targetRevision))) + e.getMessage(), e);
-        }
-   }
 
     BuildRepositoryChanges extractCommits(@NotNull final File directory, @Nullable final String previousRevision, @Nullable final String targetRevision)
             throws RepositoryException
