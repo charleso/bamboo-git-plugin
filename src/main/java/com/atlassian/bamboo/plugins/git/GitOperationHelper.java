@@ -300,7 +300,7 @@ public abstract class GitOperationHelper
         return null;
     }
 
-    private GitRepositoryAccessData wooBooDooBoo(@NotNull final GitRepositoryAccessData accessData) throws RepositoryException
+    protected GitRepositoryAccessData wooBooDooBoo(@NotNull final GitRepositoryAccessData accessData) throws RepositoryException
     {
         if (accessData.authenticationType == GitAuthenticationType.SSH_KEYPAIR)
         {
