@@ -595,6 +595,16 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         return accessData.branch;
     }
 
+    public int getCommandTimeout()
+    {
+        return accessData.commandTimeout;
+    }
+
+    public boolean getVerboseLogs()
+    {
+        return accessData.verboseLogs;
+    }
+
     public String getAuthTypeName()
     {
         return getAuthTypeName(getAuthType());
