@@ -22,11 +22,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * TODO: Document this class / interface here
- *
- * @since v5.0
- */
 class GitCommandProcessor implements Serializable, ProxyErrorReceiver
 {
     private static final Logger log = Logger.getLogger(GitCommandProcessor.class);
@@ -110,10 +105,14 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
 
     public void runFetchCommand(@NotNull final File workingDirectory, @NotNull final GitRepository.GitRepositoryAccessData accessData, RefSpec refSpec, boolean useShallow) throws RepositoryException
     {
-        GitCommandBuilder commandBuilder = createCommandBuilder("fetch", accessData.repositoryUrl, refSpec.getDestination()).verbose(true);
+        GitCommandBuilder commandBuilder = createCommandBuilder("fetch", accessData.repositoryUrl, refSpec.getDestination());
         if (useShallow)
         {
             commandBuilder.shallowClone();
+        }
+        if (accessData.verboseLogs)
+        {
+            commandBuilder.verbose(true);
         }
         runCommand(commandBuilder.build(), workingDirectory, new LoggingOutputHandler(buildLogger));
     }
@@ -141,30 +140,6 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         proxyException = exception;
     }
 
-    class LoggingOutputHandler extends LineOutputHandler implements GitCommandProcessor.GitOutputHandler
-    {
-        final BuildLogger buildLogger;
-        final StringBuilder stringBuilder;
-
-        public LoggingOutputHandler(@NotNull final BuildLogger buildLogger)
-        {
-            this.buildLogger = buildLogger;
-            stringBuilder = new StringBuilder();
-        }
-
-        @Override
-        protected void processLine(int i, String s)
-        {
-            buildLogger.addBuildLogEntry(s);
-            stringBuilder.append(s);
-        }
-
-        public String getStdout()
-        {
-            return stringBuilder.toString();
-        }
-    }
-
     private void runCommand(@NotNull final List<String> commandArgs, @NotNull final File workingDirectory,
                             @NotNull final GitOutputHandler outputHandler) throws RepositoryException
     {
@@ -173,8 +148,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
 
         PluggableProcessHandler handler = new PluggableProcessHandler();
         handler.setOutputHandler(outputHandler);
-        StringOutputHandler errorHandler = new StringOutputHandler();
-        handler.setErrorHandler(errorHandler);
+        handler.setErrorHandler(outputHandler);
 
         if (maxVerboseOutput)
         {
@@ -200,7 +174,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
                     + workingDirectory + "'.",
                     proxyException != null ? proxyException : handler.getException(),
                     outputHandler.getStdout(),
-                    proxyErrorMessage != null ? "SSH Proxy error: " + proxyErrorMessage : errorHandler.getOutput());
+                    proxyErrorMessage != null ? "SSH Proxy error: " + proxyErrorMessage : outputHandler.getStdout());
         }
     }
 
@@ -214,6 +188,30 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         public String getStdout()
         {
             return getOutput();
+        }
+    }
+
+    class LoggingOutputHandler extends LineOutputHandler implements GitCommandProcessor.GitOutputHandler
+    {
+        final BuildLogger buildLogger;
+        final StringBuilder stringBuilder;
+
+        public LoggingOutputHandler(@NotNull final BuildLogger buildLogger)
+        {
+            this.buildLogger = buildLogger;
+            stringBuilder = new StringBuilder();
+        }
+
+        @Override
+        protected void processLine(int i, String s)
+        {
+            buildLogger.addBuildLogEntry(s);
+            stringBuilder.append(s);
+        }
+
+        public String getStdout()
+        {
+            return stringBuilder.toString();
         }
     }
 

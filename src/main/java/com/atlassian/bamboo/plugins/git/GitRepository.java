@@ -6,6 +6,7 @@ import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.commit.CommitContextImpl;
 import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.repository.AbstractRepository;
+import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
 import com.atlassian.bamboo.repository.CustomVariableProviderRepository;
 import com.atlassian.bamboo.repository.MavenPomAccessor;
 import com.atlassian.bamboo.repository.MavenPomAccessorCapableRepository;
@@ -61,7 +62,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                                                                  SelectableAuthenticationRepository,
                                                                  CustomVariableProviderRepository,
                                                                  CustomSourceDirectoryAwareRepository,
-                                                                 RequirementsAwareRepository
+                                                                 RequirementsAwareRepository,
+                                                                 AdvancedConfigurationAwareRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -75,6 +77,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     private static final String REPOSITORY_GIT_SSH_PASSPHRASE = "repository.git.ssh.passphrase";
     private static final String REPOSITORY_GIT_USE_SHALLOW_CLONES = "repository.git.useShallowClones";
     private static final String REPOSITORY_GIT_MAVEN_PATH = "repository.git.maven.path";
+    private static final String REPOSITORY_GIT_COMMAND_TIMEOUT = "repository.git.commandTimeout";
+    private static final String REPOSITORY_GIT_VERBOSE_LOGS = "repository.git.verbose.logs";
     private static final String TEMPORARY_GIT_PASSWORD = "temporary.git.password";
     private static final String TEMPORARY_GIT_PASSWORD_CHANGE = "temporary.git.password.change";
     private static final String TEMPORARY_GIT_SSH_PASSPHRASE = "temporary.git.ssh.passphrase";
@@ -84,6 +88,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
     private static final GitAuthenticationType defaultAuthenticationType = GitAuthenticationType.NONE;
     private static boolean USE_SHALLOW_CLONES = new SystemProperty(false, "atlassian.bamboo.git.useShallowClones", "ATLASSIAN_BAMBOO_GIT_USE_SHALLOW_CLONES").getValue(true);
+
+    final static int DEFAULT_COMMAND_TIMEOUT_IN_MINUTES = 180;
 
     // ------------------------------------------------------------------------------------------------- Type Properties
 
@@ -99,6 +105,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         String sshPassphrase;
         GitAuthenticationType authenticationType;
         boolean useShallowClones;
+        int commandTimeout;
+        boolean verboseLogs;
     }
 
     final GitRepositoryAccessData accessData = new GitRepositoryAccessData();
@@ -151,7 +159,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         {
             final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(PlanKeys.getPlanKey(planKey));
-            final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(buildLogger, sshProxyService, textProvider, getGitCapability());
+            final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
 
             final String targetRevision = helper.obtainLatestRevision(substitutedAccessData);
 
@@ -247,7 +255,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(buildContext.getPlanResultKey());
             final boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones;
             final boolean isOnLocalAgent = !(buildDirectoryManager instanceof RemoteBuildDirectoryManager);
-            final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(buildLogger, sshProxyService, textProvider, getGitCapability());
+            final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
             final String targetRevision = nullableTargetRevision != null ? nullableTargetRevision : helper.obtainLatestRevision(substitutedAccessData);
             final String previousRevision = helper.getCurrentRevision(sourceDirectory);
 
@@ -344,6 +352,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     @Override
     public void addDefaultValues(@NotNull BuildConfiguration buildConfiguration)
     {
+        buildConfiguration.setProperty(REPOSITORY_GIT_COMMAND_TIMEOUT, String.valueOf(DEFAULT_COMMAND_TIMEOUT_IN_MINUTES));
+        buildConfiguration.clearTree(REPOSITORY_GIT_VERBOSE_LOGS);
         buildConfiguration.setProperty(REPOSITORY_GIT_USE_SHALLOW_CLONES, true);
     }
 
@@ -358,6 +368,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             }
         };
 
+        buildConfiguration.setProperty(REPOSITORY_GIT_COMMAND_TIMEOUT, buildConfiguration.getString(REPOSITORY_GIT_COMMAND_TIMEOUT, "").trim());
         if (buildConfiguration.getBoolean(TEMPORARY_GIT_PASSWORD_CHANGE))
         {
             buildConfiguration.setProperty(REPOSITORY_GIT_PASSWORD, encrypterRef.get().encrypt(buildConfiguration.getString(TEMPORARY_GIT_PASSWORD)));
@@ -402,6 +413,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         accessData.sshPassphrase = config.getString(REPOSITORY_GIT_SSH_PASSPHRASE);
         accessData.authenticationType = safeParseAuthenticationType(config.getString(REPOSITORY_GIT_AUTHENTICATION_TYPE));
         accessData.useShallowClones = config.getBoolean(REPOSITORY_GIT_USE_SHALLOW_CLONES);
+        accessData.commandTimeout = config.getInt(REPOSITORY_GIT_COMMAND_TIMEOUT, DEFAULT_COMMAND_TIMEOUT_IN_MINUTES);
+        accessData.verboseLogs = config.getBoolean(REPOSITORY_GIT_VERBOSE_LOGS, false);
 
         pathToPom = config.getString(REPOSITORY_GIT_MAVEN_PATH);
     }
@@ -419,6 +432,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         configuration.setProperty(REPOSITORY_GIT_SSH_PASSPHRASE, accessData.sshPassphrase);
         configuration.setProperty(REPOSITORY_GIT_AUTHENTICATION_TYPE, accessData.authenticationType != null ? accessData.authenticationType.name() : null);
         configuration.setProperty(REPOSITORY_GIT_USE_SHALLOW_CLONES, accessData.useShallowClones);
+        configuration.setProperty(REPOSITORY_GIT_COMMAND_TIMEOUT, accessData.commandTimeout);
+        configuration.setProperty(REPOSITORY_GIT_VERBOSE_LOGS, accessData.verboseLogs);
         return configuration;
     }
 
@@ -558,6 +573,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         substituted.sshPassphrase = accessData.sshPassphrase;
         substituted.authenticationType = accessData.authenticationType;
         substituted.useShallowClones = accessData.useShallowClones;
+        substituted.commandTimeout = accessData.commandTimeout;
+        substituted.verboseLogs = accessData.verboseLogs;
         return substituted;
     }
 
@@ -576,6 +593,16 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     public String getBranch()
     {
         return accessData.branch;
+    }
+
+    public int getCommandTimeout()
+    {
+        return accessData.commandTimeout;
+    }
+
+    public boolean getVerboseLogs()
+    {
+        return accessData.verboseLogs;
     }
 
     public String getAuthTypeName()
