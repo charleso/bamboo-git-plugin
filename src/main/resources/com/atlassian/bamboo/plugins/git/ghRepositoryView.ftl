@@ -1,5 +1,5 @@
 [#-- @ftlvariable name="plan" type="com.atlassian.bamboo.plan.Plan" --]
-[#-- @ftlvariable name="plan.buildDefinition.repository" type="com.atlassian.bamboo.plugins.git.GitHubRepository" --]
+[#-- @ftlvariable name="repository" type="com.atlassian.bamboo.plugins.git.GitHubRepository" --]
 [@ww.label labelKey='repository.github.repository' value=repository.repository /]
 [@ww.label labelKey='repository.github.branch' value=repository.branch! hideOnNull=true /]
 [@ww.label labelKey='repository.github.useShallowClones' value=repository.useShallowClones?string hideOnNull=true /]

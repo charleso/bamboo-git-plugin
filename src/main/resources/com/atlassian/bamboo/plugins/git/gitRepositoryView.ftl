@@ -1,6 +1,5 @@
 [#-- @ftlvariable name="plan" type="com.atlassian.bamboo.plan.Plan" --]
-[#-- @ftlvariable name="plan.buildDefinition.repository" type="com.atlassian.bamboo.plugins.git.GitRepository" --]
-[#assign repository=plan.buildDefinition.repository /]
+[#-- @ftlvariable name="repository" type="com.atlassian.bamboo.plugins.git.GitRepository" --]
 [@ww.label labelKey='repository.git.repositoryUrl' value=repository.repositoryUrl /]
 [@ww.label labelKey='repository.git.branch' value=repository.branch hideOnNull=true /]
 [@ww.label labelKey='repository.git.authenticationType' value=repository.authTypeName /]
