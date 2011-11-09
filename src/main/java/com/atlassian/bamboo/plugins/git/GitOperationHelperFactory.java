@@ -21,7 +21,7 @@ public class GitOperationHelperFactory
                                                               final @NotNull TextProvider textProvider) throws RepositoryException, URISyntaxException
     {
         URIish uri = new URIish(accessData.repositoryUrl);
-        if (StringUtils.isNotBlank(repository.getGitCapability()) && !uri.getScheme().startsWith("http"))
+        if (StringUtils.isNotBlank(repository.getGitCapability()) && (uri.getScheme() == null || !uri.getScheme().startsWith("http")))
         {
             return new NativeGitOperationHelper(repository, accessData, sshProxyService, buildLogger, textProvider, repository.getGitCapability());
         }
