@@ -170,7 +170,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         {
             final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(PlanKeys.getPlanKey(planKey));
-            final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
+            final GitOperationHelper helper =  GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
 
             final String targetRevision = helper.obtainLatestRevision(substitutedAccessData);
 
@@ -246,6 +246,10 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
             }
         }
         catch (RuntimeException e)
+        {
+            throw new RepositoryException(textProvider.getText("repository.git.messages.runtimeException"), e);
+        }
+        catch (URISyntaxException e)
         {
             throw new RepositoryException(textProvider.getText("repository.git.messages.runtimeException"), e);
         }
