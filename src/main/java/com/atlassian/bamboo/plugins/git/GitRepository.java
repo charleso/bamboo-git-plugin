@@ -15,6 +15,7 @@ import com.atlassian.bamboo.repository.Repository;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.repository.SelectableAuthenticationRepository;
 import com.atlassian.bamboo.security.StringEncrypter;
+import com.atlassian.bamboo.ssh.ProxyRegistrationInfo;
 import com.atlassian.bamboo.ssh.SshProxyService;
 import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
@@ -107,6 +108,8 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         boolean useShallowClones;
         int commandTimeout;
         boolean verboseLogs;
+
+        transient ProxyRegistrationInfo proxyRegistrationInfo;
     }
 
     final GitRepositoryAccessData accessData = new GitRepositoryAccessData();

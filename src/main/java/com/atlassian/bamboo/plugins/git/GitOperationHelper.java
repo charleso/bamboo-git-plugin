@@ -69,7 +69,6 @@ public abstract class GitOperationHelper
 
     private static final String[] FQREF_PREFIXES = {Constants.R_HEADS, Constants.R_REFS};
     // ------------------------------------------------------------------------------------------------- Type Properties
-    private ProxyRegistrationInfo proxyRegistrationInfo;
     // ---------------------------------------------------------------------------------------------------- Dependencies
     protected final BuildLogger buildLogger;
     protected final SshProxyService sshProxyService;
@@ -265,11 +264,6 @@ public abstract class GitOperationHelper
         }
     }
 
-    public void close()
-    {
-        sshProxyService.unregister(proxyRegistrationInfo);
-    }
-
     // -------------------------------------------------------------------------------------- Basic Accessors / Mutators
 
     @Nullable
@@ -300,7 +294,7 @@ public abstract class GitOperationHelper
         return null;
     }
 
-    protected GitRepositoryAccessData proxifyAccessData(@NotNull final GitRepositoryAccessData accessData) throws RepositoryException
+    protected GitRepositoryAccessData openProxy(@NotNull final GitRepositoryAccessData accessData) throws RepositoryException
     {
         if (accessData.authenticationType == GitAuthenticationType.SSH_KEYPAIR)
         {
@@ -331,15 +325,15 @@ public abstract class GitOperationHelper
                             .withKeyFromString(proxyAccessData.sshKey, proxyAccessData.sshPassphrase)
                             .build();
 
-                    proxyRegistrationInfo = sshProxyService.register(connectionData);
+                    proxyAccessData.proxyRegistrationInfo = sshProxyService.register(connectionData);
 
                     URI cooked = new URI(repositoryUri.getScheme(),
-                            proxyRegistrationInfo.getProxyUserName(),
-                            proxyRegistrationInfo.getProxyHost(),
-                            proxyRegistrationInfo.getProxyPort(),
-                            repositoryUri.getRawPath(),
-                            repositoryUri.getRawQuery(),
-                            repositoryUri.getRawFragment());
+                                         proxyAccessData.proxyRegistrationInfo.getProxyUserName(),
+                                         proxyAccessData.proxyRegistrationInfo.getProxyHost(),
+                                         proxyAccessData.proxyRegistrationInfo.getProxyPort(),
+                                         repositoryUri.getRawPath(),
+                                         repositoryUri.getRawQuery(),
+                                         repositoryUri.getRawFragment());
 
                     proxyAccessData.repositoryUrl = cooked.toString();
                 }
@@ -368,6 +362,11 @@ public abstract class GitOperationHelper
         }
 
         return accessData;
+    }
+
+    protected void closeProxy(@NotNull final GitRepositoryAccessData accessData)
+    {
+        sshProxyService.unregister(accessData.proxyRegistrationInfo);
     }
 
     protected FileRepository createLocalRepository(File workingDirectory, @Nullable File cacheDirectory)
