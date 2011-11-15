@@ -213,7 +213,7 @@ public class LoadGitHubRepositories extends PlanActionSupport implements PlanEdi
             }
             addRepositoriesFromJson(githubRepositories, json);
 
-            final JSONObject organizationJson = getJSONResponseFromUrl(GITHUB_API_BASE_URL + "organizations/repositories?owned=1");
+            JSONObject organizationJson = getJSONResponseFromUrl(GITHUB_API_BASE_URL + "organizations/repositories?owned=1");
             if (organizationJson.has("error") && organizationJson.getString("error").equals("not authorized"))
             {
                 if (getPlan() != null)
@@ -227,6 +227,9 @@ public class LoadGitHubRepositories extends PlanActionSupport implements PlanEdi
                 return githubRepositories;
             }
             addRepositoriesFromJson(githubRepositories, organizationJson, true);
+
+            organizationJson = getJSONResponseFromUrl(GITHUB_API_BASE_URL + "organizations/repositories");
+            addRepositoriesFromJson(githubRepositories, organizationJson);
         }
 
         final JSONObject json = getJSONResponseFromUrl(GITHUB_API_BASE_URL + "repos/show/" + username);
