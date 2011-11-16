@@ -28,6 +28,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.atlassian.bamboo.plugins</groupId>
+            <artifactId>atlassian-bamboo-plugin-ssh</artifactId>
+            <version>${bamboo.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
             <version>1.1.0.201109151100-r-ATLASSIAN-4</version>
@@ -39,6 +45,12 @@
             </exclusions>
             <scope>system</scope>
             <systemPath>${basedir}/libs/org.eclipse.jgit-1.1.0.201109151100-r-ATLASSIAN-4.jar</systemPath>
+        </dependency>
+        <dependency>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+          <version>1.2.15</version>
+          <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -84,7 +96,7 @@
                 <configuration>
                     <productVersion>${bamboo.version}</productVersion>
                     <productDataVersion>${bamboo.data.version}</productDataVersion>
-                    <extractDependencies>true</extractDependencies>
+                    <!--<extractDependencies>true</extractDependencies>-->
                 </configuration>
             </plugin>
             <plugin>

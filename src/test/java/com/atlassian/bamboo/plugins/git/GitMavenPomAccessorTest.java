@@ -3,7 +3,6 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.repository.MavenPomAccessor;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.ssh.SshProxyService;
-import com.atlassian.bamboo.ssh.SshProxyServiceImpl;
 import com.atlassian.testtools.TempDirectory;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
@@ -132,7 +131,7 @@ public class GitMavenPomAccessorTest extends GitAbstractTest
     {
         GitRepository repository = mock(GitRepository.class);
         TextProvider textProvider = mock(TextProvider.class);
-        SshProxyService sshProxyService = new SshProxyServiceImpl(textProvider);
+        SshProxyService sshProxyService = null; //new SshProxyServiceImpl(textProvider);
         new GitMavenPomAccessor(repository, sshProxyService, textProvider, null).withPath("..");
     }
 

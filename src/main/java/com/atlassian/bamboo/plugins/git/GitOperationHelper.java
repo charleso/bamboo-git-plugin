@@ -7,12 +7,8 @@ import com.atlassian.bamboo.commit.CommitFileImpl;
 import com.atlassian.bamboo.commit.CommitImpl;
 import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
 import com.atlassian.bamboo.repository.RepositoryException;
-import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.ssh.ProxyConnectionData;
-import com.atlassian.bamboo.ssh.ProxyConnectionDataBuilder;
 import com.atlassian.bamboo.ssh.ProxyException;
-import com.atlassian.bamboo.ssh.ProxyRegistrationInfo;
-import com.atlassian.bamboo.ssh.SshProxy;
 import com.atlassian.bamboo.ssh.SshProxyService;
 import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
@@ -130,8 +126,6 @@ public abstract class GitOperationHelper
 
     public void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
     {
-        SshProxy.getRunningInstance();
-
         Transport transport = null;
         FileRepository localRepository = null;
         String branchDescription = "(unresolved) " + accessData.branch;
@@ -318,7 +312,7 @@ public abstract class GitOperationHelper
             {
                 try
                 {
-                    ProxyConnectionData connectionData = new ProxyConnectionDataBuilder()
+                    ProxyConnectionData connectionData = sshProxyService.createProxyConnectionDataBuilder()
                             .withRemoteAddress(repositoryUri.getHost(), repositoryUri.getPort() == -1 ? 22 : repositoryUri.getPort())
                             .withRemoteUserName(StringUtils.defaultIfEmpty(proxyAccessData.username, repositoryUri.getUserInfo()))
                             //.withErrorReceiver(hgCommandProcessor)

@@ -10,6 +10,7 @@ import com.atlassian.utils.process.LineOutputHandler;
 import com.atlassian.utils.process.OutputHandler;
 import com.atlassian.utils.process.PluggableProcessHandler;
 import com.atlassian.utils.process.StringOutputHandler;
+import com.google.common.collect.Maps;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.transport.RefSpec;
 import org.jetbrains.annotations.NotNull;
@@ -18,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -160,8 +162,16 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
             buildLogger.addBuildLogEntry(stringBuilder.toString());
         }
 
+        Map<String, String> environment = Maps.newHashMap();
+        if (sshCommand != null)
+        {
+            environment.put("GIT_SSH", sshCommand);
+        }
+        
         ExternalProcess process = new ExternalProcessBuilder()
                 .command((commandArgs), workingDirectory)
+                // TODO: nicer pls
+                .env(environment)
                 .handler(handler)
                 .build();
         process.setTimeout(TimeUnit.MINUTES.toMillis(commandTimeoutInMinutes));

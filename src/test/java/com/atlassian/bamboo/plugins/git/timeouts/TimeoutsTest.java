@@ -7,7 +7,6 @@ import com.atlassian.bamboo.plugins.git.GitOperationHelper;
 import com.atlassian.bamboo.plugins.git.JGitOperationHelper;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.ssh.SshProxyService;
-import com.atlassian.bamboo.ssh.SshProxyServiceImpl;
 import com.opensymphony.xwork.TextProvider;
 import org.mockito.Mockito;
 import org.testng.annotations.AfterClass;
@@ -80,7 +79,7 @@ public class TimeoutsTest extends GitAbstractTest
     public GitOperationHelper createGitOperationHelper()
     {
         TextProvider textProvider = mock(TextProvider.class);
-        SshProxyService sshProxyService = new SshProxyServiceImpl(textProvider);
+        SshProxyService sshProxyService = null; //new SshProxyServiceImpl(textProvider);
 
         return new JGitOperationHelper(
             new NullBuildLogger()

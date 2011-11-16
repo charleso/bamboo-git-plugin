@@ -3,6 +3,7 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.ssh.SshProxyService;
+import com.atlassian.config.HomeLocator;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.storage.file.FileRepository;
@@ -29,12 +30,14 @@ public class NativeGitOperationHelper extends GitOperationHelper
                                     final @NotNull SshProxyService sshProxyService,
                                     final @NotNull BuildLogger buildLogger,
                                     final @NotNull TextProvider textProvider,
+                                    final @NotNull HomeLocator homeLocator,
                                     final @Nullable String gitCapability) throws RepositoryException
     {
         super(buildLogger, sshProxyService, textProvider);
         this.gitCapability = gitCapability;
         gitCommandProcessor = new GitCommandProcessor(gitCapability, buildLogger, accessData.commandTimeout, accessData.verboseLogs);
         gitCommandProcessor.checkGitExistenceInSystem(repository.getWorkingDirectory());
+        gitCommandProcessor.setSshCommand(homeLocator.getHomePath() + "/ssh/bin/ssh.sh");
     }
 
     // ----------------------------------------------------------------------------------------------- Interface Methods

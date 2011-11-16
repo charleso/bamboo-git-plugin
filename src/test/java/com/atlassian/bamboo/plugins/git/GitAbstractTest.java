@@ -10,7 +10,6 @@ import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
 import com.atlassian.bamboo.project.Project;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.ssh.SshProxyService;
-import com.atlassian.bamboo.ssh.SshProxyServiceImpl;
 import com.atlassian.bamboo.util.BambooFileUtils;
 import com.atlassian.bamboo.utils.i18n.DefaultI18nBean;
 import com.atlassian.bamboo.v2.build.BuildContext;
@@ -120,7 +119,7 @@ public class GitAbstractTest
     public GitOperationHelper createGitOperationHelper()
     {
         TextProvider textProvider = Mockito.mock(TextProvider.class);
-        SshProxyService sshProxyService = new SshProxyServiceImpl(textProvider);
+        SshProxyService sshProxyService = null; //new SshProxyServiceImpl(textProvider);
         return new JGitOperationHelper(new NullBuildLogger(), sshProxyService, textProvider);
     }
 
@@ -143,7 +142,7 @@ public class GitAbstractTest
         
         gitRepository.setCapabilityContext(mock(CapabilityContext.class));
 
-        SshProxyService sshProxyService = new SshProxyServiceImpl(getTextProvider());
+        SshProxyService sshProxyService = null;// new SshProxyServiceImpl(getTextProvider());
         gitRepository.setSshProxyService(sshProxyService);
 
         return gitRepository;

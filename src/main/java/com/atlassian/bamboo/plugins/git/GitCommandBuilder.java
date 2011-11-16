@@ -132,18 +132,7 @@ public class GitCommandBuilder
 
         if (StringUtils.isNotBlank(sshCommand))
         {
-            final StringBuilder sshCommandOption = new StringBuilder("ui.ssh=");
-            sshCommandOption.append(sshCommand);
-            if (StringUtils.isNotBlank(sshKeyFile))
-            {
-                sshCommandOption.append(" -i ").append(sshKeyFile);
-            }
-            if (sshCompression)
-            {
-                sshCommandOption.append(" -C");
-            }
-            commandArgs.add("--config");
-            commandArgs.add(sshCommandOption.toString());
+            // set env for git GIT_SSH
         }
 
         if (source != null)
