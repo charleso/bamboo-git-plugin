@@ -108,7 +108,7 @@ public class GitCommandBuilder
         }
         else
         {
-            commandArgs.add("hg");
+            commandArgs.add("git");
         }
 
         commandArgs.addAll(commands);

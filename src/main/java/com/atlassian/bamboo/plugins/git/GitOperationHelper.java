@@ -564,6 +564,10 @@ public abstract class GitOperationHelper
                 SshSessionFactory factory = new GitSshSessionFactory(sshKey, passphrase);
                 ((SshTransport)transport).setSshSessionFactory(factory);
             }
+            if (passphrase != null)
+            {
+                transport.setCredentialsProvider(new TweakedUsernamePasswordCredentialsProvider("dummy", passphrase));
+            }
             if (accessData.authenticationType == GitAuthenticationType.PASSWORD)
             {
                 // username may be specified in the URL instead of in the text field, we may still need the password if it's set
