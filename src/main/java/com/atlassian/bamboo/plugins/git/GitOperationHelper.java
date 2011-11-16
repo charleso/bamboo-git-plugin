@@ -563,10 +563,10 @@ public abstract class GitOperationHelper
 
                 SshSessionFactory factory = new GitSshSessionFactory(sshKey, passphrase);
                 ((SshTransport)transport).setSshSessionFactory(factory);
-            }
-            if (passphrase != null)
-            {
-                transport.setCredentialsProvider(new TweakedUsernamePasswordCredentialsProvider("dummy", passphrase));
+                if (passphrase != null)
+                {
+                    transport.setCredentialsProvider(new TweakedUsernamePasswordCredentialsProvider("dummy", passphrase));
+                }
             }
             if (accessData.authenticationType == GitAuthenticationType.PASSWORD)
             {
