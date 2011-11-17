@@ -1,15 +1,12 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.v2.build.agent.capability.AbstractExecutableCapabilityTypeModule;
-import org.apache.log4j.Logger;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class GitCapabilityTypeModule extends AbstractExecutableCapabilityTypeModule
 {
-    private static final Logger log = Logger.getLogger(GitCapabilityTypeModule.class);
-
     public static final String GIT_CAPABILITY = "system.git.executable";
     public static final String GIT_EXECUTABLE = "gitExecutable";
 
@@ -30,7 +27,7 @@ public class GitCapabilityTypeModule extends AbstractExecutableCapabilityTypeMod
     @Override
     public String getExecutableKey()
     {
-        return null;
+        return GIT_EXECUTABLE;
     }
 
     @Override
@@ -43,9 +40,9 @@ public class GitCapabilityTypeModule extends AbstractExecutableCapabilityTypeMod
     public List<String> getDefaultWindowPaths()
     {
         return Arrays.asList(
-            "C:\\Program Files\\git",
-            "C:\\Program Files (x86)\\git",
-            "C:\\git"
+                "C:\\Program Files\\git",
+                "C:\\Program Files (x86)\\git",
+                "C:\\git"
         );
     }
 
