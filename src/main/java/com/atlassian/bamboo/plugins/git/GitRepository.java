@@ -17,7 +17,7 @@ import com.atlassian.bamboo.repository.SelectableAuthenticationRepository;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.ssh.ProxyRegistrationInfo;
 import com.atlassian.bamboo.ssh.SshProxyService;
-//import com.atlassian.bamboo.ssh.SshCapabilityTypeModule;
+import com.atlassian.bamboo.plugins.ssh.SshCapabilityTypeModule;
 import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildContext;
@@ -654,7 +654,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     @Nullable
     public String getSshCapability()
     {
-        return capabilityContext.getCapabilityValue("system.executable.ssh");//SshCapabilityTypeModule.SSH_CAPABILITY);
+        return capabilityContext.getCapabilityValue(SshCapabilityTypeModule.SSH_CAPABILITY);
     }
 
     public void setCapabilityContext(final CapabilityContext capabilityContext)
