@@ -20,7 +20,6 @@ public class NativeGitOperationHelper extends GitOperationHelper
     private static final Logger log = Logger.getLogger(NativeGitOperationHelper.class);
     // ------------------------------------------------------------------------------------------------------- Constants
     // ------------------------------------------------------------------------------------------------- Type Properties
-    private String gitCapability;
     private GitCommandProcessor gitCommandProcessor;
     // ---------------------------------------------------------------------------------------------------- Dependencies
     // ---------------------------------------------------------------------------------------------------- Constructors
@@ -34,10 +33,9 @@ public class NativeGitOperationHelper extends GitOperationHelper
                                     final @Nullable String gitCapability) throws RepositoryException
     {
         super(buildLogger, sshProxyService, textProvider);
-        this.gitCapability = gitCapability;
         gitCommandProcessor = new GitCommandProcessor(gitCapability, buildLogger, accessData.commandTimeout, accessData.verboseLogs);
         gitCommandProcessor.checkGitExistenceInSystem(repository.getWorkingDirectory());
-        gitCommandProcessor.setSshCommand(homeLocator.getHomePath() + "/ssh/bin/ssh.sh");
+        gitCommandProcessor.setSshCommand(repository.getSshCapability());
     }
 
     // ----------------------------------------------------------------------------------------------- Interface Methods

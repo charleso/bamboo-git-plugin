@@ -31,7 +31,7 @@
             <groupId>com.atlassian.bamboo.plugins</groupId>
             <artifactId>atlassian-bamboo-plugin-ssh</artifactId>
             <version>${bamboo.version}</version>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jgit</groupId>

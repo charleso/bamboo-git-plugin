@@ -11,6 +11,7 @@ import com.atlassian.utils.process.OutputHandler;
 import com.atlassian.utils.process.PluggableProcessHandler;
 import com.atlassian.utils.process.StringOutputHandler;
 import com.google.common.collect.Maps;
+import org.apache.commons.lang.SystemUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.transport.RefSpec;
 import org.jetbrains.annotations.NotNull;
@@ -122,6 +123,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
     public void runCheckoutCommand(@NotNull final File workingDirectory, String revision) throws RepositoryException
     {
         GitCommandBuilder commandBuilder = createCommandBuilder("checkout", revision);
+
         runCommand(commandBuilder.build(), workingDirectory, new LoggingOutputHandler(buildLogger));
     }
 
