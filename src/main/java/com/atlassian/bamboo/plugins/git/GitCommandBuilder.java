@@ -1,10 +1,13 @@
 package com.atlassian.bamboo.plugins.git;
 
+import de.schlichtherle.truezip.util.Maps;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GitCommandBuilder
 {
@@ -130,11 +133,6 @@ public class GitCommandBuilder
             commandArgs.add(revision);
         }
 
-        if (StringUtils.isNotBlank(sshCommand))
-        {
-            // set env for git GIT_SSH
-        }
-
         if (source != null)
         {
             commandArgs.add(source);
@@ -151,6 +149,16 @@ public class GitCommandBuilder
         }
 
         return commandArgs;
+    }
+
+    public Map<String, String> prepareEnvironment()
+    {
+        Map<String, String> environment = new HashMap<String, String>();
+        if (StringUtils.isNotBlank(sshCommand))
+        {
+            environment.put("GIT_SSH", sshCommand);
+        }
+        return environment;
     }
 
     public String toString() {

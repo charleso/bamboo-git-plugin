@@ -42,17 +42,9 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
     private String proxyErrorMessage;
     private Throwable proxyException;
     private String sshCommand;
-    private String sshKeyFile;
-    private boolean sshCompression;
 
     // ---------------------------------------------------------------------------------------------------- Dependencies
     // ---------------------------------------------------------------------------------------------------- Constructors
-
-    public GitCommandProcessor(@Nullable final String gitExecutable, @NotNull final BuildLogger buildLogger, final int commandTimeoutInMinutes)
-    {
-        this(gitExecutable, buildLogger, commandTimeoutInMinutes, false);
-    }
-
     public GitCommandProcessor(@Nullable final String gitExecutable, @NotNull final BuildLogger buildLogger, final int commandTimeoutInMinutes, boolean maxVerboseOutput)
     {
         this.gitExecutable = gitExecutable;
@@ -78,7 +70,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
 
         try
         {
-            runCommand(commandBuilder.build(), workingDirectory, outputHandler);
+            runCommand(commandBuilder, workingDirectory, outputHandler);
             String output = outputHandler.getOutput();
             Matcher matcher = gitVersionPattern.matcher(output);
             if (!matcher.find())
@@ -103,7 +95,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
     public void runInitCommand(@NotNull final File workingDirectory) throws RepositoryException
     {
         GitCommandBuilder commandBuilder = createCommandBuilder("init");
-        runCommand(commandBuilder.build(), workingDirectory, new LoggingOutputHandler(buildLogger));
+        runCommand(commandBuilder, workingDirectory, new LoggingOutputHandler(buildLogger));
     }
 
     public void runFetchCommand(@NotNull final File workingDirectory, @NotNull final GitRepository.GitRepositoryAccessData accessData, RefSpec refSpec, boolean useShallow) throws RepositoryException
@@ -117,14 +109,14 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         {
             commandBuilder.verbose(true);
         }
-        runCommand(commandBuilder.build(), workingDirectory, new LoggingOutputHandler(buildLogger));
+        runCommand(commandBuilder, workingDirectory, new LoggingOutputHandler(buildLogger));
     }
 
     public void runCheckoutCommand(@NotNull final File workingDirectory, String revision) throws RepositoryException
     {
         GitCommandBuilder commandBuilder = createCommandBuilder("checkout", revision);
 
-        runCommand(commandBuilder.build(), workingDirectory, new LoggingOutputHandler(buildLogger));
+        runCommand(commandBuilder, workingDirectory, new LoggingOutputHandler(buildLogger));
     }
 
     // -------------------------------------------------------------------------------------------------- Helper Methods
@@ -133,9 +125,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
     {
         return new GitCommandBuilder(commands)
                 .executable(gitExecutable)
-                .sshCommand(sshCommand)
-                .sshKeyFile(sshKeyFile)
-                .sshCompression(sshCompression);
+                .sshCommand(sshCommand);
     }
 
     public void reportProxyError(String message, Throwable exception)
@@ -144,7 +134,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         proxyException = exception;
     }
 
-    private void runCommand(@NotNull final List<String> commandArgs, @NotNull final File workingDirectory,
+    private void runCommand(@NotNull final GitCommandBuilder commandBuilder, @NotNull final File workingDirectory,
                             @NotNull final GitOutputHandler outputHandler) throws RepositoryException
     {
         //noinspection ResultOfMethodCallIgnored
@@ -154,6 +144,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         handler.setOutputHandler(outputHandler);
         handler.setErrorHandler(outputHandler);
 
+        final List<String> commandArgs = commandBuilder.build();
         if (maxVerboseOutput)
         {
             StringBuilder stringBuilder = new StringBuilder();
@@ -164,18 +155,17 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
             buildLogger.addBuildLogEntry(stringBuilder.toString());
         }
 
-        Map<String, String> environment = Maps.newHashMap();
-        if (sshCommand != null)
-        {
-            environment.put("GIT_SSH", sshCommand);
-        }
-        
-        ExternalProcess process = new ExternalProcessBuilder()
+        final ExternalProcessBuilder externalProcessBuilder = new ExternalProcessBuilder()
                 .command((commandArgs), workingDirectory)
-                // TODO: nicer pls
-                .env(environment)
-                .handler(handler)
-                .build();
+                .handler(handler);
+
+        final Map<String, String> environment = commandBuilder.prepareEnvironment();
+        if (!environment.isEmpty())
+        {
+            externalProcessBuilder.env(environment);
+        }
+        ExternalProcess process = externalProcessBuilder.build();
+
         process.setTimeout(TimeUnit.MINUTES.toMillis(commandTimeoutInMinutes));
         process.execute();
 
@@ -233,15 +223,5 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
     public void setSshCommand(String sshCommand)
     {
         this.sshCommand = sshCommand;
-    }
-
-    public void setSshKeyFile(String sshKeyFile)
-    {
-        this.sshKeyFile = sshKeyFile;
-    }
-
-    public void setSshCompression(boolean sshCompression)
-    {
-        this.sshCompression = sshCompression;
     }
 }
