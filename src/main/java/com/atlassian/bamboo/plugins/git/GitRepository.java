@@ -654,7 +654,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     @Nullable
     public String getSshCapability()
     {
-        return capabilityContext.getCapabilityValue(SshCapabilityTypeModule.SSH_CAPABILITY);
+        return capabilityContext.getCapabilityValue(GitCapabilityTypeModule.SSH_CAPABILITY);
     }
 
     public void setCapabilityContext(final CapabilityContext capabilityContext)

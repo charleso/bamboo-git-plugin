@@ -1,17 +1,21 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.v2.build.agent.capability.AbstractExecutableCapabilityTypeModule;
+import com.atlassian.bamboo.v2.build.agent.capability.AbstractMultipleExecutableCapabilityTypeModule;
+import com.google.common.collect.Lists;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class GitCapabilityTypeModule extends AbstractExecutableCapabilityTypeModule
+public class GitCapabilityTypeModule extends AbstractMultipleExecutableCapabilityTypeModule
 {
     public static final String GIT_CAPABILITY = "system.git.executable";
-    public static final String GIT_EXECUTABLE = "gitExecutable";
+    public static final String SSH_CAPABILITY = "system.git.executable.ssh";
 
     private static final String AGENT_CAPABILITY_TYPE_GIT_ERROR_UNDEFINED_EXECUTABLE = "agent.capability.type.git.error.undefinedExecutable";
+    private static final String AGENT_CAPABILITY_TYPE_GIT_ERROR_UNDEFINED_EXECUTABLE_KIND = "agent.capability.type.git.error.undefinedExecutableKind";
 
+    private static final String DEFAULT_SSH_CAPABILITY = "/usr/bin/ssh";
     // ------------------------------------------------------------------------------------------------- Type Properties
     // ---------------------------------------------------------------------------------------------------- Dependencies
     // ---------------------------------------------------------------------------------------------------- Constructors
@@ -19,21 +23,33 @@ public class GitCapabilityTypeModule extends AbstractExecutableCapabilityTypeMod
     // ----------------------------------------------------------------------------------------------- Interface Methods
 
     @Override
-    public String getCapabilityKey()
+    public String getExecutableKindKey()
     {
-        return GIT_CAPABILITY;
-    }
-
-    @Override
-    public String getExecutableKey()
-    {
-        return GIT_EXECUTABLE;
+        return "gitExecutableKind";
     }
 
     @Override
     public String getCapabilityUndefinedKey()
     {
         return AGENT_CAPABILITY_TYPE_GIT_ERROR_UNDEFINED_EXECUTABLE;
+    }
+
+    @Override
+    public String getCapabilityKindUndefinedKey()
+    {
+        return AGENT_CAPABILITY_TYPE_GIT_ERROR_UNDEFINED_EXECUTABLE_KIND;
+    }
+
+    @Override
+    public String getMandatoryCapabilityKey()
+    {
+        return GIT_CAPABILITY;
+    }
+
+    @Override
+    public List<String> getAdditionalCapabilityKeys()
+    {
+        return Lists.newArrayList(SSH_CAPABILITY);
     }
 
     @Override
@@ -50,5 +66,11 @@ public class GitCapabilityTypeModule extends AbstractExecutableCapabilityTypeMod
     public String getExecutableFilename()
     {
         return "git";
+    }
+
+    @Override
+    public String getExecutableDescription(String key)
+    {
+        return getText(AGENT_CAPABILITY_TYPE_PREFIX + key + ".description", new String[] {DEFAULT_SSH_CAPABILITY});
     }
 }
