@@ -6,10 +6,12 @@ import com.atlassian.bamboo.repository.AbstractRepository;
 import com.atlassian.bamboo.repository.Repository;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
+import com.atlassian.bamboo.ssh.SshProxyService;
 import com.atlassian.bamboo.template.TemplateRenderer;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
+import com.atlassian.bamboo.v2.build.agent.capability.CapabilityContext;
 import com.atlassian.bamboo.v2.build.repository.CustomSourceDirectoryAwareRepository;
 import com.atlassian.bamboo.variable.CustomVariableContext;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
@@ -49,6 +51,7 @@ public class GitHubRepository extends AbstractRepository implements CustomSource
     private String branch;
     private boolean useShallowClones;
 
+
     // ---------------------------------------------------------------------------------------------------- Dependencies
 
     public void setBuildDirectoryManager(BuildDirectoryManager buildDirectoryManager)
@@ -74,6 +77,16 @@ public class GitHubRepository extends AbstractRepository implements CustomSource
     {
         super.setCustomVariableContext(customVariableContext);
         gitRepository.setCustomVariableContext(customVariableContext);
+    }
+
+    public void setCapabilityContext(final CapabilityContext capabilityContext)
+    {
+        gitRepository.setCapabilityContext(capabilityContext);
+    }
+
+    public void setSshProxyService(SshProxyService sshProxyService)
+    {
+        gitRepository.setSshProxyService(sshProxyService);
     }
 
     @Override
