@@ -79,6 +79,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     private static final String REPOSITORY_GIT_SSH_KEY = "repository.git.ssh.key";
     private static final String REPOSITORY_GIT_SSH_PASSPHRASE = "repository.git.ssh.passphrase";
     private static final String REPOSITORY_GIT_USE_SHALLOW_CLONES = "repository.git.useShallowClones";
+    private static final String REPOSITORY_GIT_USE_SUBMODULES = "repository.git.useSubmodules";
     private static final String REPOSITORY_GIT_MAVEN_PATH = "repository.git.maven.path";
     private static final String REPOSITORY_GIT_COMMAND_TIMEOUT = "repository.git.commandTimeout";
     private static final String REPOSITORY_GIT_VERBOSE_LOGS = "repository.git.verbose.logs";
@@ -108,6 +109,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         String sshPassphrase;
         GitAuthenticationType authenticationType;
         boolean useShallowClones;
+        boolean useSubmodules;
         int commandTimeout;
         boolean verboseLogs;
 
@@ -298,13 +300,13 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
 
                         try
                         {
-                            return helper.checkout(cacheDirectory, sourceDirectory, targetRevision, previousRevision);
+                            return helper.checkout(cacheDirectory, sourceDirectory, targetRevision, previousRevision, accessData.useSubmodules);
                         }
                         catch (Exception e)
                         {
                             rethrowOrRemoveDirectory(e, buildLogger, sourceDirectory, "repository.git.messages.rsRecover.failedToCheckout");
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(sourceDirectory)));
-                            String returnRevision = helper.checkout(cacheDirectory, sourceDirectory, targetRevision, null);
+                            String returnRevision = helper.checkout(cacheDirectory, sourceDirectory, targetRevision, null, accessData.useSubmodules);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.checkoutCompleted"));
                             return returnRevision;
                         }
@@ -317,7 +319,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                 try
                 {
                     helper.fetch(sourceDirectory, substitutedAccessData, doShallowFetch);
-                    return helper.checkout(null, sourceDirectory, targetRevision, previousRevision);
+                    return helper.checkout(null, sourceDirectory, targetRevision, previousRevision, accessData.useSubmodules);
                 }
                 catch (Exception e)
                 {
@@ -325,7 +327,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(sourceDirectory)));
                     helper.fetch(sourceDirectory, substitutedAccessData, false);
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.fetchingCompleted", Arrays.asList(sourceDirectory)));
-                    String returnRevision = helper.checkout(null, sourceDirectory, targetRevision, null);
+                    String returnRevision = helper.checkout(null, sourceDirectory, targetRevision, null, accessData.useSubmodules);
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.checkoutCompleted"));
                     return returnRevision;
                 }
@@ -373,6 +375,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         buildConfiguration.setProperty(REPOSITORY_GIT_COMMAND_TIMEOUT, String.valueOf(DEFAULT_COMMAND_TIMEOUT_IN_MINUTES));
         buildConfiguration.clearTree(REPOSITORY_GIT_VERBOSE_LOGS);
         buildConfiguration.setProperty(REPOSITORY_GIT_USE_SHALLOW_CLONES, true);
+        buildConfiguration.clearTree(REPOSITORY_GIT_USE_SUBMODULES);
     }
 
     public void prepareConfigObject(@NotNull BuildConfiguration buildConfiguration)
@@ -422,6 +425,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         accessData.sshPassphrase = config.getString(REPOSITORY_GIT_SSH_PASSPHRASE);
         accessData.authenticationType = safeParseAuthenticationType(config.getString(REPOSITORY_GIT_AUTHENTICATION_TYPE));
         accessData.useShallowClones = config.getBoolean(REPOSITORY_GIT_USE_SHALLOW_CLONES);
+        accessData.useSubmodules = config.getBoolean(REPOSITORY_GIT_USE_SUBMODULES, false);
         accessData.commandTimeout = config.getInt(REPOSITORY_GIT_COMMAND_TIMEOUT, DEFAULT_COMMAND_TIMEOUT_IN_MINUTES);
         accessData.verboseLogs = config.getBoolean(REPOSITORY_GIT_VERBOSE_LOGS, false);
 
@@ -441,6 +445,7 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
         configuration.setProperty(REPOSITORY_GIT_SSH_PASSPHRASE, accessData.sshPassphrase);
         configuration.setProperty(REPOSITORY_GIT_AUTHENTICATION_TYPE, accessData.authenticationType != null ? accessData.authenticationType.name() : null);
         configuration.setProperty(REPOSITORY_GIT_USE_SHALLOW_CLONES, accessData.useShallowClones);
+        configuration.setProperty(REPOSITORY_GIT_USE_SUBMODULES, accessData.useSubmodules);
         configuration.setProperty(REPOSITORY_GIT_COMMAND_TIMEOUT, accessData.commandTimeout);
         configuration.setProperty(REPOSITORY_GIT_VERBOSE_LOGS, accessData.verboseLogs);
         return configuration;
@@ -592,6 +597,11 @@ public class GitRepository extends AbstractRepository implements MavenPomAccesso
     public boolean isUseShallowClones()
     {
         return accessData.useShallowClones;
+    }
+
+    public boolean isUseSubmodules()
+    {
+        return accessData.useSubmodules;
     }
 
     public String getRepositoryUrl()

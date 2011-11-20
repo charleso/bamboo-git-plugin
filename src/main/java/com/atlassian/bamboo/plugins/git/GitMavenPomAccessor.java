@@ -77,7 +77,7 @@ public class GitMavenPomAccessor extends MavenPomAccessorAbstract<GitRepository>
         GitRepository.GitRepositoryAccessData substitutedAccessData = repository.getSubstitutedAccessData();
         String targetRevision = helper.obtainLatestRevision(substitutedAccessData);
         helper.fetch(destinationPath, substitutedAccessData, true);
-        helper.checkout(null, destinationPath, targetRevision, helper.getCurrentRevision(destinationPath));
+        helper.checkout(null, destinationPath, targetRevision, helper.getCurrentRevision(destinationPath), substitutedAccessData.useSubmodules);
         final File pomLocation = new File(destinationPath, pathToPom);
         if (pomLocation.isFile())
         {

@@ -91,7 +91,8 @@ public abstract class GitOperationHelper
     protected abstract String doCheckout(@NotNull final FileRepository localRepository,
                                          @NotNull File sourceDirectory,
                                          @NotNull String targetRevision,
-                                         @Nullable String previousRevision) throws RepositoryException;
+                                         @Nullable String previousRevision,
+                                         final boolean useSubmodules) throws RepositoryException;
 
     // -------------------------------------------------------------------------------------------------- Action Methods
     // -------------------------------------------------------------------------------------------------- Public Methods
@@ -103,7 +104,8 @@ public abstract class GitOperationHelper
     public String checkout(@Nullable File cacheDirectory,
                            @NotNull final File sourceDirectory,
                            @NotNull final String targetRevision,
-                           @Nullable final String previousRevision) throws RepositoryException
+                           @Nullable final String previousRevision,
+                           final boolean useSubmodules) throws RepositoryException
     {
         // would be cool to store lastCheckoutedRevision in the localRepository somehow - so we don't need to specify it
         buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.checkingOutRevision", Arrays.asList(targetRevision)));
@@ -116,7 +118,7 @@ public abstract class GitOperationHelper
             File lck = new File(localRepository.getIndexFile().getParentFile(), localRepository.getIndexFile().getName() + ".lock");
             FileUtils.deleteQuietly(lck);
 
-            return doCheckout(localRepository, sourceDirectory, targetRevision, previousRevision);
+            return doCheckout(localRepository, sourceDirectory, targetRevision, previousRevision, useSubmodules);
         }
         catch (IOException e)
         {

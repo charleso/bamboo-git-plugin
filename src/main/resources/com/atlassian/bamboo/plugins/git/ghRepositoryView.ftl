@@ -3,3 +3,6 @@
 [@ww.label labelKey='repository.github.repository' value=repository.repository /]
 [@ww.label labelKey='repository.github.branch' value=repository.branch! hideOnNull=true /]
 [@ww.label labelKey='repository.github.useShallowClones' value=repository.useShallowClones?string hideOnNull=true /]
+[@ww.label labelKey='repository.github.useSubmodules' value=repository.useSubmodules?string hideOnNull=true /]
+[@ww.label labelKey='repository.github.commandTimeout' value=repository.commandTimeout! hideOnNull=true /]
+[@ww.label labelKey='repository.github.verbose.logs' value=repository.verboseLogs?string hideOnNull=true /]

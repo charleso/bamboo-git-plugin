@@ -3,6 +3,7 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.build.BuildLoggerManager;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.repository.AbstractRepository;
+import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
 import com.atlassian.bamboo.repository.Repository;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
@@ -12,9 +13,12 @@ import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.build.agent.capability.CapabilityContext;
+import com.atlassian.bamboo.v2.build.agent.capability.Requirement;
 import com.atlassian.bamboo.v2.build.repository.CustomSourceDirectoryAwareRepository;
+import com.atlassian.bamboo.v2.build.repository.RequirementsAwareRepository;
 import com.atlassian.bamboo.variable.CustomVariableContext;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
+import com.google.common.collect.Sets;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.lang.StringUtils;
@@ -24,8 +28,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.Set;
 
-public class GitHubRepository extends AbstractRepository implements CustomSourceDirectoryAwareRepository
+public class GitHubRepository extends AbstractRepository implements CustomSourceDirectoryAwareRepository,
+                                                                    AdvancedConfigurationAwareRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -34,6 +40,9 @@ public class GitHubRepository extends AbstractRepository implements CustomSource
     private static final String REPOSITORY_GITHUB_REPOSITORY = "repository.github.repository";
     private static final String REPOSITORY_GITHUB_BRANCH = "repository.github.branch";
     private static final String REPOSITORY_GITHUB_USE_SHALLOW_CLONES = "repository.github.useShallowClones";
+    private static final String REPOSITORY_GITHUB_USE_SUBMODULES = "repository.github.useSubmodules";
+    private static final String REPOSITORY_GITHUB_COMMAND_TIMEOUT = "repository.github.commandTimeout";
+    private static final String REPOSITORY_GITHUB_VERBOSE_LOGS = "repository.github.verbose.logs";
 
     private static final String REPOSITORY_GITHUB_TEMPORARY_PASSWORD = "repository.github.temporary.password";
     private static final String TEMPORARY_GITHUB_PASSWORD_CHANGE = "temporary.github.password.change";
@@ -50,6 +59,9 @@ public class GitHubRepository extends AbstractRepository implements CustomSource
     private String repository;
     private String branch;
     private boolean useShallowClones;
+    private boolean useSubmodules;
+    private boolean verboseLogs;
+    private int commandTimeout;
 
 
     // ---------------------------------------------------------------------------------------------------- Dependencies
@@ -129,7 +141,11 @@ public class GitHubRepository extends AbstractRepository implements CustomSource
     @Override
     public void addDefaultValues(@NotNull BuildConfiguration buildConfiguration)
     {
+        buildConfiguration.setProperty(REPOSITORY_GITHUB_COMMAND_TIMEOUT, String.valueOf(GitRepository.DEFAULT_COMMAND_TIMEOUT_IN_MINUTES));
+        buildConfiguration.clearTree(REPOSITORY_GITHUB_VERBOSE_LOGS);
         buildConfiguration.setProperty(REPOSITORY_GITHUB_USE_SHALLOW_CLONES, true);
+        buildConfiguration.clearTree(REPOSITORY_GITHUB_USE_SUBMODULES);
+
     }
 
     public void prepareConfigObject(@NotNull BuildConfiguration buildConfiguration)
@@ -152,6 +168,9 @@ public class GitHubRepository extends AbstractRepository implements CustomSource
         repository = config.getString(REPOSITORY_GITHUB_REPOSITORY);
         branch = config.getString(REPOSITORY_GITHUB_BRANCH);
         useShallowClones = config.getBoolean(REPOSITORY_GITHUB_USE_SHALLOW_CLONES);
+        useSubmodules = config.getBoolean(REPOSITORY_GITHUB_USE_SUBMODULES);
+        commandTimeout = config.getInt(REPOSITORY_GITHUB_COMMAND_TIMEOUT, GitRepository.DEFAULT_COMMAND_TIMEOUT_IN_MINUTES);
+        verboseLogs = config.getBoolean(REPOSITORY_GITHUB_VERBOSE_LOGS, false);
 
         gitRepository.accessData.repositoryUrl = "https://github.com/" + repository + ".git";
         gitRepository.accessData.username = username;
@@ -161,7 +180,9 @@ public class GitHubRepository extends AbstractRepository implements CustomSource
         gitRepository.accessData.sshPassphrase = "";
         gitRepository.accessData.authenticationType = GitAuthenticationType.PASSWORD;
         gitRepository.accessData.useShallowClones = useShallowClones;
-
+        gitRepository.accessData.useSubmodules = useSubmodules;
+        gitRepository.accessData.commandTimeout = commandTimeout;
+        gitRepository.accessData.verboseLogs = verboseLogs;
     }
 
     @NotNull
@@ -174,6 +195,10 @@ public class GitHubRepository extends AbstractRepository implements CustomSource
         configuration.setProperty(REPOSITORY_GITHUB_REPOSITORY, repository);
         configuration.setProperty(REPOSITORY_GITHUB_BRANCH, branch);
         configuration.setProperty(REPOSITORY_GITHUB_USE_SHALLOW_CLONES, useShallowClones);
+        configuration.setProperty(REPOSITORY_GITHUB_USE_SUBMODULES, useSubmodules);
+        configuration.setProperty(REPOSITORY_GITHUB_COMMAND_TIMEOUT, commandTimeout);
+        configuration.setProperty(REPOSITORY_GITHUB_VERBOSE_LOGS, verboseLogs);
+
         return configuration;
     }
 
@@ -235,5 +260,20 @@ public class GitHubRepository extends AbstractRepository implements CustomSource
     String getPassword()
     {
         return password;
+    }
+
+    public boolean isUseSubmodules()
+    {
+        return useSubmodules;
+    }
+
+    public int getCommandTimeout()
+    {
+        return commandTimeout;
+    }
+
+    public boolean getVerboseLogs()
+    {
+        return verboseLogs;
     }
 }

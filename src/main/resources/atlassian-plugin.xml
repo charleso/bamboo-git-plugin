@@ -19,6 +19,7 @@
         <description>A GitHub Repository</description>
         <resource type="freemarker" name="edit" location="/com/atlassian/bamboo/plugins/git/ghRepositoryEdit.ftl"/>
         <resource type="freemarker" name="view" location="/com/atlassian/bamboo/plugins/git/ghRepositoryView.ftl"/>
+        <resource type="freemarker" name="advancedEdit" location="/com/atlassian/bamboo/plugins/git/ghRepositoryEditAdvancedOptions.ftl"/>
     </repository>
 
     <capabilityType key="system.git.executable" name="Git" class="com.atlassian.bamboo.plugins.git.GitCapabilityTypeModule" sortOrder="2000">

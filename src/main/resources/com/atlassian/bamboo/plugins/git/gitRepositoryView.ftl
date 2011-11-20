@@ -4,6 +4,7 @@
 [@ww.label labelKey='repository.git.branch' value=repository.branch hideOnNull=true /]
 [@ww.label labelKey='repository.git.authenticationType' value=repository.authTypeName /]
 [@ww.label labelKey='repository.git.useShallowClones' value=repository.useShallowClones?string hideOnNull=true /]
+[@ww.label labelKey='repository.git.useSubmodules' value=repository.useSubmodules?string hideOnNull=true /]
 [@ww.label labelKey='repository.git.commandTimeout' value=repository.commandTimeout! hideOnNull=true /]
 [@ww.label labelKey='repository.git.verbose.logs' value=repository.verboseLogs?string hideOnNull=true /]
 [@ww.label labelKey='repository.git.cacheDirectory' value=repository.cacheDirectory/]

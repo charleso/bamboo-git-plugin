@@ -1,6 +1,7 @@
 package com.atlassian.bamboo.plugins.git;
 
 
+import com.atlassian.bamboo.build.CommandLogEntry;
 import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.ssh.SshProxyService;
@@ -69,8 +70,10 @@ public class JGitOperationHelper extends GitOperationHelper
     }
 
     @Override
-    protected String doCheckout(@NotNull final FileRepository localRepository, @NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision) throws RepositoryException
+    protected String doCheckout(@NotNull final FileRepository localRepository, @NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision, final boolean useSubmodules) throws RepositoryException
     {
+        buildLogger.addBuildLogEntry(new CommandLogEntry(textProvider.getText("repository.git.messages.jgit.submodules.not.supported")));
+
         RevWalk revWalk = null;
         DirCache dirCache = null;
         try
