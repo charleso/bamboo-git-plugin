@@ -3,6 +3,7 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.build.BuildLoggerManager;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.repository.AbstractRepository;
+import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
 import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
 import com.atlassian.bamboo.repository.Repository;
 import com.atlassian.bamboo.repository.RepositoryException;
@@ -30,8 +31,8 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.Set;
 
-public class GitHubRepository extends AbstractRepository implements CustomSourceDirectoryAwareRepository,
-                                                                    AdvancedConfigurationAwareRepository
+public class GitHubRepository extends AbstractStandaloneRepository implements CustomSourceDirectoryAwareRepository,
+                                                                              AdvancedConfigurationAwareRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 

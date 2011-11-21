@@ -6,6 +6,7 @@ import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.commit.CommitContextImpl;
 import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.repository.AbstractRepository;
+import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
 import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
 import com.atlassian.bamboo.repository.CustomVariableProviderRepository;
 import com.atlassian.bamboo.repository.MavenPomAccessor;
@@ -61,12 +62,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-public class GitRepository extends AbstractRepository implements MavenPomAccessorCapableRepository,
-                                                                 SelectableAuthenticationRepository,
-                                                                 CustomVariableProviderRepository,
-                                                                 CustomSourceDirectoryAwareRepository,
-                                                                 RequirementsAwareRepository,
-                                                                 AdvancedConfigurationAwareRepository
+public class GitRepository extends AbstractStandaloneRepository implements MavenPomAccessorCapableRepository,
+                                                                           SelectableAuthenticationRepository,
+                                                                           CustomVariableProviderRepository,
+                                                                           CustomSourceDirectoryAwareRepository,
+                                                                           RequirementsAwareRepository,
+                                                                           AdvancedConfigurationAwareRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
