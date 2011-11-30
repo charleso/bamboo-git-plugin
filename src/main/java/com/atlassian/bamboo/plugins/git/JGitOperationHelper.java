@@ -72,7 +72,10 @@ public class JGitOperationHelper extends GitOperationHelper
     @Override
     protected String doCheckout(@NotNull final FileRepository localRepository, @NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision, final boolean useSubmodules) throws RepositoryException
     {
-        buildLogger.addBuildLogEntry(new CommandLogEntry(textProvider.getText("repository.git.messages.jgit.submodules.not.supported")));
+        if (useSubmodules)
+        {
+            buildLogger.addBuildLogEntry(new CommandLogEntry(textProvider.getText("repository.git.messages.jgit.submodules.not.supported")));
+        }
 
         RevWalk revWalk = null;
         DirCache dirCache = null;

@@ -10,10 +10,10 @@
 [@ww.label labelKey='repository.git.cacheDirectory' value=repository.cacheDirectory/]
 
 [#if fn.hasGlobalAdminPermission() && repository.cacheDirectory?? && repository.cacheDirectory.exists()]
-    <div class="infoMessage">
+    [@ui.messageBox type='info']
         [@ww.text name='repository.git.cacheDirectory.cleanMessage'/]
         <a class="requireConfirmation"
            title="[@ww.text name='repository.git.cacheDirectory.cleanTitle' /]"
            href="[@ww.url action='deleteGitCacheDirectory' namespace='/build/admin' buildKey=plan.key/]">[@ww.text name='global.buttons.delete' /]</a>
-    </div>
+    [/@ui.messageBox]
 [/#if]
