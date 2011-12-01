@@ -5,7 +5,6 @@ import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.commit.CommitContextImpl;
 import com.atlassian.bamboo.plan.PlanKeys;
-import com.atlassian.bamboo.repository.AbstractRepository;
 import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
 import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
 import com.atlassian.bamboo.repository.CustomVariableProviderRepository;
@@ -18,7 +17,6 @@ import com.atlassian.bamboo.repository.SelectableAuthenticationRepository;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.ssh.ProxyRegistrationInfo;
 import com.atlassian.bamboo.ssh.SshProxyService;
-import com.atlassian.bamboo.plugins.ssh.SshCapabilityTypeModule;
 import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildContext;
@@ -37,6 +35,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.opensymphony.webwork.ServletActionContext;
 import com.opensymphony.xwork.TextProvider;
 import com.opensymphony.xwork.util.LocalizedTextUtil;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -642,6 +641,16 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         {
             LocalizedTextUtil.addDefaultResourceBundle("com.atlassian.bamboo.plugins.git.i18n");
         }
+    }
+
+    public String getOptionDescription()
+    {
+        String capabilitiesLink = ServletActionContext.getRequest().getContextPath() +
+                                  "/admin/agent/configureSharedLocalCapabilities.action";
+        return textProvider.getText("repository.git.description", Arrays.asList(
+                getGitCapability(),
+                capabilitiesLink
+        ));
     }
 
     // Git capability is optional, so we don't enforce it here

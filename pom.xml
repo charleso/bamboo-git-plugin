@@ -14,13 +14,19 @@
 
     <name>Atlassian Bamboo Git Repository Plugin</name>
     <description>Plugin to provide Git SCM support.</description>
-    <packaging>atlassian-plugin</packaging>
+    <packaging>jar</packaging>
     <scm>
         <connection>scm:git:git://github.com/atlassian/bamboo-git-plugin.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/atlassian/bamboo-git-plugin.git</developerConnection>
     </scm>
 
     <dependencies>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>com.atlassian.bamboo</groupId>
             <artifactId>atlassian-bamboo-web</artifactId>
@@ -31,7 +37,7 @@
             <groupId>com.atlassian.bamboo.plugins</groupId>
             <artifactId>atlassian-bamboo-plugin-ssh</artifactId>
             <version>${bamboo.version}</version>
-            <scope>provided</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
