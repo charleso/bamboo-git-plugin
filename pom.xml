@@ -178,4 +178,5 @@
             <url>https://maven.atlassian.com/contrib-snapshot</url>
         </snapshotRepository>
     </distributionManagement>
+
 </project>
