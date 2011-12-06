@@ -92,6 +92,7 @@ public abstract class GitOperationHelper
                                          @NotNull File sourceDirectory,
                                          @NotNull String targetRevision,
                                          @Nullable String previousRevision,
+                                         String resolvedBranch,
                                          final boolean useSubmodules) throws RepositoryException;
 
     // -------------------------------------------------------------------------------------------------- Action Methods
@@ -105,6 +106,7 @@ public abstract class GitOperationHelper
                            @NotNull final File sourceDirectory,
                            @NotNull final String targetRevision,
                            @Nullable final String previousRevision,
+                           String resolvedBranch,
                            final boolean useSubmodules) throws RepositoryException
     {
         // would be cool to store lastCheckoutedRevision in the localRepository somehow - so we don't need to specify it
@@ -118,7 +120,7 @@ public abstract class GitOperationHelper
             File lck = new File(localRepository.getIndexFile().getParentFile(), localRepository.getIndexFile().getName() + ".lock");
             FileUtils.deleteQuietly(lck);
 
-            return doCheckout(localRepository, sourceDirectory, targetRevision, previousRevision, useSubmodules);
+            return doCheckout(localRepository, sourceDirectory, targetRevision, previousRevision, resolvedBranch, useSubmodules);
         }
         catch (IOException e)
         {
@@ -126,7 +128,7 @@ public abstract class GitOperationHelper
         }
    }
 
-    public void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
+    public String fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
     {
         Transport transport = null;
         FileRepository localRepository = null;
@@ -168,6 +170,7 @@ public abstract class GitOperationHelper
             {
                 localRepository.updateRef(Constants.HEAD).link(resolvedBranch);
             }
+            return resolvedBranch;
         }
         catch (IOException e)
         {

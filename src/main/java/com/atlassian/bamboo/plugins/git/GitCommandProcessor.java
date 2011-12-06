@@ -11,8 +11,10 @@ import com.atlassian.utils.process.OutputHandler;
 import com.atlassian.utils.process.PluggableProcessHandler;
 import com.atlassian.utils.process.StringOutputHandler;
 import com.google.common.collect.Maps;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.log4j.Logger;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.RefSpec;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -100,7 +102,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
 
     public void runFetchCommand(@NotNull final File workingDirectory, @NotNull final GitRepository.GitRepositoryAccessData accessData, RefSpec refSpec, boolean useShallow) throws RepositoryException
     {
-        GitCommandBuilder commandBuilder = createCommandBuilder("fetch", accessData.repositoryUrl, refSpec.getDestination());
+        GitCommandBuilder commandBuilder = createCommandBuilder("fetch", accessData.repositoryUrl, refSpec.toString(), "--update-head-ok");
         if (useShallow)
         {
             commandBuilder.shallowClone();
@@ -108,19 +110,44 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         if (accessData.verboseLogs)
         {
             commandBuilder.verbose(true);
+            commandBuilder.append("--progress");
         }
         runCommand(commandBuilder, workingDirectory, new LoggingOutputHandler(buildLogger));
     }
 
-    public void runCheckoutCommand(@NotNull final File workingDirectory, String revision, final boolean useSubmodules) throws RepositoryException
+    public String runLogCommand(@NotNull final File workingDirectory, String revision, String previousRevision) throws RepositoryException
     {
-        GitCommandBuilder commandBuilder = createCommandBuilder("checkout");
-        if (useSubmodules)
+        GitCommandBuilder commandBuilder = createCommandBuilder("log", "--decorate=full");
+        if (StringUtils.isNotBlank(previousRevision) && !StringUtils.equals(revision, previousRevision))
         {
-            commandBuilder.append("-f");
+            commandBuilder.append(previousRevision + ".." + revision);
         }
-        commandBuilder.append(revision);
+        else
+        {
+            commandBuilder.append(revision);
+        }
+        final GitStringOutputHandler outputHandler = new GitStringOutputHandler();
+        runCommand(commandBuilder, workingDirectory, outputHandler);
+        return outputHandler.getOutput();
+    }
 
+    public void runCheckoutCommand(@NotNull final File workingDirectory, String revision, String previousRevision, String resolvedBranch, final boolean useSubmodules) throws RepositoryException
+    {
+        /**
+         * this call to git log checks if requested revision is considered as HEAD of resolved branch. If so, insead of calling explicit revision,
+         * checkout to branch is called to avoid DETACHED HEAD
+         */
+        String revisionDescription = runLogCommand(workingDirectory, revision, previousRevision);
+
+        String destination = revision;
+        if (StringUtils.contains(revisionDescription, resolvedBranch))
+        {
+            if (StringUtils.startsWith(resolvedBranch, Constants.R_HEADS))
+            {
+                destination = StringUtils.removeStart(resolvedBranch, Constants.R_HEADS);
+            }
+        }
+        GitCommandBuilder commandBuilder = createCommandBuilder("checkout", "-f", destination);
         runCommand(commandBuilder, workingDirectory, new LoggingOutputHandler(buildLogger));
     }
 

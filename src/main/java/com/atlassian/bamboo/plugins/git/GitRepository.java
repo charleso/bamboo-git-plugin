@@ -286,27 +286,28 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
                 {
                     public String call() throws Exception
                     {
+                        String resolvedBranch = null;
                         try
                         {
-                            helper.fetch(cacheDirectory, substitutedAccessData, doShallowFetch);
+                            resolvedBranch = helper.fetch(cacheDirectory, substitutedAccessData, doShallowFetch);
                         }
                         catch (Exception e)
                         {
                             rethrowOrRemoveDirectory(e, buildLogger, cacheDirectory, "repository.git.messages.rsRecover.failedToFetchCache");
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedCacheDirectory", Arrays.asList(cacheDirectory)));
-                            helper.fetch(cacheDirectory, substitutedAccessData, doShallowFetch);
+                            resolvedBranch = helper.fetch(cacheDirectory, substitutedAccessData, doShallowFetch);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.fetchingCacheCompleted", Arrays.asList(cacheDirectory)));
                         }
 
                         try
                         {
-                            return helper.checkout(cacheDirectory, sourceDirectory, targetRevision, previousRevision, accessData.useSubmodules);
+                            return helper.checkout(cacheDirectory, sourceDirectory, targetRevision, previousRevision, resolvedBranch, accessData.useSubmodules);
                         }
                         catch (Exception e)
                         {
                             rethrowOrRemoveDirectory(e, buildLogger, sourceDirectory, "repository.git.messages.rsRecover.failedToCheckout");
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(sourceDirectory)));
-                            String returnRevision = helper.checkout(cacheDirectory, sourceDirectory, targetRevision, null, accessData.useSubmodules);
+                            String returnRevision = helper.checkout(cacheDirectory, sourceDirectory, targetRevision, null, resolvedBranch, accessData.useSubmodules);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.checkoutCompleted"));
                             return returnRevision;
                         }
@@ -316,18 +317,19 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
             }
             else //isOnRemoteAgent
             {
+                String resolvedBranch = null;
                 try
                 {
-                    helper.fetch(sourceDirectory, substitutedAccessData, doShallowFetch);
-                    return helper.checkout(null, sourceDirectory, targetRevision, previousRevision, accessData.useSubmodules);
+                    resolvedBranch = helper.fetch(sourceDirectory, substitutedAccessData, doShallowFetch);
+                    return helper.checkout(null, sourceDirectory, targetRevision, previousRevision, resolvedBranch, accessData.useSubmodules);
                 }
                 catch (Exception e)
                 {
                     rethrowOrRemoveDirectory(e, buildLogger, sourceDirectory, "repository.git.messages.rsRecover.failedToCheckout");
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(sourceDirectory)));
-                    helper.fetch(sourceDirectory, substitutedAccessData, false);
+                    resolvedBranch = helper.fetch(sourceDirectory, substitutedAccessData, false);
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.fetchingCompleted", Arrays.asList(sourceDirectory)));
-                    String returnRevision = helper.checkout(null, sourceDirectory, targetRevision, null, accessData.useSubmodules);
+                    String returnRevision = helper.checkout(null, sourceDirectory, targetRevision, null, resolvedBranch, accessData.useSubmodules);
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.checkoutCompleted"));
                     return returnRevision;
                 }

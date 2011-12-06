@@ -47,7 +47,7 @@ public class ObjectCacheGithubTest extends GitAbstractTest
 
         String targetRevision = helper.obtainLatestRevision(createAccessData(url));
         helper.fetch(cacheDir, createAccessData(url), false);
-        helper.checkout(cacheDir, targetDir, targetRevision, null, false);
+        helper.checkout(cacheDir, targetDir, targetRevision, null, null, false);
 
         verifyContents(targetDir, "shallow-clones/5-contents.zip");
 
@@ -65,7 +65,7 @@ public class ObjectCacheGithubTest extends GitAbstractTest
         String targetRevision = helper.obtainLatestRevision(createAccessData("https://github.com/pstefaniak/3.git"));
         String previousRevision = null;
         helper.fetch(cacheDir, createAccessData("https://github.com/pstefaniak/3.git"), true);
-        helper.checkout(cacheDir, targetDir, targetRevision, previousRevision, false);
+        helper.checkout(cacheDir, targetDir, targetRevision, previousRevision, null, false);
         verifyContents(targetDir, "shallow-clones/3-contents.zip");
 
         RepositorySummary rs = new RepositorySummary(targetDir);
@@ -75,7 +75,7 @@ public class ObjectCacheGithubTest extends GitAbstractTest
 
         previousRevision = helper.getCurrentRevision(targetDir);
         helper.fetch(cacheDir, createAccessData("https://github.com/pstefaniak/5.git"), true);
-        helper.checkout(cacheDir, targetDir, targetRevision, previousRevision, false);
+        helper.checkout(cacheDir, targetDir, targetRevision, previousRevision, null, false);
         verifyContents(targetDir, "shallow-clones/5-contents.zip");
 
         RepositorySummary rs2 = new RepositorySummary(targetDir);
@@ -84,7 +84,7 @@ public class ObjectCacheGithubTest extends GitAbstractTest
         File targetDir2 = createTempDirectory();
         String targetRevision2 = helper.obtainLatestRevision(createAccessData("https://github.com/pstefaniak/3.git"));
         helper.fetch(targetDir2, createAccessData("https://github.com/pstefaniak/3.git"), true);
-        helper.checkout(cacheDir, targetDir2, targetRevision2, null, false);
+        helper.checkout(cacheDir, targetDir2, targetRevision2, null, null, false);
         verifyContents(targetDir2, "shallow-clones/3-contents.zip");
 
         RepositorySummary rs3 = new RepositorySummary(targetDir);
@@ -93,7 +93,7 @@ public class ObjectCacheGithubTest extends GitAbstractTest
         File targetDir3 = createTempDirectory();
         String targetRevision3 = helper.obtainLatestRevision(createAccessData("https://github.com/pstefaniak/5.git"));
         helper.fetch(targetDir3, createAccessData("https://github.com/pstefaniak/5.git"), true);
-        helper.checkout(cacheDir, targetDir3, targetRevision3, null, false);
+        helper.checkout(cacheDir, targetDir3, targetRevision3, null, null, false);
         verifyContents(targetDir3, "shallow-clones/5-contents.zip");
 
     }
@@ -106,7 +106,7 @@ public class ObjectCacheGithubTest extends GitAbstractTest
 
         String targetRevision = createGitOperationHelper().obtainLatestRevision(createAccessData("https://github.com/pstefaniak/3.git"));
         createGitOperationHelper().fetch(cacheDir, createAccessData("https://github.com/pstefaniak/3.git"), false);
-        createGitOperationHelper().checkout(cacheDir, targetDir, targetRevision, null, false);
+        createGitOperationHelper().checkout(cacheDir, targetDir, targetRevision, null, null, false);
         verifyContents(targetDir, "shallow-clones/3-contents.zip");
 
         FileRepository repository = new FileRepository(new File(targetDir, Constants.DOT_GIT));
@@ -132,7 +132,7 @@ public class ObjectCacheGithubTest extends GitAbstractTest
         File targetDir = createTempDirectory();
         String targetRevision = createGitOperationHelper().obtainLatestRevision(createAccessData(url));
         createGitOperationHelper().fetch(targetDir, createAccessData(url), false);
-        createGitOperationHelper().checkout(null, targetDir, targetRevision, null, false);
+        createGitOperationHelper().checkout(null, targetDir, targetRevision, null, null, false);
 
         verifyContents(targetDir, "shallow-clones/5-contents.zip");
 
