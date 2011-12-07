@@ -79,7 +79,6 @@ public class TimeoutsTest extends GitAbstractTest
     public GitOperationHelper createGitOperationHelper()
     {
         TextProvider textProvider = mock(TextProvider.class);
-        SshProxyService sshProxyService = null; //new SshProxyServiceImpl(textProvider);
 
         return new JGitOperationHelper(
             new NullBuildLogger()
@@ -91,7 +90,6 @@ public class TimeoutsTest extends GitAbstractTest
                     return null;
                 }
             },
-            sshProxyService,
             textProvider);
     }
 

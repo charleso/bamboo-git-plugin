@@ -17,16 +17,15 @@ public class GitOperationHelperFactory
                                                               final @NotNull GitRepository.GitRepositoryAccessData accessData,
                                                               final @NotNull SshProxyService sshProxyService,
                                                               final @NotNull BuildLogger buildLogger,
-                                                              final @NotNull TextProvider textProvider,
-                                                              final @NotNull HomeLocator homeLocator) throws RepositoryException, URISyntaxException
+                                                              final @NotNull TextProvider textProvider) throws RepositoryException, URISyntaxException
     {
         if (StringUtils.isNotBlank(repository.getGitCapability()))
         {
-            return new NativeGitOperationHelper(repository, accessData, sshProxyService, buildLogger, textProvider, homeLocator, repository.getGitCapability());
+            return new NativeGitOperationHelper(repository, accessData, sshProxyService, buildLogger, textProvider);
         }
         else
         {
-            return new JGitOperationHelper(buildLogger, sshProxyService, textProvider);
+            return new JGitOperationHelper(buildLogger, textProvider);
         }
     }
 }

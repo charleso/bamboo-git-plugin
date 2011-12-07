@@ -119,8 +119,7 @@ public class GitAbstractTest
     public GitOperationHelper createGitOperationHelper()
     {
         TextProvider textProvider = Mockito.mock(TextProvider.class);
-        SshProxyService sshProxyService = null; //new SshProxyServiceImpl(textProvider);
-        return new JGitOperationHelper(new NullBuildLogger(), sshProxyService, textProvider);
+        return new JGitOperationHelper(new NullBuildLogger(), textProvider);
     }
 
     public GitRepository createGitRepository() throws Exception

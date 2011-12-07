@@ -4,7 +4,6 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.build.CommandLogEntry;
 import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.repository.RepositoryException;
-import com.atlassian.bamboo.ssh.SshProxyService;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.dircache.DirCache;
@@ -36,10 +35,9 @@ public class JGitOperationHelper extends GitOperationHelper
     // ---------------------------------------------------------------------------------------------------- Constructors
 
     public JGitOperationHelper(final @NotNull BuildLogger buildLogger,
-                               final @NotNull SshProxyService sshProxyService,
                                final @NotNull TextProvider textProvider)
     {
-        super(buildLogger, sshProxyService, textProvider);
+        super(buildLogger, textProvider);
     }
 
     // ----------------------------------------------------------------------------------------------- Interface Methods
@@ -133,5 +131,4 @@ public class JGitOperationHelper extends GitOperationHelper
     // -------------------------------------------------------------------------------------------------- Action Methods
     // -------------------------------------------------------------------------------------------------- Public Methods
     // -------------------------------------------------------------------------------------- Basic Accessors / Mutators
-
 }
