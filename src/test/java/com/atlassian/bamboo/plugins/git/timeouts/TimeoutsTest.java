@@ -102,8 +102,8 @@ public class TimeoutsTest extends GitAbstractTest
         String s = helper.obtainLatestRevision(createAccessData("git://git.jetbrains.org/idea/community.git"));
         File directory = createTempDirectory();
         System.out.println(directory);
-        String resolvedBranch = helper.fetch(directory, createAccessData("git://git.jetbrains.org/idea/community.git"), false);
-        helper.checkout(null, directory, s, null, resolvedBranch, false);
+        helper.fetch(directory, createAccessData("git://git.jetbrains.org/idea/community.git"), false);
+        helper.checkout(null, directory, s, null, false);
     }
 
     @DataProvider
@@ -127,8 +127,8 @@ public class TimeoutsTest extends GitAbstractTest
     {
         File directory = createTempDirectory();
         String targetRevision = createGitOperationHelper().obtainLatestRevision(createAccessData(url));
-        String resolvedBranch = createGitOperationHelper().fetch(directory, createAccessData(url), false);
-        createGitOperationHelper().checkout(null, directory, targetRevision, null, resolvedBranch, false);
+        createGitOperationHelper().fetch(directory, createAccessData(url), false);
+        createGitOperationHelper().checkout(null, directory, targetRevision, null, false);
     }
 
 }

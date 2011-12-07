@@ -10,9 +10,10 @@ import com.atlassian.utils.process.LineOutputHandler;
 import com.atlassian.utils.process.OutputHandler;
 import com.atlassian.utils.process.PluggableProcessHandler;
 import com.atlassian.utils.process.StringOutputHandler;
-import com.google.common.collect.Maps;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.SystemUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.RefSpec;
@@ -23,6 +24,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -62,6 +64,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
      * Checks whether git exist in current system.
      *
      * @param workingDirectory specifies arbitrary directory.
+     *
      * @throws RepositoryException when git wasn't found in current system.
      */
     public void checkGitExistenceInSystem(@NotNull final File workingDirectory) throws RepositoryException
@@ -92,6 +95,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
      * Creates .git repository in a given directory.
      *
      * @param workingDirectory - directory in which we want to create empty repository.
+     *
      * @throws RepositoryException when init command fails
      */
     public void runInitCommand(@NotNull final File workingDirectory) throws RepositoryException
@@ -115,37 +119,18 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         runCommand(commandBuilder, workingDirectory, new LoggingOutputHandler(buildLogger));
     }
 
-    public String runLogCommand(@NotNull final File workingDirectory, String revision, String previousRevision) throws RepositoryException
-    {
-        GitCommandBuilder commandBuilder = createCommandBuilder("log", "--decorate=full");
-        if (StringUtils.isNotBlank(previousRevision) && !StringUtils.equals(revision, previousRevision))
-        {
-            commandBuilder.append(previousRevision + ".." + revision);
-        }
-        else
-        {
-            commandBuilder.append(revision);
-        }
-        final GitStringOutputHandler outputHandler = new GitStringOutputHandler();
-        runCommand(commandBuilder, workingDirectory, outputHandler);
-        return outputHandler.getOutput();
-    }
-
-    public void runCheckoutCommand(@NotNull final File workingDirectory, String revision, String previousRevision, String resolvedBranch, final boolean useSubmodules) throws RepositoryException
+    public void runCheckoutCommand(@NotNull final File workingDirectory, String revision, final boolean useSubmodules) throws RepositoryException
     {
         /**
          * this call to git log checks if requested revision is considered as HEAD of resolved branch. If so, insead of calling explicit revision,
          * checkout to branch is called to avoid DETACHED HEAD
          */
-        String revisionDescription = runLogCommand(workingDirectory, revision, previousRevision);
+        String possibleBranch = getPossibleBranchNameForCheckout(workingDirectory, revision);
 
         String destination = revision;
-        if (StringUtils.contains(revisionDescription, resolvedBranch))
+        if (StringUtils.isNotBlank(possibleBranch))
         {
-            if (StringUtils.startsWith(resolvedBranch, Constants.R_HEADS))
-            {
-                destination = StringUtils.removeStart(resolvedBranch, Constants.R_HEADS);
-            }
+           destination = possibleBranch;
         }
         GitCommandBuilder commandBuilder = createCommandBuilder("checkout", "-f", destination);
         runCommand(commandBuilder, workingDirectory, new LoggingOutputHandler(buildLogger));
@@ -166,6 +151,30 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
     }
 
     // -------------------------------------------------------------------------------------------------- Helper Methods
+
+    private String getPossibleBranchNameForCheckout(File workingDirectory, String revision) throws RepositoryException
+    {
+        GitCommandBuilder commandBuilder = createCommandBuilder("log", "-1", "--format=%d", "--decorate=full");
+        commandBuilder.append(revision);
+        final GitStringOutputHandler outputHandler = new GitStringOutputHandler();
+        runCommand(commandBuilder, workingDirectory, outputHandler);
+
+        String revisionDescription = outputHandler.getOutput();
+        if (StringUtils.isNotBlank(revisionDescription))
+        {
+            Set<String> possibleBranches = Sets.newHashSet(
+                    Splitter.on(',').trimResults().split(
+                            CharMatcher.anyOf("()").removeFrom(StringUtils.trim(revisionDescription))));
+            for (String possibleBranch : possibleBranches)
+            {
+                if (possibleBranch.startsWith(Constants.R_HEADS))
+                {
+                    return StringUtils.removeStart(possibleBranch, Constants.R_HEADS);
+                }
+            }
+        }
+        return "";
+    }
 
     private GitCommandBuilder createCommandBuilder(String... commands)
     {
@@ -219,10 +228,10 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         {
             // command may contain user password (url) in plaintext -> hide it from bamboo plan/build logs. see BAM-5781
             throw new GitCommandException("command " + RepositoryUrlObfuscator.obfuscatePasswordsInUrls(commandArgs) + " failed. Working directory was `"
-                    + workingDirectory + "'.",
-                    proxyException != null ? proxyException : handler.getException(),
-                    outputHandler.getStdout(),
-                    proxyErrorMessage != null ? "SSH Proxy error: " + proxyErrorMessage : outputHandler.getStdout());
+                                          + workingDirectory + "'.",
+                                          proxyException != null ? proxyException : handler.getException(),
+                                          outputHandler.getStdout(),
+                                          proxyErrorMessage != null ? "SSH Proxy error: " + proxyErrorMessage : outputHandler.getStdout());
         }
     }
 

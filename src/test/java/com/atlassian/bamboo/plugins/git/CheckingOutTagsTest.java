@@ -246,7 +246,7 @@ public class CheckingOutTagsTest extends GitAbstractTest
         {
             helper.fetch(src, accessData, useShallow);
         }
-        helper.checkout(cache, src, tag, null, null, false);
+        helper.checkout(cache, src, tag, null, false);
 
         String contents = FileUtils.readFileToString(srcRepo.getTextFile(src));
         Assert.assertEquals(contents, expectedContents);
@@ -264,9 +264,9 @@ public class CheckingOutTagsTest extends GitAbstractTest
         File src = createTempDirectory();
         GitOperationHelper helper = createGitOperationHelper();
         helper.fetch(src, createAccessData("https://github.com/github/git.git", "dup-post-receive-refs-patch"), true);
-        helper.checkout(null, src, "v1.7.0.2", null, null, false);
-        helper.checkout(null, src, "5565f47c", "v1.7.0.2", null, false);
-        helper.checkout(null, src, "8ed5bd96", "5565f47c", null, false);
+        helper.checkout(null, src, "v1.7.0.2", null, false);
+        helper.checkout(null, src, "5565f47c", "v1.7.0.2", false);
+        helper.checkout(null, src, "8ed5bd96", "5565f47c", false);
     }
 }
 

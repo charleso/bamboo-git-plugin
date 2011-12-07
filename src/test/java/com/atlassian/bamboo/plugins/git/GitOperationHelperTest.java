@@ -80,7 +80,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         {
             String targetRevision = testCase[0];
             String expectedContentsInZip = testCase[1];
-            String result = helper.checkout(null, tmp, targetRevision, previousRevision, null, false);
+            String result = helper.checkout(null, tmp, targetRevision, previousRevision, false);
             previousRevision = result;
 
             assertEquals(result, targetRevision);

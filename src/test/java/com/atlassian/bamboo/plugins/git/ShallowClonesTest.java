@@ -130,8 +130,8 @@ public class ShallowClonesTest extends GitAbstractTest
             String revision = null;
             for (String[] currentFetch : successiveFetches)
             {
-                String resolvedBranch = helper.fetch(tmp, createAccessData(protocol + currentFetch[0]), true);
-                revision = helper.checkout(null, tmp, currentFetch[1], revision, resolvedBranch, false);
+                helper.fetch(tmp, createAccessData(protocol + currentFetch[0]), true);
+                revision = helper.checkout(null, tmp, currentFetch[1], revision, false);
                 verifyContents(tmp, currentFetch[2]);
             }
         }
@@ -227,9 +227,9 @@ public class ShallowClonesTest extends GitAbstractTest
         File tmp = createTempDirectory();
         GitOperationHelper helper = createGitOperationHelper();
 
-        String resolvedBranch = helper.fetch(tmp, createAccessData("git://github.com/pstefaniak/72parents.git"), true);
+        helper.fetch(tmp, createAccessData("git://github.com/pstefaniak/72parents.git"), true);
         assertEquals(FileUtils.readLines(new File(tmp, ".git/shallow")).size(), 72);
-        helper.checkout(null, tmp, "f9a3b37fcbf5298c1bfa", null, resolvedBranch, false);
+        helper.checkout(null, tmp, "f9a3b37fcbf5298c1bfa", null, false);
         verifyContents(tmp, "shallow-clones/72parents-contents.zip");
     }
 
@@ -241,9 +241,9 @@ public class ShallowClonesTest extends GitAbstractTest
 
         helper.fetch(tmp, createAccessData("git://github.com/pstefaniak/3.git"), true);
         assertEquals(FileUtils.readFileToString(new File(tmp, ".git/shallow")), "4c9d0c7e6167407deff1d31af5884911202dd3db\n");
-        String resolvedBranch =  helper.fetch(tmp, createAccessData("git://github.com/pstefaniak/7.git"), false);
+        helper.fetch(tmp, createAccessData("git://github.com/pstefaniak/7.git"), false);
         assertEquals(FileUtils.readFileToString(new File(tmp, ".git/shallow")), "4c9d0c7e6167407deff1d31af5884911202dd3db\n");
-        helper.checkout(null, tmp, "1070f438270b8cf1ca36", null, resolvedBranch, false);
+        helper.checkout(null, tmp, "1070f438270b8cf1ca36", null, false);
         verifyContents(tmp, "shallow-clones/5-contents.zip");
 
         FileRepository repository = new FileRepository(new File(tmp, Constants.DOT_GIT));
