@@ -291,7 +291,7 @@ public abstract class GitOperationHelper
         return null;
     }
 
-    protected GitRepositoryAccessData openProxy(@NotNull final GitRepositoryAccessData accessData) throws RepositoryException
+    protected GitRepositoryAccessData adjustRepositoryAccess(@NotNull final GitRepositoryAccessData accessData) throws RepositoryException
     {
         if (accessData.authenticationType == GitAuthenticationType.SSH_KEYPAIR)
         {
@@ -357,8 +357,56 @@ public abstract class GitOperationHelper
                 return proxyAccessData;
             }
         }
+        else
+        {
+            if (accessData.authenticationType == GitAuthenticationType.PASSWORD)
+            {
+                GitRepositoryAccessData credentialsAwareAccessData = new GitRepositoryAccessData();
+                credentialsAwareAccessData.repositoryUrl = accessData.repositoryUrl;
+                credentialsAwareAccessData.branch = accessData.branch;
+                credentialsAwareAccessData.username = accessData.username;
+                credentialsAwareAccessData.password = accessData.password;
+                credentialsAwareAccessData.sshKey = accessData.sshKey;
+                credentialsAwareAccessData.sshPassphrase = accessData.sshPassphrase;
+                credentialsAwareAccessData.authenticationType = accessData.authenticationType;
+                credentialsAwareAccessData.useShallowClones = accessData.useShallowClones;
+                URI repositoryUrl = wrapWithUsernameAndPassword(credentialsAwareAccessData);
+                credentialsAwareAccessData.repositoryUrl = repositoryUrl.toString();
+
+                return credentialsAwareAccessData;
+            }
+        }
 
         return accessData;
+    }
+
+    @NotNull
+    URI wrapWithUsernameAndPassword(GitRepositoryAccessData repositoryAccessData)
+    {
+        try
+        {
+            final String username = repositoryAccessData.username;
+            final String password = repositoryAccessData.password;
+            final boolean usePassword = repositoryAccessData.authenticationType == GitAuthenticationType.PASSWORD && StringUtils.isNotBlank(password);
+            final String authority = StringUtils.isEmpty(username) ? null :
+                                     usePassword ? (username + ":" + password) : username;
+
+            URI remoteUri = new URI(repositoryAccessData.repositoryUrl);
+            return new URI(remoteUri.getScheme(),
+                           authority,
+                           remoteUri.getHost(),
+                           remoteUri.getPort(),
+                           remoteUri.getPath(),
+                           remoteUri.getQuery(),
+                           remoteUri.getFragment());
+        }
+        catch (URISyntaxException e)
+        {
+            // can't really happen
+            final String message = "Cannot parse remote URI: " + repositoryAccessData.repositoryUrl;
+            log.error(message, e);
+            throw new RuntimeException(e);
+        }
     }
 
     protected void closeProxy(@NotNull final GitRepositoryAccessData accessData)

@@ -43,7 +43,7 @@ public class NativeGitOperationHelper extends GitOperationHelper
     @Override
     protected void doFetch(@NotNull final Transport transport, @NotNull final File sourceDirectory, @NotNull final GitRepository.GitRepositoryAccessData accessData, final RefSpec refSpec, final boolean useShallow) throws RepositoryException
     {
-        final GitRepository.GitRepositoryAccessData proxiedAccessData = openProxy(accessData);
+        final GitRepository.GitRepositoryAccessData proxiedAccessData = adjustRepositoryAccess(accessData);
         try
         {
             gitCommandProcessor.runFetchCommand(sourceDirectory, proxiedAccessData, refSpec, useShallow);
