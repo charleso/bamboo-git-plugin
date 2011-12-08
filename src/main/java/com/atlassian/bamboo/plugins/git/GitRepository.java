@@ -288,12 +288,13 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
                         try
                         {
                             helper.fetch(cacheDirectory, substitutedAccessData, doShallowFetch);
+                            helper.checkRevisionExistsInRepository(cacheDirectory, targetRevision);
                         }
                         catch (Exception e)
                         {
                             rethrowOrRemoveDirectory(e, buildLogger, cacheDirectory, "repository.git.messages.rsRecover.failedToFetchCache");
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedCacheDirectory", Arrays.asList(cacheDirectory)));
-                            helper.fetch(cacheDirectory, substitutedAccessData, doShallowFetch);
+                            helper.fetch(cacheDirectory, substitutedAccessData, false);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.fetchingCacheCompleted", Arrays.asList(cacheDirectory)));
                         }
 

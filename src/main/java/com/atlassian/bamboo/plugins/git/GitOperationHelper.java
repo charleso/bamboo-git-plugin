@@ -258,6 +258,21 @@ public abstract class GitOperationHelper
         }
     }
 
+    /**
+     *
+     * @param repositoryDirectory directory where repository is fetched
+     * @param targetRevision revision to find in repository
+     * @return true if revision found
+     * @throws IOException thrown when revision not found (MissingObjectException)
+     */
+    public boolean checkRevisionExistsInRepository(@NotNull File repositoryDirectory, @NotNull String targetRevision) throws IOException
+    {
+        FileRepository localRepository = createLocalRepository(repositoryDirectory, null);
+        RevWalk revWalk = new RevWalk(localRepository);
+        final RevCommit targetCommit = revWalk.parseCommit(localRepository.resolve(targetRevision));
+        return targetCommit != null;
+    }
+    
     // -------------------------------------------------------------------------------------- Basic Accessors / Mutators
 
     @Nullable
