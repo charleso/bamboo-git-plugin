@@ -116,7 +116,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         transient ProxyRegistrationInfo proxyRegistrationInfo;
     }
 
-    final GitRepositoryAccessData accessData = new GitRepositoryAccessData();
+    final public GitRepositoryAccessData accessData = new GitRepositoryAccessData();
 
     // Maven 2 import
     private transient String pathToPom;
