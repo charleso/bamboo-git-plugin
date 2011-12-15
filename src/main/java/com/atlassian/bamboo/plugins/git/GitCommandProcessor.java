@@ -136,16 +136,9 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         runCommand(commandBuilder, workingDirectory, new LoggingOutputHandler(buildLogger));
     }
 
-    public void runSubmoduleInitCommand(@NotNull final File workingDirectory) throws RepositoryException
-    {
-        GitCommandBuilder commandBuilder = createCommandBuilder("submodule", "init");
-
-        runCommand(commandBuilder, workingDirectory, new LoggingOutputHandler(buildLogger));
-    }
-
     public void runSubmoduleUpdateCommand(@NotNull final File workingDirectory) throws RepositoryException
     {
-        GitCommandBuilder commandBuilder = createCommandBuilder("submodule", "update");
+        GitCommandBuilder commandBuilder = createCommandBuilder("submodule", "update", "--init", "--recursive");
 
         runCommand(commandBuilder, workingDirectory, new LoggingOutputHandler(buildLogger));
     }

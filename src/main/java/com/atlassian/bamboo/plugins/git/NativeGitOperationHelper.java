@@ -67,7 +67,6 @@ public class NativeGitOperationHelper extends GitOperationHelper
         gitCommandProcessor.runCheckoutCommand(sourceDirectory, targetRevision, useSubmodules);
         if (useSubmodules)
         {
-            gitCommandProcessor.runSubmoduleInitCommand(sourceDirectory);
             gitCommandProcessor.runSubmoduleUpdateCommand(sourceDirectory);
         }
         return targetRevision;
