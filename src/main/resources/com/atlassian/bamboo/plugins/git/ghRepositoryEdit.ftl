@@ -153,7 +153,7 @@ BAMBOO.LoadGitHubRepositoriesAsynchronously = function ($) {
 
     $(function(){
         $repositories.change(function() {
-            mutateSelectListContent($(this), $branches, repositoryBranchFilter);
+            BAMBOO.DynamicFieldParameters.mutateSelectListContent($(this), $branches, repositoryBranchFilter);
         });
     });
 
