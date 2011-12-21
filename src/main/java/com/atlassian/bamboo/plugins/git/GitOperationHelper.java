@@ -474,13 +474,15 @@ public abstract class GitOperationHelper
             {
                 uri = uri.setUser(accessData.username);
             }
-            final Transport transport;
+            Transport transport = Transport.open(localRepository, uri);
             if (TransportAllTrustingHttps.canHandle(uri))
             {
+                transport.close();
                 transport = new TransportAllTrustingHttps(localRepository, uri);
             }
             else if ("http".equals(uri.getScheme()))
             {
+                transport.close();
                 class TransportHttpHack extends TransportHttp {
                     TransportHttpHack(FileRepository localRepository, URIish uri) throws NotSupportedException
                     {
@@ -488,10 +490,6 @@ public abstract class GitOperationHelper
                     }
                 }
                 transport = new TransportHttpHack(localRepository, uri);
-            }
-            else
-            {
-                transport = Transport.open(localRepository, uri);
             }
             transport.setTimeout(DEFAULT_TRANSFER_TIMEOUT);
             if (transport instanceof SshTransport)
