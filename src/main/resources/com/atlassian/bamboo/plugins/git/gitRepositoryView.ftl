@@ -9,7 +9,7 @@
 [@ww.label labelKey='repository.git.verbose.logs' value=repository.verboseLogs?string hideOnNull=true /]
 [@ww.label labelKey='repository.git.cacheDirectory' value=repository.cacheDirectory/]
 
-[#if fn.hasGlobalAdminPermission() && repository.cacheDirectory?? && repository.cacheDirectory.exists()]
+[#if plan?? && fn.hasGlobalAdminPermission() && repository.cacheDirectory?? && repository.cacheDirectory.exists()]
     [@ui.messageBox type='info']
         [@ww.text name='repository.git.cacheDirectory.cleanMessage'/]
         <a class="requireConfirmation"
