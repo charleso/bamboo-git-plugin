@@ -474,6 +474,9 @@ public abstract class GitOperationHelper
             {
                 uri = uri.setUser(accessData.username);
             }
+            // transport should be opened using factory method at least first time to properly initialize all transports
+            // for non http/https this is absolutely the same way as usual, for http/https as we use own modified transports
+            // we have to close just opened transport and use the own one
             Transport transport = Transport.open(localRepository, uri);
             if (TransportAllTrustingHttps.canHandle(uri))
             {
