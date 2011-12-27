@@ -123,7 +123,7 @@ public abstract class GitOperationHelper
         }
    }
 
-    public String fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
+    public void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
     {
         Transport transport = null;
         FileRepository localRepository = null;
@@ -165,7 +165,6 @@ public abstract class GitOperationHelper
             {
                 localRepository.updateRef(Constants.HEAD).link(resolvedBranch);
             }
-            return resolvedBranch;
         }
         catch (IOException e)
         {

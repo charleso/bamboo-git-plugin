@@ -119,10 +119,10 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         runCommand(commandBuilder, workingDirectory, new LoggingOutputHandler(buildLogger));
     }
 
-    public void runCheckoutCommand(@NotNull final File workingDirectory, String revision, final boolean useSubmodules) throws RepositoryException
+    public void runCheckoutCommand(@NotNull final File workingDirectory, String revision) throws RepositoryException
     {
         /**
-         * this call to git log checks if requested revision is considered as HEAD of resolved branch. If so, insead of calling explicit revision,
+         * this call to git log checks if requested revision is considered as HEAD of resolved branch. If so, instead of calling explicit revision,
          * checkout to branch is called to avoid DETACHED HEAD
          */
         String possibleBranch = getPossibleBranchNameForCheckout(workingDirectory, revision);

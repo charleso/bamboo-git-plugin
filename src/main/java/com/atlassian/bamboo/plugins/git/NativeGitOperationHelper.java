@@ -64,7 +64,7 @@ public class NativeGitOperationHelper extends GitOperationHelper
     @Override
     protected String doCheckout(@NotNull FileRepository localRepository, @NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision, final boolean useSubmodules) throws RepositoryException
     {
-        gitCommandProcessor.runCheckoutCommand(sourceDirectory, targetRevision, useSubmodules);
+        gitCommandProcessor.runCheckoutCommand(sourceDirectory, targetRevision);
         if (useSubmodules)
         {
             gitCommandProcessor.runSubmoduleUpdateCommand(sourceDirectory);
