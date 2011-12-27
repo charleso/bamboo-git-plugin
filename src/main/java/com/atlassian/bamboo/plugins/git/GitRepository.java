@@ -52,6 +52,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -114,6 +115,24 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         boolean verboseLogs;
 
         transient ProxyRegistrationInfo proxyRegistrationInfo;
+
+        GitRepositoryAccessData cloneAccessData()
+        {
+            GitRepository.GitRepositoryAccessData data = new GitRepositoryAccessData();
+            data.repositoryUrl = this.repositoryUrl;
+            data.branch = this.branch;
+            data.username = this.username;
+            data.password = this.password;
+            data.sshKey = this.sshKey;
+            data.sshPassphrase = this.sshPassphrase;
+            data.authenticationType = this.authenticationType;
+            data.useShallowClones = this.useShallowClones;
+            data.useSubmodules = this.useSubmodules;
+            data.commandTimeout = this.commandTimeout;
+            data.verboseLogs = this.verboseLogs;
+
+            return data;
+        }
     }
 
     final public GitRepositoryAccessData accessData = new GitRepositoryAccessData();

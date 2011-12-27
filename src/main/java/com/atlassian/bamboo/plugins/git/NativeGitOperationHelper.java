@@ -80,15 +80,7 @@ public class NativeGitOperationHelper extends GitOperationHelper
     {
         if (accessData.authenticationType == GitAuthenticationType.SSH_KEYPAIR)
         {
-            GitRepository.GitRepositoryAccessData proxyAccessData = new GitRepository.GitRepositoryAccessData();
-            proxyAccessData.repositoryUrl = accessData.repositoryUrl;
-            proxyAccessData.branch = accessData.branch;
-            proxyAccessData.username = accessData.username;
-            proxyAccessData.password = accessData.password;
-            proxyAccessData.sshKey = accessData.sshKey;
-            proxyAccessData.sshPassphrase = accessData.sshPassphrase;
-            proxyAccessData.authenticationType = accessData.authenticationType;
-            proxyAccessData.useShallowClones = accessData.useShallowClones;
+            GitRepository.GitRepositoryAccessData proxyAccessData = accessData.cloneAccessData();
 
             if (!StringUtils.contains(proxyAccessData.repositoryUrl, "://"))
             {
@@ -152,15 +144,7 @@ public class NativeGitOperationHelper extends GitOperationHelper
         {
             if (accessData.authenticationType == GitAuthenticationType.PASSWORD)
             {
-                GitRepository.GitRepositoryAccessData credentialsAwareAccessData = new GitRepository.GitRepositoryAccessData();
-                credentialsAwareAccessData.repositoryUrl = accessData.repositoryUrl;
-                credentialsAwareAccessData.branch = accessData.branch;
-                credentialsAwareAccessData.username = accessData.username;
-                credentialsAwareAccessData.password = accessData.password;
-                credentialsAwareAccessData.sshKey = accessData.sshKey;
-                credentialsAwareAccessData.sshPassphrase = accessData.sshPassphrase;
-                credentialsAwareAccessData.authenticationType = accessData.authenticationType;
-                credentialsAwareAccessData.useShallowClones = accessData.useShallowClones;
+                GitRepository.GitRepositoryAccessData credentialsAwareAccessData = accessData.cloneAccessData();
                 URI repositoryUrl = wrapWithUsernameAndPassword(credentialsAwareAccessData);
                 credentialsAwareAccessData.repositoryUrl = repositoryUrl.toString();
 
