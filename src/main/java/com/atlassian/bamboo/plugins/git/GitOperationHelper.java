@@ -264,7 +264,7 @@ public abstract class GitOperationHelper
      * @return true if revision found
      * @throws IOException thrown when revision not found (MissingObjectException)
      */
-    public boolean checkRevisionExistsInRepository(@NotNull File repositoryDirectory, @NotNull String targetRevision) throws IOException
+    public boolean checkRevisionExistsInCacheRepository(@NotNull File repositoryDirectory, @NotNull String targetRevision) throws IOException
     {
         FileRepository localRepository = createLocalRepository(repositoryDirectory, null);
         RevWalk revWalk = new RevWalk(localRepository);
