@@ -389,7 +389,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     @Override
     public void addDefaultValues(@NotNull BuildConfiguration buildConfiguration)
     {
-        buildConfiguration.setProperty(REPOSITORY_GIT_COMMAND_TIMEOUT, String.valueOf(DEFAULT_COMMAND_TIMEOUT_IN_MINUTES));
+        buildConfiguration.setProperty(REPOSITORY_GIT_COMMAND_TIMEOUT, Integer.valueOf(DEFAULT_COMMAND_TIMEOUT_IN_MINUTES));
         buildConfiguration.clearTree(REPOSITORY_GIT_VERBOSE_LOGS);
         buildConfiguration.setProperty(REPOSITORY_GIT_USE_SHALLOW_CLONES, true);
         buildConfiguration.clearTree(REPOSITORY_GIT_USE_SUBMODULES);
@@ -397,7 +397,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
 
     public void prepareConfigObject(@NotNull BuildConfiguration buildConfiguration)
     {
-        buildConfiguration.setProperty(REPOSITORY_GIT_COMMAND_TIMEOUT, buildConfiguration.getString(REPOSITORY_GIT_COMMAND_TIMEOUT, "").trim());
+        buildConfiguration.setProperty(REPOSITORY_GIT_COMMAND_TIMEOUT, buildConfiguration.getInt(REPOSITORY_GIT_COMMAND_TIMEOUT, DEFAULT_COMMAND_TIMEOUT_IN_MINUTES));
         if (buildConfiguration.getBoolean(TEMPORARY_GIT_PASSWORD_CHANGE))
         {
             buildConfiguration.setProperty(REPOSITORY_GIT_PASSWORD, encrypterRef.get().encrypt(buildConfiguration.getString(TEMPORARY_GIT_PASSWORD)));
