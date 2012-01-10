@@ -178,7 +178,7 @@
     </build>
 
     <properties>
-        <bamboo.version>3.4</bamboo.version>
+        <bamboo.version>4.0-SNAPSHOT</bamboo.version>
         <bamboo.data.version>3.2.2</bamboo.data.version>
     </properties>
 

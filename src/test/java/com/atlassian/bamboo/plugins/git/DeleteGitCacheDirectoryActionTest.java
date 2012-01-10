@@ -15,7 +15,7 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.Map;
+import java.util.List;
 
 public class DeleteGitCacheDirectoryActionTest extends GitAbstractTest
 {
@@ -79,9 +79,9 @@ public class DeleteGitCacheDirectoryActionTest extends GitAbstractTest
         DeleteGitCacheDirectoryAction action = new DeleteGitCacheDirectoryAction();
         action.setBuildKey("BUILD-KEY-1");
         RepositoryDefinition repositoryDefinition = Mockito.mock(RepositoryDefinition.class, new Returns(repository));
-        Map<Long, RepositoryDefinition> repositoryDefinitions = Collections.singletonMap(1L, repositoryDefinition);
+        List<RepositoryDefinition> repositoryDefinitions = Collections.singletonList(repositoryDefinition);
         Chain chain = Mockito.mock(Chain.class);
-        Mockito.when(chain.getRepositoryDefinitionMap()).thenReturn(repositoryDefinitions);
+        Mockito.when(chain.getEffectiveRepositoryDefinitions()).thenReturn(repositoryDefinitions);
         PlanManager planManager = Mockito.mock(PlanManager.class);
         Mockito.when(planManager.getPlanByKey(action.getBuildKey())).thenReturn(chain);
         action.setPlanManager(planManager);

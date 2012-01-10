@@ -1,18 +1,20 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.build.BuildLoggerManager;
+import com.atlassian.bamboo.build.branches.BranchDetectionService;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.chains.BuildContextFactory;
-import com.atlassian.bamboo.plan.Plan;
 import com.atlassian.bamboo.plan.PlanKeys;
+import com.atlassian.bamboo.plan.cache.ImmutableChain;
+import com.atlassian.bamboo.plan.cache.ImmutablePlan;
 import com.atlassian.bamboo.plan.vcsRevision.PlanVcsRevisionData;
 import com.atlassian.bamboo.plan.vcsRevision.PlanVcsRevisionHistoryService;
 import com.atlassian.bamboo.repository.IncludeExcludeAwareRepository;
 import com.atlassian.bamboo.repository.RepositoryDefinition;
-import com.atlassian.bamboo.repository.RepositoryDefinitionManager;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.trigger.DefaultChangeDetectionManager;
 import com.atlassian.bamboo.variable.CustomVariableContextImpl;
+import com.atlassian.bamboo.variable.VariableContextBuilder;
 import com.atlassian.bamboo.variable.VariableDefinitionContext;
 import com.atlassian.bamboo.variable.VariableDefinitionManager;
 import com.google.common.collect.Maps;
@@ -36,7 +38,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class IncludeExcludeAwareChangeDetectionTest extends GitAbstractTest
 {
@@ -73,6 +77,13 @@ public class IncludeExcludeAwareChangeDetectionTest extends GitAbstractTest
         String previousVcsRevisionKey = touchFiles(localRepository, Arrays.asList("file1.txt"));
 
         BuildLoggerManager mockBuildLoggerManager = Mockito.mock(BuildLoggerManager.class, new Returns(new NullBuildLogger()));
+        VariableDefinitionManager mockVariableDefinitionManager = Mockito.mock(VariableDefinitionManager.class);
+        VariableContextBuilder mockVariableContextBuilder = Mockito.mock(VariableContextBuilder.class);
+        Mockito.when(mockVariableContextBuilder.addGlobalVariables()).thenReturn(mockVariableContextBuilder);
+        Mockito.when(mockVariableContextBuilder.addPlanVariables(Mockito.<ImmutablePlan>any())).thenReturn(mockVariableContextBuilder);
+        Mockito.when(mockVariableContextBuilder.addManualVariables(Mockito.<Map<String, String>>any())).thenReturn(mockVariableContextBuilder);
+        Mockito.when(mockVariableContextBuilder.buildMap()).thenReturn(new HashMap<String, VariableDefinitionContext>());
+        Mockito.when(mockVariableDefinitionManager.createVariableContextBuilder()).thenReturn(mockVariableContextBuilder);
 
         CustomVariableContextImpl customVariableContext = new CustomVariableContextImpl();
         customVariableContext.setBuildLoggerManager(mockBuildLoggerManager);
@@ -81,10 +92,10 @@ public class IncludeExcludeAwareChangeDetectionTest extends GitAbstractTest
                 Mockito.mock(BuildContextFactory.class),
                 mockBuildLoggerManager,
                 DefaultTextProvider.INSTANCE,
-                Mockito.mock(VariableDefinitionManager.class),
+                mockVariableDefinitionManager,
                 customVariableContext,
                 Mockito.mock(PlanVcsRevisionHistoryService.class),
-                Mockito.mock(RepositoryDefinitionManager.class)
+                Mockito.mock(BranchDetectionService.class)
         );
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, localRepository);
@@ -103,7 +114,7 @@ public class IncludeExcludeAwareChangeDetectionTest extends GitAbstractTest
 
             String newRevision = touchFiles(localRepository, filesToTouch);
 
-            Plan plan = Mockito.mock(Plan.class);
+            ImmutableChain plan = Mockito.mock(ImmutableChain.class);
             Mockito.when(plan.getKey()).thenReturn(PLAN_KEY.getKey());
             Mockito.when(plan.getPlanKey()).thenReturn(PlanKeys.getPlanKey(PLAN_KEY.getKey()));
             BuildRepositoryChanges changes = changeDetectionManager.collectChangesSinceLastBuild(plan, repositoryDefinition, new PlanVcsRevisionData(previousVcsRevisionKey, null), null);

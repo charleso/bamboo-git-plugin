@@ -1,12 +1,15 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.author.Author;
+import com.atlassian.bamboo.build.branches.VcsBranch;
 import com.atlassian.bamboo.build.logger.BuildLogger;
+import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.commit.CommitContextImpl;
 import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
 import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
+import com.atlassian.bamboo.repository.BranchDetectableRepository;
 import com.atlassian.bamboo.repository.CustomVariableProviderRepository;
 import com.atlassian.bamboo.repository.MavenPomAccessor;
 import com.atlassian.bamboo.repository.MavenPomAccessorCapableRepository;
@@ -65,7 +68,8 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
                                                                            CustomVariableProviderRepository,
                                                                            CustomSourceDirectoryAwareRepository,
                                                                            RequirementsAwareRepository,
-                                                                           AdvancedConfigurationAwareRepository
+                                                                           AdvancedConfigurationAwareRepository,
+                                                                           BranchDetectableRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -191,7 +195,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         {
             final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(PlanKeys.getPlanKey(planKey));
-            final GitOperationHelper helper =  GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
+            final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
 
             final String targetRevision = helper.obtainLatestRevision(substitutedAccessData);
 
@@ -360,30 +364,27 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         }
     }
 
-    private void rethrowOrRemoveDirectory(final Exception originalException, final BuildLogger buildLogger, final File directory, final String key) throws Exception
+    @NotNull
+    @Override
+    public Set<VcsBranch> getOpenBranches() throws RepositoryException
     {
-        Throwable e = originalException;
-        do
-        {
-            if (e instanceof TransportException)
-            {
-                throw originalException;
-            }
-            e = e.getCause();
-        } while (e!=null);
+        final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
+        final JGitOperationHelper helper = new JGitOperationHelper(new NullBuildLogger(), textProvider);
+        return helper.getOpenBranches(substitutedAccessData);
+    }
 
-        buildLogger.addBuildLogEntry(textProvider.getText(key, Arrays.asList(directory)));
-        log.warn("Deleting directory " + directory, e);
+    @NotNull
+    @Override
+    public VcsBranch getCurrentVcsBranch()
+    {
+        final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
+        return new VcsBranch(StringUtils.defaultIfEmpty(substitutedAccessData.branch, "master"));
+    }
 
-        // This section does not really work on Windows (files open by antivirus software or leaked by jgit - and it does leak handles - will remain on the harddrive),
-        // so it should be entered if we know that the cache has to be blown away
-        FileUtils.deleteQuietly(directory);
-
-        final String[] filesInDirectory = directory.list();
-        if (filesInDirectory !=null)
-        {
-            log.error("Unable to delete files: " + Arrays.toString(filesInDirectory) + ", expect trouble");
-        }
+    @Override
+    public void setCurrentVcsBranch(@NotNull final VcsBranch branch)
+    {
+        this.accessData.branch = branch.getName();
     }
 
     @Override
@@ -607,6 +608,32 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         substituted.commandTimeout = accessData.commandTimeout;
         substituted.verboseLogs = accessData.verboseLogs;
         return substituted;
+    }
+
+    private void rethrowOrRemoveDirectory(final Exception originalException, final BuildLogger buildLogger, final File directory, final String key) throws Exception
+    {
+        Throwable e = originalException;
+        do
+        {
+            if (e instanceof TransportException)
+            {
+                throw originalException;
+            }
+            e = e.getCause();
+        } while (e!=null);
+
+        buildLogger.addBuildLogEntry(textProvider.getText(key, Arrays.asList(directory)));
+        log.warn("Deleting directory " + directory, e);
+
+        // This section does not really work on Windows (files open by antivirus software or leaked by jgit - and it does leak handles - will remain on the harddrive),
+        // so it should be entered if we know that the cache has to be blown away
+        FileUtils.deleteQuietly(directory);
+
+        final String[] filesInDirectory = directory.list();
+        if (filesInDirectory !=null)
+        {
+            log.error("Unable to delete files: " + Arrays.toString(filesInDirectory) + ", expect trouble");
+        }
     }
 
     // -------------------------------------------------------------------------------------- Basic Accessors / Mutators

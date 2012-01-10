@@ -1,18 +1,20 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.author.AuthorImpl;
+import com.atlassian.bamboo.build.branches.VcsBranch;
 import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.commit.Commit;
 import com.atlassian.bamboo.commit.CommitFileImpl;
 import com.atlassian.bamboo.commit.CommitImpl;
 import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
 import com.atlassian.bamboo.repository.RepositoryException;
-import com.atlassian.bamboo.ssh.ProxyConnectionData;
-import com.atlassian.bamboo.ssh.ProxyException;
-import com.atlassian.bamboo.ssh.SshProxyService;
 import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChangesImpl;
+import com.google.common.base.Function;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -44,13 +46,13 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Class used for issuing various git operations. We don't want to hold this logic in
@@ -254,6 +256,37 @@ public abstract class GitOperationHelper
             {
                 transport.close();
             }
+        }
+    }
+
+    @NotNull
+    public Set<VcsBranch> getOpenBranches(@NotNull final GitRepositoryAccessData repositoryData) throws RepositoryException
+    {
+        try
+        {
+            Transport transport = open(new FileRepository(""), repositoryData);
+            FetchConnection fetchConnection = transport.openFetch();
+
+            return Sets.newHashSet(Iterables.filter(Iterables.transform(fetchConnection.getRefs(), new Function<Ref, VcsBranch>()
+            {
+                @Override
+                public VcsBranch apply(@Nullable Ref ref)
+                {
+                    return (ref.getName().startsWith(Constants.R_HEADS) ? new VcsBranch(ref.getName().substring(Constants.R_HEADS.length())) : null);
+                }
+            }), Predicates.notNull()));
+        }
+        catch (NotSupportedException e)
+        {
+            throw new RepositoryException(textProvider.getText("repository.git.messages.protocolUnsupported", Arrays.asList(repositoryData.repositoryUrl)), e);
+        }
+        catch (TransportException e)
+        {
+            throw new RepositoryException(e.getMessage(), e);
+        }
+        catch (IOException e)
+        {
+            throw new RepositoryException(textProvider.getText("repository.git.messages.failedToCreateFileRepository"), e);
         }
     }
 

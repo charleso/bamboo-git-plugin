@@ -141,7 +141,7 @@ public class GitAbstractTest
         
         gitRepository.setCapabilityContext(mock(CapabilityContext.class));
 
-        SshProxyService sshProxyService = null;// new SshProxyServiceImpl(getTextProvider());
+        SshProxyService sshProxyService = mock(SshProxyService.class);
         gitRepository.setSshProxyService(sshProxyService);
 
         return gitRepository;
@@ -245,6 +245,12 @@ public class GitAbstractTest
 
     static class GitRepositoryFixture extends GitRepository
     {
+        @Override
+        public String getGitCapability()
+        {
+            return "";
+        }
+
         @Override
         public File getCacheDirectory()
         {
