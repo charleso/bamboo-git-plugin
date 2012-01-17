@@ -117,6 +117,7 @@ public class IncludeExcludeAwareChangeDetectionTest extends GitAbstractTest
             ImmutableChain plan = Mockito.mock(ImmutableChain.class);
             Mockito.when(plan.getKey()).thenReturn(PLAN_KEY.getKey());
             Mockito.when(plan.getPlanKey()).thenReturn(PlanKeys.getPlanKey(PLAN_KEY.getKey()));
+            Mockito.when(plan.hasMaster()).thenReturn(true); //to not step into branch detection in ChangeDetectionManagerImpl
             BuildRepositoryChanges changes = changeDetectionManager.collectChangesSinceLastBuild(plan, repositoryDefinition, new PlanVcsRevisionData(previousVcsRevisionKey, null), null);
             Assert.assertEquals(!changes.getChanges().isEmpty(), shouldTrigger, "Build should " + (shouldTrigger ? "" : "not ") + "trigger for " + option + " pattern '" + pattern + "' and files " + filesToTouch);
             previousVcsRevisionKey = newRevision;
