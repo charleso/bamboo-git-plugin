@@ -11,9 +11,6 @@ import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChangesImpl;
-import com.google.common.base.Function;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
@@ -267,14 +264,15 @@ public abstract class GitOperationHelper
             Transport transport = open(new FileRepository(""), repositoryData);
             FetchConnection fetchConnection = transport.openFetch();
 
-            return Sets.newHashSet(Iterables.filter(Iterables.transform(fetchConnection.getRefs(), new Function<Ref, VcsBranch>()
+            Set<VcsBranch> openBranches = Sets.newHashSet();
+            for (Ref ref : fetchConnection.getRefs())
             {
-                @Override
-                public VcsBranch apply(@Nullable Ref ref)
+                if (ref.getName().startsWith(Constants.R_HEADS))
                 {
-                    return (ref.getName().startsWith(Constants.R_HEADS) ? new VcsBranch(ref.getName().substring(Constants.R_HEADS.length())) : null);
+                    openBranches.add(new VcsBranch(ref.getName().substring(Constants.R_HEADS.length())));
                 }
-            }), Predicates.notNull()));
+            }
+            return openBranches;
         }
         catch (NotSupportedException e)
         {
