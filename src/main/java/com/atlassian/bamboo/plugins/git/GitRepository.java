@@ -9,7 +9,7 @@ import com.atlassian.bamboo.commit.CommitContextImpl;
 import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
 import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
-import com.atlassian.bamboo.repository.BranchDetectableRepository;
+import com.atlassian.bamboo.repository.BranchDetectionCapableRepository;
 import com.atlassian.bamboo.repository.CustomVariableProviderRepository;
 import com.atlassian.bamboo.repository.MavenPomAccessor;
 import com.atlassian.bamboo.repository.MavenPomAccessorCapableRepository;
@@ -69,7 +69,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
                                                                            CustomSourceDirectoryAwareRepository,
                                                                            RequirementsAwareRepository,
                                                                            AdvancedConfigurationAwareRepository,
-                                                                           BranchDetectableRepository
+                                                                           BranchDetectionCapableRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
