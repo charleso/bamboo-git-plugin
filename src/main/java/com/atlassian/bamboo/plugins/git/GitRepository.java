@@ -388,6 +388,12 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     }
 
     @Override
+    public Date getLastCommitDate(@NotNull PlanKey planKey) throws RepositoryException
+    {
+        return null;
+    }
+
+    @Override
     public void addDefaultValues(@NotNull BuildConfiguration buildConfiguration)
     {
         buildConfiguration.setProperty(REPOSITORY_GIT_COMMAND_TIMEOUT, Integer.valueOf(DEFAULT_COMMAND_TIMEOUT_IN_MINUTES));
