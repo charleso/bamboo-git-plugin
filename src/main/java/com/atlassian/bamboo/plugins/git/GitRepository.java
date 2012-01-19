@@ -31,6 +31,7 @@ import com.atlassian.bamboo.v2.build.agent.remote.RemoteBuildDirectoryManager;
 import com.atlassian.bamboo.v2.build.repository.CustomSourceDirectoryAwareRepository;
 import com.atlassian.bamboo.v2.build.repository.RequirementsAwareRepository;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
+import com.atlassian.bamboo.plan.PlanKey;
 import com.atlassian.util.concurrent.LazyReference;
 import com.atlassian.util.concurrent.Supplier;
 import com.google.common.base.Function;
