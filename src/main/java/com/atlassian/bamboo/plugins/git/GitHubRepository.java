@@ -1,10 +1,13 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.build.BuildLoggerManager;
+import com.atlassian.bamboo.build.branches.VcsBranch;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
+import com.atlassian.bamboo.plan.PlanKey;
 import com.atlassian.bamboo.repository.AbstractRepository;
 import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
 import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
+import com.atlassian.bamboo.repository.BranchDetectionCapableRepository;
 import com.atlassian.bamboo.repository.Repository;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
@@ -29,10 +32,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.Date;
 import java.util.Set;
 
 public class GitHubRepository extends AbstractStandaloneRepository implements CustomSourceDirectoryAwareRepository,
-                                                                              AdvancedConfigurationAwareRepository
+                                                                              AdvancedConfigurationAwareRepository,
+                                                                              BranchDetectionCapableRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -276,5 +281,31 @@ public class GitHubRepository extends AbstractStandaloneRepository implements Cu
     public boolean getVerboseLogs()
     {
         return verboseLogs;
+    }
+
+    @NotNull
+    @Override
+    public Set<VcsBranch> getOpenBranches() throws RepositoryException
+    {
+        return gitRepository.getOpenBranches();
+    }
+
+    @NotNull
+    @Override
+    public VcsBranch getCurrentVcsBranch()
+    {
+        return gitRepository.getCurrentVcsBranch();
+    }
+
+    @Override
+    public void setCurrentVcsBranch(@NotNull final VcsBranch vcsBranch)
+    {
+        gitRepository.setCurrentVcsBranch(vcsBranch);
+    }
+
+    @Override
+    public Date getLastCommitDate(@NotNull final PlanKey planKey) throws RepositoryException
+    {
+        return gitRepository.getLastCommitDate(planKey);
     }
 }
