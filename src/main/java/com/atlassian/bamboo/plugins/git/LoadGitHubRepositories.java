@@ -1,9 +1,9 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.repository.Repository;
-import com.atlassian.bamboo.repository.RepositoryDefinition;
-import com.atlassian.bamboo.repository.RepositoryDefinitionEntity;
-import com.atlassian.bamboo.repository.RepositoryDefinitionImpl;
+import com.atlassian.bamboo.repository.RepositoryData;
+import com.atlassian.bamboo.repository.RepositoryDataEntity;
+import com.atlassian.bamboo.repository.RepositoryDataImpl;
 import com.atlassian.bamboo.repository.RepositoryDefinitionManager;
 import com.atlassian.bamboo.rest.util.Get;
 import com.atlassian.bamboo.security.StringEncrypter;
@@ -65,10 +65,10 @@ public class LoadGitHubRepositories extends PlanActionSupport implements PlanEdi
 
         if (repositoryId > 0 && StringUtils.isBlank(password))
         {
-            RepositoryDefinitionEntity repositoryDefinitionEntity = repositoryDefinitionManager.getRepositoryDefinitionEntity(repositoryId);
-            if (repositoryDefinitionEntity != null)
+            RepositoryDataEntity repositoryDataEntity = repositoryDefinitionManager.getRepositoryDataEntity(repositoryId);
+            if (repositoryDataEntity != null)
             {
-                RepositoryDefinition repositoryDefinition = new RepositoryDefinitionImpl(repositoryDefinitionEntity);
+                RepositoryData repositoryDefinition = new RepositoryDataImpl(repositoryDataEntity);
                 Repository repository = repositoryDefinition.getRepository();
                 GitHubRepository ghRepository = Narrow.to(repository, GitHubRepository.class);
                 if (ghRepository != null)
