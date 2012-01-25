@@ -1,11 +1,12 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.author.AuthorImpl;
-import com.atlassian.bamboo.build.branches.VcsBranch;
 import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.commit.Commit;
 import com.atlassian.bamboo.commit.CommitFileImpl;
 import com.atlassian.bamboo.commit.CommitImpl;
+import com.atlassian.bamboo.plan.branch.VcsBranch;
+import com.atlassian.bamboo.plan.branch.VcsBranchImpl;
 import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.utils.SystemProperty;
@@ -269,7 +270,7 @@ public abstract class GitOperationHelper
             {
                 if (ref.getName().startsWith(Constants.R_HEADS))
                 {
-                    openBranches.add(new VcsBranch(ref.getName().substring(Constants.R_HEADS.length())));
+                    openBranches.add(new VcsBranchImpl(ref.getName().substring(Constants.R_HEADS.length())));
                 }
             }
             return openBranches;

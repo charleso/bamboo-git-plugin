@@ -1,10 +1,9 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.build.BuildLoggerManager;
-import com.atlassian.bamboo.build.branches.VcsBranch;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.plan.PlanKey;
-import com.atlassian.bamboo.repository.AbstractRepository;
+import com.atlassian.bamboo.plan.branch.VcsBranch;
 import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
 import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
 import com.atlassian.bamboo.repository.BranchDetectionCapableRepository;
@@ -17,12 +16,9 @@ import com.atlassian.bamboo.utils.error.ErrorCollection;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.build.agent.capability.CapabilityContext;
-import com.atlassian.bamboo.v2.build.agent.capability.Requirement;
 import com.atlassian.bamboo.v2.build.repository.CustomSourceDirectoryAwareRepository;
-import com.atlassian.bamboo.v2.build.repository.RequirementsAwareRepository;
 import com.atlassian.bamboo.variable.CustomVariableContext;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
-import com.google.common.collect.Sets;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.lang.StringUtils;

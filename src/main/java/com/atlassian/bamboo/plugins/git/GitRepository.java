@@ -1,12 +1,13 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.author.Author;
-import com.atlassian.bamboo.build.branches.VcsBranch;
 import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.commit.CommitContextImpl;
 import com.atlassian.bamboo.plan.PlanKeys;
+import com.atlassian.bamboo.plan.branch.VcsBranch;
+import com.atlassian.bamboo.plan.branch.VcsBranchImpl;
 import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
 import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
 import com.atlassian.bamboo.repository.BranchDetectionCapableRepository;
@@ -379,7 +380,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     public VcsBranch getCurrentVcsBranch()
     {
         final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
-        return new VcsBranch(StringUtils.defaultIfEmpty(substitutedAccessData.branch, "master"));
+        return new VcsBranchImpl(StringUtils.defaultIfEmpty(substitutedAccessData.branch, "master"));
     }
 
     @Override

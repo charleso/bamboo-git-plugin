@@ -1,6 +1,6 @@
 package com.atlassian.bamboo.plugins.git;
 
-import com.atlassian.bamboo.build.branches.VcsBranch;
+import com.atlassian.bamboo.plan.branch.VcsBranchImpl;
 import com.atlassian.testtools.ZipResourceDirectory;
 import com.google.common.collect.Sets;
 import org.testng.annotations.Test;
@@ -21,9 +21,9 @@ public class DetectingBranchesTest extends GitAbstractTest
         setRepositoryProperties(gitRepository, testRepository);
 
         assertEquals(gitRepository.getOpenBranches(), Sets.newHashSet(
-                new VcsBranch("Branch%with&stupid_chars"),
-                new VcsBranch("a_branch"),
-                new VcsBranch("master")
+                new VcsBranchImpl("Branch%with&stupid_chars"),
+                new VcsBranchImpl("a_branch"),
+                new VcsBranchImpl("master")
         ));
     }
 
