@@ -155,15 +155,29 @@ public class LoadGitHubRepositories extends PlanActionSupport implements PlanEdi
     @NotNull
     private List<String> getRepositoryBranches(String repository) throws Exception
     {
-        final List<String> repositoryBranches = new ArrayList<String>();
         final JSONObject json = getJSONResponseFromUrl(GITHUB_API_BASE_URL + "repos/show/" + repository + "/branches");
+        return getRepositoryBranches(json);
+    }
+
+    @NotNull
+    protected List<String> getRepositoryBranches(JSONObject json) throws Exception
+    {
+        final List<String> repositoryBranches = new ArrayList<String>();
         final JSONObject branches = json.getJSONObject("branches");
         if (branches != null)
         {
             Iterator it = branches.keys();
             while (it.hasNext())
             {
-                repositoryBranches.add((String)it.next());
+                String branch = (String) it.next();
+                if (branch.equals("master"))
+                {
+                    repositoryBranches.add(0, branch);
+                }
+                else
+                {
+                    repositoryBranches.add(branch);
+                }
             }
         }
         return repositoryBranches;
