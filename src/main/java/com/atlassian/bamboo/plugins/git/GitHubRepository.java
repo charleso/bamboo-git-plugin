@@ -7,6 +7,8 @@ import com.atlassian.bamboo.plan.branch.VcsBranch;
 import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
 import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
 import com.atlassian.bamboo.repository.BranchDetectionCapableRepository;
+import com.atlassian.bamboo.repository.CacheId;
+import com.atlassian.bamboo.repository.CachingAwareRepository;
 import com.atlassian.bamboo.repository.Repository;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
@@ -33,7 +35,8 @@ import java.util.Set;
 
 public class GitHubRepository extends AbstractStandaloneRepository implements CustomSourceDirectoryAwareRepository,
                                                                               AdvancedConfigurationAwareRepository,
-                                                                              BranchDetectionCapableRepository
+                                                                              BranchDetectionCapableRepository,
+                                                                              CachingAwareRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -286,17 +289,45 @@ public class GitHubRepository extends AbstractStandaloneRepository implements Cu
         return gitRepository.getOpenBranches();
     }
 
-    @NotNull
     @Override
+    @NotNull
     public VcsBranch getCurrentVcsBranch()
     {
-        return gitRepository.getCurrentVcsBranch();
+        return gitRepository.getVcsBranch();
     }
 
     @Override
     public void setCurrentVcsBranch(@NotNull final VcsBranch vcsBranch)
     {
-        gitRepository.setCurrentVcsBranch(vcsBranch);
+        gitRepository.setVcsBranch(vcsBranch);
+    }
+
+    @NotNull
+    public VcsBranch getVcsBranch()
+    {
+        return gitRepository.getVcsBranch();
+    }
+
+    public void setVcsBranch(@NotNull final VcsBranch vcsBranch)
+    {
+        gitRepository.setVcsBranch(vcsBranch);
+    }
+
+    @Override
+    public CacheId getCacheId(@NotNull final CachableOperation cachableOperation)
+    {
+        switch (cachableOperation)
+        {
+            case BRANCH_DETECTION:
+                return new CacheId(this, gitRepository.accessData.repositoryUrl);
+        }
+        return null;
+    }
+
+    @Override
+    public boolean isCachingSupportedFor(@NotNull final CachableOperation cachableOperation)
+    {
+        return cachableOperation==CachableOperation.BRANCH_DETECTION;
     }
 
     @Override

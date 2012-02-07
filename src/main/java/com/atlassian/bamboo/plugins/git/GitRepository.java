@@ -11,6 +11,8 @@ import com.atlassian.bamboo.plan.branch.VcsBranchImpl;
 import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
 import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
 import com.atlassian.bamboo.repository.BranchDetectionCapableRepository;
+import com.atlassian.bamboo.repository.CacheId;
+import com.atlassian.bamboo.repository.CachingAwareRepository;
 import com.atlassian.bamboo.repository.CustomVariableProviderRepository;
 import com.atlassian.bamboo.repository.MavenPomAccessor;
 import com.atlassian.bamboo.repository.MavenPomAccessorCapableRepository;
@@ -71,7 +73,8 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
                                                                            CustomSourceDirectoryAwareRepository,
                                                                            RequirementsAwareRepository,
                                                                            AdvancedConfigurationAwareRepository,
-                                                                           BranchDetectionCapableRepository
+                                                                           BranchDetectionCapableRepository,
+                                                                           CachingAwareRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -375,16 +378,45 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         return helper.getOpenBranches(substitutedAccessData);
     }
 
+    @Override
+    public CacheId getCacheId(@NotNull final CachableOperation cachableOperation)
+    {
+        switch (cachableOperation)
+        {
+            case BRANCH_DETECTION:
+                final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
+                return new CacheId(this, substitutedAccessData.repositoryUrl, substitutedAccessData.username, substitutedAccessData.sshKey);
+        }
+        return null;
+    }
+
+    @Override
+    public boolean isCachingSupportedFor(@NotNull final CachableOperation cachableOperation)
+    {
+        return cachableOperation==CachableOperation.BRANCH_DETECTION;
+    }
+
     @NotNull
     @Override
     public VcsBranch getCurrentVcsBranch()
+    {
+        return getVcsBranch();
+    }
+
+    @Override
+    public void setCurrentVcsBranch(@NotNull final VcsBranch branch)
+    {
+        setVcsBranch(branch);
+    }
+
+    @NotNull
+    public VcsBranch getVcsBranch()
     {
         final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
         return new VcsBranchImpl(StringUtils.defaultIfEmpty(substitutedAccessData.branch, "master"));
     }
 
-    @Override
-    public void setCurrentVcsBranch(@NotNull final VcsBranch branch)
+    public void setVcsBranch(@NotNull final VcsBranch branch)
     {
         this.accessData.branch = branch.getName();
     }
