@@ -116,10 +116,10 @@ public class GitAbstractTest
         gitRepository.populateFromConfig(buildConfiguration);
     }
 
-    public GitOperationHelper createGitOperationHelper()
+    public GitOperationHelper createGitOperationHelper(final GitRepositoryAccessData accessData)
     {
         TextProvider textProvider = Mockito.mock(TextProvider.class);
-        return new JGitOperationHelper(new NullBuildLogger(), textProvider);
+        return new JGitOperationHelper(accessData, new NullBuildLogger(), textProvider);
     }
 
     public GitRepository createGitRepository() throws Exception

@@ -73,11 +73,10 @@ public class GitMavenPomAccessor extends MavenPomAccessorAbstract<GitRepository>
     public File checkoutMavenPom(@NotNull File destinationPath) throws RepositoryException
     {
         log.info("checkoutMavenPom to: " + destinationPath);
-        GitOperationHelper helper = new JGitOperationHelper(new NullBuildLogger(), textProvider);
-        GitRepository.GitRepositoryAccessData substitutedAccessData = repository.getSubstitutedAccessData();
-        String targetRevision = helper.obtainLatestRevision(substitutedAccessData);
-        helper.fetch(destinationPath, substitutedAccessData, true);
-        helper.checkout(null, destinationPath, targetRevision, helper.getCurrentRevision(destinationPath), substitutedAccessData.useSubmodules);
+        GitOperationHelper helper = new JGitOperationHelper(repository.getSubstitutedAccessData(), new NullBuildLogger(), textProvider);
+        String targetRevision = helper.obtainLatestRevision();
+        helper.fetch(destinationPath, true);
+        helper.checkout(null, destinationPath, targetRevision, helper.getCurrentRevision(destinationPath));
         final File pomLocation = new File(destinationPath, pathToPom);
         if (pomLocation.isFile())
         {

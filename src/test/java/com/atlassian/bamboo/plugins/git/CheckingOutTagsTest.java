@@ -233,20 +233,20 @@ public class CheckingOutTagsTest extends GitAbstractTest
     {
         boolean useShallow = false; // this doesn't matter until jgit has server support for shallow clones over local repositories
         File src = createTempDirectory();
-        GitOperationHelper helper = createGitOperationHelper();
-        GitRepository.GitRepositoryAccessData accessData = createAccessData(srcDir, branch);
+        GitOperationHelper helper = createGitOperationHelper(createAccessData(srcDir, branch));
+
         File cache = null;
 
         if (useCache)
         {
             cache = createTempDirectory();
-            helper.fetch(cache, accessData, useShallow);
+            helper.fetch(cache, useShallow);
         }
         else
         {
-            helper.fetch(src, accessData, useShallow);
+            helper.fetch(src, useShallow);
         }
-        helper.checkout(cache, src, tag, null, false);
+        helper.checkout(cache, src, tag, null);
 
         String contents = FileUtils.readFileToString(srcRepo.getTextFile(src));
         Assert.assertEquals(contents, expectedContents);
@@ -262,11 +262,11 @@ public class CheckingOutTagsTest extends GitAbstractTest
         // {rest of commits}
 
         File src = createTempDirectory();
-        GitOperationHelper helper = createGitOperationHelper();
-        helper.fetch(src, createAccessData("https://github.com/github/git.git", "dup-post-receive-refs-patch"), true);
-        helper.checkout(null, src, "v1.7.0.2", null, false);
-        helper.checkout(null, src, "5565f47c", "v1.7.0.2", false);
-        helper.checkout(null, src, "8ed5bd96", "5565f47c", false);
+        GitOperationHelper helper = createGitOperationHelper(createAccessData("https://github.com/github/git.git", "dup-post-receive-refs-patch"));
+        helper.fetch(src, true);
+        helper.checkout(null, src, "v1.7.0.2", null);
+        helper.checkout(null, src, "5565f47c", "v1.7.0.2");
+        helper.checkout(null, src, "8ed5bd96", "5565f47c");
     }
 }
 

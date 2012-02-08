@@ -12,6 +12,7 @@ import com.atlassian.bamboo.plan.branch.VcsBranchImpl;
 import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
 import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
 import com.atlassian.bamboo.repository.BranchDetectionCapableRepository;
+import com.atlassian.bamboo.repository.BranchMergingCapableRepository;
 import com.atlassian.bamboo.repository.CacheId;
 import com.atlassian.bamboo.repository.CachingAwareRepository;
 import com.atlassian.bamboo.repository.CustomVariableProviderRepository;
@@ -74,8 +75,8 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
                                                                            RequirementsAwareRepository,
                                                                            AdvancedConfigurationAwareRepository,
                                                                            BranchDetectionCapableRepository,
-                                                                           CachingAwareRepository/*,
-                                                                           BranchMergingCapableRepository*/
+                                                                           CachingAwareRepository,
+                                                                           BranchMergingCapableRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -207,7 +208,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(PlanKeys.getPlanKey(planKey));
             final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
 
-            final String targetRevision = helper.obtainLatestRevision(substitutedAccessData);
+            final String targetRevision = helper.obtainLatestRevision();
 
             if (targetRevision.equals(lastVcsRevisionKey))
             {
@@ -225,7 +226,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
                         public Void call() throws RepositoryException
                         {
                             boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones && !cacheDirectory.isDirectory();
-                            helper.fetch(cacheDirectory, substitutedAccessData, doShallowFetch);
+                            helper.fetch(cacheDirectory, doShallowFetch);
                             return null;
                         }
                     });
@@ -243,7 +244,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
                 {
                     try
                     {
-                        helper.fetch(cacheDirectory, substitutedAccessData, false);
+                        helper.fetch(cacheDirectory, false);
                         return helper.extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
                     }
                     catch (Exception e) // not just RepositoryException - see HandlingSwitchingRepositoriesToUnrelatedOnesTest.testCollectChangesWithUnrelatedPreviousRevision
@@ -252,7 +253,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
                         {
                             rethrowOrRemoveDirectory(e, buildLogger, cacheDirectory, "repository.git.messages.ccRecover.failedToCollectChangesets");
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.cleanedCacheDirectory", Arrays.asList(cacheDirectory)));
-                            helper.fetch(cacheDirectory, substitutedAccessData, false);
+                            helper.fetch(cacheDirectory, false);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.fetchedRemoteRepository", Arrays.asList(cacheDirectory)));
                             BuildRepositoryChanges extractedChanges = helper.extractCommits(cacheDirectory, lastVcsRevisionKey, targetRevision);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRecover.completed"));
@@ -308,7 +309,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
             final boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones;
             final boolean isOnLocalAgent = !(buildDirectoryManager instanceof RemoteBuildDirectoryManager);
             final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
-            final String targetRevision = nullableTargetRevision != null ? nullableTargetRevision : helper.obtainLatestRevision(substitutedAccessData);
+            final String targetRevision = nullableTargetRevision != null ? nullableTargetRevision : helper.obtainLatestRevision();
             final String previousRevision = helper.getCurrentRevision(sourceDirectory);
 
             if (isOnLocalAgent)
@@ -320,26 +321,26 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
                     {
                         try
                         {
-                            helper.fetch(cacheDirectory, substitutedAccessData, doShallowFetch);
+                            helper.fetch(cacheDirectory, doShallowFetch);
                             helper.checkRevisionExistsInCacheRepository(cacheDirectory, targetRevision);
                         }
                         catch (Exception e)
                         {
                             rethrowOrRemoveDirectory(e, buildLogger, cacheDirectory, "repository.git.messages.rsRecover.failedToFetchCache");
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedCacheDirectory", Arrays.asList(cacheDirectory)));
-                            helper.fetch(cacheDirectory, substitutedAccessData, false);
+                            helper.fetch(cacheDirectory, false);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.fetchingCacheCompleted", Arrays.asList(cacheDirectory)));
                         }
 
                         try
                         {
-                            return helper.checkout(cacheDirectory, sourceDirectory, targetRevision, previousRevision, accessData.useSubmodules);
+                            return helper.checkout(cacheDirectory, sourceDirectory, targetRevision, previousRevision);
                         }
                         catch (Exception e)
                         {
                             rethrowOrRemoveDirectory(e, buildLogger, sourceDirectory, "repository.git.messages.rsRecover.failedToCheckout");
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(sourceDirectory)));
-                            String returnRevision = helper.checkout(cacheDirectory, sourceDirectory, targetRevision, null, accessData.useSubmodules);
+                            String returnRevision = helper.checkout(cacheDirectory, sourceDirectory, targetRevision, null);
                             buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.checkoutCompleted"));
                             return returnRevision;
                         }
@@ -351,16 +352,16 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
             {
                 try
                 {
-                    helper.fetch(sourceDirectory, substitutedAccessData, doShallowFetch);
-                    return helper.checkout(null, sourceDirectory, targetRevision, previousRevision, accessData.useSubmodules);
+                    helper.fetch(sourceDirectory, doShallowFetch);
+                    return helper.checkout(null, sourceDirectory, targetRevision, previousRevision);
                 }
                 catch (Exception e)
                 {
                     rethrowOrRemoveDirectory(e, buildLogger, sourceDirectory, "repository.git.messages.rsRecover.failedToCheckout");
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(sourceDirectory)));
-                    helper.fetch(sourceDirectory, substitutedAccessData, false);
+                    helper.fetch(sourceDirectory, false);
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.fetchingCompleted", Arrays.asList(sourceDirectory)));
-                    String returnRevision = helper.checkout(null, sourceDirectory, targetRevision, null, accessData.useSubmodules);
+                    String returnRevision = helper.checkout(null, sourceDirectory, targetRevision, null);
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.checkoutCompleted"));
                     return returnRevision;
                 }
@@ -381,7 +382,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     public Set<VcsBranch> getOpenBranches() throws RepositoryException
     {
         final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
-        final JGitOperationHelper helper = new JGitOperationHelper(new NullBuildLogger(), textProvider);
+        final JGitOperationHelper helper = new JGitOperationHelper(accessData, new NullBuildLogger(), textProvider);
         return helper.getOpenBranches(substitutedAccessData);
     }
 
@@ -420,6 +421,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
 
     public boolean mergeWorkspaceWith(@NotNull final BuildContext buildContext, @NotNull final File workspaceDir, @NotNull final String targetRevision) throws RepositoryException
     {
+        //final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
         //git merge --no-commit 1ef00fef5018deec710706aa94d71bf39b81056f
         return false;
     }

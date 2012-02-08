@@ -9,7 +9,6 @@ import org.eclipse.jgit.JGitText;
 import org.eclipse.jgit.errors.TransportException;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.transport.Transport;
-import org.eclipse.jgit.transport.TransportHttp;
 import org.eclipse.jgit.transport.TransportProtocol;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -76,7 +75,7 @@ public class TransportAllTrustingHttpsTest extends GitAbstractTest
     {
         String url = "https://localhost:" + port + "/repository"; // path necessary or jGit will not parse properly
 
-        GitOperationHelper goh = createGitOperationHelper();
+        GitOperationHelper goh = createGitOperationHelper(null);
         GitRepository.GitRepositoryAccessData accessData = createAccessData(url);
         FileRepository fileRepository = new FileRepository(createTempDirectory());
         Transport transport = goh.open(fileRepository, accessData);
@@ -98,7 +97,7 @@ public class TransportAllTrustingHttpsTest extends GitAbstractTest
     {
         String url = "https://localhost:" + port + "/repository"; // path necessary or jGit will not parse properly
 
-        GitOperationHelper goh = createGitOperationHelper();
+        GitOperationHelper goh = createGitOperationHelper(null);
         GitRepository.GitRepositoryAccessData accessData = createAccessData(url);
         FileRepository fileRepository = new FileRepository(createTempDirectory());
         Transport transport = goh.open(fileRepository, accessData);

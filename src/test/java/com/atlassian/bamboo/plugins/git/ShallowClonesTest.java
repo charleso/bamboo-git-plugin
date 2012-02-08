@@ -125,13 +125,13 @@ public class ShallowClonesTest extends GitAbstractTest
         for (String protocol : protocols)
         {
             File tmp = createTempDirectory();
-            GitOperationHelper helper = createGitOperationHelper();
 
             String revision = null;
             for (String[] currentFetch : successiveFetches)
             {
-                helper.fetch(tmp, createAccessData(protocol + currentFetch[0]), true);
-                revision = helper.checkout(null, tmp, currentFetch[1], revision, false);
+                GitOperationHelper helper = createGitOperationHelper(createAccessData(protocol + currentFetch[0]));
+                helper.fetch(tmp, true);
+                revision = helper.checkout(null, tmp, currentFetch[1], revision);
                 verifyContents(tmp, currentFetch[2]);
             }
         }
@@ -218,18 +218,18 @@ public class ShallowClonesTest extends GitAbstractTest
         setRepositoryProperties(gitRepository, repositoryUrl, params);
 
         gitRepository.retrieveSourceCode(mockBuildContext(), targetRevision, getCheckoutDir(gitRepository));
-        assertEquals(createGitOperationHelper().extractCommits(getCheckoutDir(gitRepository), null, targetRevision).getChanges().size(), expectedChangesetCount);
+        assertEquals(createGitOperationHelper(null).extractCommits(getCheckoutDir(gitRepository), null, targetRevision).getChanges().size(), expectedChangesetCount);
     }
 
     @Test
     public void testShallowClone72Parents() throws Exception
     {
         File tmp = createTempDirectory();
-        GitOperationHelper helper = createGitOperationHelper();
+        GitOperationHelper helper = createGitOperationHelper(createAccessData("git://github.com/pstefaniak/72parents.git"));
 
-        helper.fetch(tmp, createAccessData("git://github.com/pstefaniak/72parents.git"), true);
+        helper.fetch(tmp, true);
         assertEquals(FileUtils.readLines(new File(tmp, ".git/shallow")).size(), 72);
-        helper.checkout(null, tmp, "f9a3b37fcbf5298c1bfa", null, false);
+        helper.checkout(null, tmp, "f9a3b37fcbf5298c1bfa", null);
         verifyContents(tmp, "shallow-clones/72parents-contents.zip");
     }
 
@@ -237,13 +237,15 @@ public class ShallowClonesTest extends GitAbstractTest
     public void testDefaultFetchingToShallowedCopy() throws Exception
     {
         File tmp = createTempDirectory();
-        GitOperationHelper helper = createGitOperationHelper();
+        GitOperationHelper helper3 = createGitOperationHelper(createAccessData("git://github.com/pstefaniak/3.git"));
 
-        helper.fetch(tmp, createAccessData("git://github.com/pstefaniak/3.git"), true);
+        helper3.fetch(tmp, true);
         assertEquals(FileUtils.readFileToString(new File(tmp, ".git/shallow")), "4c9d0c7e6167407deff1d31af5884911202dd3db\n");
-        helper.fetch(tmp, createAccessData("git://github.com/pstefaniak/7.git"), false);
+
+        GitOperationHelper helper7 = createGitOperationHelper(createAccessData("git://github.com/pstefaniak/7.git"));
+        helper7.fetch(tmp, false);
         assertEquals(FileUtils.readFileToString(new File(tmp, ".git/shallow")), "4c9d0c7e6167407deff1d31af5884911202dd3db\n");
-        helper.checkout(null, tmp, "1070f438270b8cf1ca36", null, false);
+        helper7.checkout(null, tmp, "1070f438270b8cf1ca36", null);
         verifyContents(tmp, "shallow-clones/5-contents.zip");
 
         FileRepository repository = new FileRepository(new File(tmp, Constants.DOT_GIT));
@@ -275,10 +277,12 @@ public class ShallowClonesTest extends GitAbstractTest
             throws IOException, RepositoryException
     {
         File tmpDeep = createTempDirectory();
-        GitOperationHelper helper = createGitOperationHelper();
+        GitOperationHelper helper = createGitOperationHelper(createAccessData("git://github.com/pstefaniak/5.git"));
 
-        helper.fetch(tmpDeep, createAccessData("git://github.com/pstefaniak/5.git"), useShallow);
-        helper.fetch(tmpDeep, createAccessData("git://github.com/pstefaniak/7.git"), false);
+        helper.fetch(tmpDeep, useShallow);
+
+        GitOperationHelper helper7 = createGitOperationHelper(createAccessData("git://github.com/pstefaniak/7.git"));
+        helper7.fetch(tmpDeep, false);
 
         RepositorySummary rsDeep = new RepositorySummary(tmpDeep);
         assertTrue(rsDeep.objects.isEmpty());
@@ -291,7 +295,7 @@ public class ShallowClonesTest extends GitAbstractTest
     }
 
     @Test
-    public void testShallowCloneFromCacheContainsShalowInfo() throws Exception
+    public void testShallowCloneFromCacheContainsShallowInfo() throws Exception
     {
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, "git://github.com/pstefaniak/7.git", Collections.singletonMap("repository.git.useShallowClones", true));

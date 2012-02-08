@@ -45,7 +45,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         File repository = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory(zipFile, repository);
 
-        String result = createGitOperationHelper().obtainLatestRevision(createAccessData(repository, branch));
+        String result = createGitOperationHelper(createAccessData(repository, branch)).obtainLatestRevision();
         assertEquals(result, expectedRevision);
     }
 
@@ -73,14 +73,14 @@ public class GitOperationHelperTest extends GitAbstractTest
     {
         File tmp = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory(repositoryZip, tmp);
-        GitOperationHelper helper = createGitOperationHelper();
+        GitOperationHelper helper = createGitOperationHelper(createAccessData(null));
         String previousRevision = null;
 
         for(String[] testCase : targetRevisions)
         {
             String targetRevision = testCase[0];
             String expectedContentsInZip = testCase[1];
-            String result = helper.checkout(null, tmp, targetRevision, previousRevision, false);
+            String result = helper.checkout(null, tmp, targetRevision, previousRevision);
             previousRevision = result;
 
             assertEquals(result, targetRevision);
@@ -254,7 +254,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         File tmp = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory(repositoryZip, tmp);
 
-        List<CommitContext> commits = createGitOperationHelper().extractCommits(tmp, previousRevision, targetRevision).getChanges();
+        List<CommitContext> commits = createGitOperationHelper(null).extractCommits(tmp, previousRevision, targetRevision).getChanges();
 
         assertEquals(commits.size(), expectedCommits.length);
         for (int i = 0; i < commits.size(); i++)
@@ -282,7 +282,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         File tmp = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory("150changes.zip", tmp);
 
-        BuildRepositoryChanges buildChanges = createGitOperationHelper().extractCommits(tmp, null, "HEAD");
+        BuildRepositoryChanges buildChanges = createGitOperationHelper(null).extractCommits(tmp, null, "HEAD");
         assertEquals(buildChanges.getChanges().size(), 100);
         assertEquals(buildChanges.getSkippedCommitsCount(), 50);
 
@@ -308,7 +308,7 @@ public class GitOperationHelperTest extends GitAbstractTest
     @Test(dataProvider = "transportMappingData")
     public void testOpenConnectionUsesCustomizedTransport(String url, boolean expectCustomized) throws Exception
     {
-        GitOperationHelper goh = createGitOperationHelper();
+        GitOperationHelper goh = createGitOperationHelper(null);
         GitRepository.GitRepositoryAccessData accessData = createAccessData(url);
         FileRepository fileRepository = new FileRepository(createTempDirectory());
         Transport transport = goh.open(fileRepository, accessData);

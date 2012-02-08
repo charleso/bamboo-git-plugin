@@ -6,9 +6,7 @@ import com.atlassian.bamboo.plugins.git.GitAbstractTest;
 import com.atlassian.bamboo.plugins.git.GitOperationHelper;
 import com.atlassian.bamboo.plugins.git.JGitOperationHelper;
 import com.atlassian.bamboo.repository.RepositoryException;
-import com.atlassian.bamboo.ssh.SshProxyService;
 import com.opensymphony.xwork.TextProvider;
-import org.mockito.Mockito;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -80,28 +78,28 @@ public class TimeoutsTest extends GitAbstractTest
     {
         TextProvider textProvider = mock(TextProvider.class);
 
-        return new JGitOperationHelper(
-            new NullBuildLogger()
-            {
-                @Override
-                public String addBuildLogEntry(String logString)
-                {
-                    System.out.println(logString);
-                    return null;
-                }
-            },
-            textProvider);
+        return new JGitOperationHelper(null,
+                                       new NullBuildLogger()
+                                       {
+                                           @Override
+                                           public String addBuildLogEntry(String logString)
+                                           {
+                                               System.out.println(logString);
+                                               return null;
+                                           }
+                                       },
+                                       textProvider);
     }
 
     @Test
     public void testTimeoutIsSufficientToCheckOutBigRepo() throws Exception
     {
-        GitOperationHelper helper = createGitOperationHelper();
-        String s = helper.obtainLatestRevision(createAccessData("git://git.jetbrains.org/idea/community.git"));
+        GitOperationHelper helper = createGitOperationHelper(createAccessData("git://git.jetbrains.org/idea/community.git"));
+        String s = helper.obtainLatestRevision();
         File directory = createTempDirectory();
         System.out.println(directory);
-        helper.fetch(directory, createAccessData("git://git.jetbrains.org/idea/community.git"), false);
-        helper.checkout(null, directory, s, null, false);
+        helper.fetch(directory, false);
+        helper.checkout(null, directory, s, null);
     }
 
     @DataProvider
@@ -117,16 +115,16 @@ public class TimeoutsTest extends GitAbstractTest
     @Test(dataProvider = "urlsToHang", expectedExceptions = RepositoryException.class, timeOut = 5000)
     public void testTimeoutOnObtainingLatestRevision(String url) throws Exception
     {
-        String rev = createGitOperationHelper().obtainLatestRevision(createAccessData(url));
+        String rev = createGitOperationHelper(createAccessData(url)).obtainLatestRevision();
     }
 
     @Test(dataProvider = "urlsToHang", expectedExceptions = RepositoryException.class, timeOut = 5000)
     public void testTimeoutOnFetch(String url) throws Exception
     {
         File directory = createTempDirectory();
-        String targetRevision = createGitOperationHelper().obtainLatestRevision(createAccessData(url));
-        createGitOperationHelper().fetch(directory, createAccessData(url), false);
-        createGitOperationHelper().checkout(null, directory, targetRevision, null, false);
+        String targetRevision = createGitOperationHelper(createAccessData(url)).obtainLatestRevision();
+        createGitOperationHelper(createAccessData(url)).fetch(directory, false);
+        createGitOperationHelper(createAccessData(url)).checkout(null, directory, targetRevision, null);
     }
 
 }

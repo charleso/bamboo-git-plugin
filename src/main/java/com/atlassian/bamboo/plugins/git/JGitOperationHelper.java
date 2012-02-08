@@ -34,16 +34,16 @@ public class JGitOperationHelper extends GitOperationHelper
     // ---------------------------------------------------------------------------------------------------- Dependencies
     // ---------------------------------------------------------------------------------------------------- Constructors
 
-    public JGitOperationHelper(final @NotNull BuildLogger buildLogger,
+    public JGitOperationHelper(final GitRepository.GitRepositoryAccessData accessData, final @NotNull BuildLogger buildLogger,
                                final @NotNull TextProvider textProvider)
     {
-        super(buildLogger, textProvider);
+        super(accessData, buildLogger, textProvider);
     }
 
     // ----------------------------------------------------------------------------------------------- Interface Methods
 
     @Override
-    protected void doFetch(@NotNull final Transport transport, @NotNull final File sourceDirectory, @NotNull final GitRepository.GitRepositoryAccessData accessData, final RefSpec refSpec, final boolean useShallow) throws RepositoryException
+    protected void doFetch(@NotNull final Transport transport, @NotNull final File sourceDirectory, final RefSpec refSpec, final boolean useShallow) throws RepositoryException
     {
         String branchDescription = "(unresolved) " + accessData.branch;
         try

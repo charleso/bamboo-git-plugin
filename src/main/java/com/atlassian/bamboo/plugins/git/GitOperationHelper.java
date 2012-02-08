@@ -64,24 +64,27 @@ public abstract class GitOperationHelper
     private static final int CHANGESET_LIMIT = new SystemProperty(false, "atlassian.bamboo.git.changeset.limit", "GIT_CHANGESET_LIMIT").getValue(100);
 
     private static final String[] FQREF_PREFIXES = {Constants.R_HEADS, Constants.R_REFS};
+    protected final GitRepositoryAccessData accessData;
     // ------------------------------------------------------------------------------------------------- Type Properties
     // ---------------------------------------------------------------------------------------------------- Dependencies
     protected final BuildLogger buildLogger;
     protected final TextProvider textProvider;
     // ---------------------------------------------------------------------------------------------------- Constructors
 
-    public GitOperationHelper(final @NotNull BuildLogger buildLogger,
+    public GitOperationHelper(final GitRepositoryAccessData accessData, final @NotNull BuildLogger buildLogger,
                               final @NotNull TextProvider textProvider)
     {
+        this.accessData = accessData;
         this.buildLogger = buildLogger;
         this.textProvider = textProvider;
     }
+
+
 
     // ----------------------------------------------------------------------------------------------- Interface Methods
 
     protected abstract void doFetch(@NotNull final Transport transport,
                                     @NotNull final File sourceDirectory,
-                                    @NotNull final GitRepository.GitRepositoryAccessData accessData,
                                     RefSpec refSpec,
                                     boolean useShallow) throws RepositoryException;
 
@@ -101,8 +104,7 @@ public abstract class GitOperationHelper
     public String checkout(@Nullable File cacheDirectory,
                            @NotNull final File sourceDirectory,
                            @NotNull final String targetRevision,
-                           @Nullable final String previousRevision,
-                           final boolean useSubmodules) throws RepositoryException
+                           @Nullable final String previousRevision) throws RepositoryException
     {
         // would be cool to store lastCheckoutedRevision in the localRepository somehow - so we don't need to specify it
         buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.checkingOutRevision", Arrays.asList(targetRevision)));
@@ -115,7 +117,7 @@ public abstract class GitOperationHelper
             File lck = new File(localRepository.getIndexFile().getParentFile(), localRepository.getIndexFile().getName() + ".lock");
             FileUtils.deleteQuietly(lck);
 
-            return doCheckout(localRepository, sourceDirectory, targetRevision, previousRevision, useSubmodules);
+            return doCheckout(localRepository, sourceDirectory, targetRevision, previousRevision, accessData.useSubmodules);
         }
         catch (IOException e)
         {
@@ -123,7 +125,7 @@ public abstract class GitOperationHelper
         }
    }
 
-    public void fetch(@NotNull final File sourceDirectory, @NotNull final GitRepositoryAccessData accessData, boolean useShallow) throws RepositoryException
+    public void fetch(@NotNull final File sourceDirectory, boolean useShallow) throws RepositoryException
     {
         Transport transport = null;
         FileRepository localRepository = null;
@@ -159,7 +161,7 @@ public abstract class GitOperationHelper
                     .setSource(resolvedBranch)
                     .setDestination(resolvedBranch);
 
-            doFetch(transport, sourceDirectory, accessData, refSpec, useShallow);
+            doFetch(transport, sourceDirectory, refSpec, useShallow);
 
             if (resolvedBranch.startsWith(Constants.R_HEADS))
             {
@@ -214,18 +216,18 @@ public abstract class GitOperationHelper
     }
 
     @NotNull
-    public String obtainLatestRevision(@NotNull final GitRepositoryAccessData repositoryData) throws RepositoryException
+    public String obtainLatestRevision() throws RepositoryException
     {
         Transport transport = null;
         FetchConnection fetchConnection = null;
         try
         {
-            transport = open(new FileRepository(""), repositoryData);
+            transport = open(new FileRepository(""), accessData);
             fetchConnection = transport.openFetch();
-            Ref headRef = resolveRefSpec(repositoryData, fetchConnection);
+            Ref headRef = resolveRefSpec(accessData, fetchConnection);
             if (headRef == null)
             {
-                throw new RepositoryException(textProvider.getText("repository.git.messages.cannotDetermineHead", Arrays.asList(repositoryData.repositoryUrl, repositoryData.branch)));
+                throw new RepositoryException(textProvider.getText("repository.git.messages.cannotDetermineHead", Arrays.asList(accessData.repositoryUrl, accessData.branch)));
             }
             else
             {
@@ -234,7 +236,7 @@ public abstract class GitOperationHelper
         }
         catch (NotSupportedException e)
         {
-            throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.protocolUnsupported", Arrays.asList(repositoryData.repositoryUrl))), e);
+            throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.protocolUnsupported", Arrays.asList(accessData.repositoryUrl))), e);
         }
         catch (TransportException e)
         {

@@ -5,7 +5,6 @@ import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.ssh.ProxyConnectionData;
 import com.atlassian.bamboo.ssh.ProxyException;
 import com.atlassian.bamboo.ssh.SshProxyService;
-import com.atlassian.config.HomeLocator;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -25,6 +24,8 @@ public class NativeGitOperationHelper extends GitOperationHelper
 {
     @SuppressWarnings("UnusedDeclaration")
     private static final Logger log = Logger.getLogger(NativeGitOperationHelper.class);
+    @NotNull
+    private final GitRepository.GitRepositoryAccessData accessData;
     // ------------------------------------------------------------------------------------------------------- Constants
     // ------------------------------------------------------------------------------------------------- Type Properties
     protected SshProxyService sshProxyService;
@@ -38,7 +39,8 @@ public class NativeGitOperationHelper extends GitOperationHelper
                                     final @NotNull BuildLogger buildLogger,
                                     final @NotNull TextProvider textProvider) throws RepositoryException
     {
-        super(buildLogger, textProvider);
+        super(accessData, buildLogger, textProvider);
+        this.accessData = accessData;
         this.sshProxyService = sshProxyService;
         this.gitCommandProcessor = new GitCommandProcessor(repository.getGitCapability(), buildLogger, accessData.commandTimeout, accessData.verboseLogs);
         this.gitCommandProcessor.checkGitExistenceInSystem(repository.getWorkingDirectory());
@@ -48,7 +50,7 @@ public class NativeGitOperationHelper extends GitOperationHelper
     // ----------------------------------------------------------------------------------------------- Interface Methods
 
     @Override
-    protected void doFetch(@NotNull final Transport transport, @NotNull final File sourceDirectory, @NotNull final GitRepository.GitRepositoryAccessData accessData, final RefSpec refSpec, final boolean useShallow) throws RepositoryException
+    protected void doFetch(@NotNull final Transport transport, @NotNull final File sourceDirectory, final RefSpec refSpec, final boolean useShallow) throws RepositoryException
     {
         final GitRepository.GitRepositoryAccessData proxiedAccessData = adjustRepositoryAccess(accessData);
         try

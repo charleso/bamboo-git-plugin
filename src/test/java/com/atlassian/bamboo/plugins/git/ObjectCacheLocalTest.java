@@ -25,8 +25,8 @@ public class ObjectCacheLocalTest extends GitAbstractTest
 
         File targetDir = t.createDir("target");
 
-        GitOperationHelper goh = createGitOperationHelper();
-        goh.checkout(t.cacheDir, targetDir, t.lastRevision, null, false);
+        GitOperationHelper goh = createGitOperationHelper(t.accessData);
+        goh.checkout(t.cacheDir, targetDir, t.lastRevision, null);
 
         String contents = FileUtils.readFileToString(new File(targetDir, "file.txt"));
         Assert.assertEquals(contents, t.lastContents);
@@ -42,9 +42,9 @@ public class ObjectCacheLocalTest extends GitAbstractTest
         TestSetup t = new TestSetup().prepare();
         File targetDir = t.createDir("target");
 
-        GitOperationHelper goh = createGitOperationHelper();
-        goh.fetch(targetDir, t.accessData, false);
-        goh.checkout(null, targetDir, t.lastRevision, null, false);
+        GitOperationHelper goh = createGitOperationHelper(t.accessData);
+        goh.fetch(targetDir, false);
+        goh.checkout(null, targetDir, t.lastRevision, null);
 
         String contents = FileUtils.readFileToString(new File(targetDir, "file.txt"));
         Assert.assertEquals(contents, t.lastContents);
@@ -61,9 +61,9 @@ public class ObjectCacheLocalTest extends GitAbstractTest
         File targetDir = t.createDir("target");
         File emptyCache = new File(createTempDirectory(), "not_created");
 
-        GitOperationHelper goh = createGitOperationHelper();
-        goh.fetch(targetDir, t.accessData, false);
-        goh.checkout(emptyCache, targetDir, t.lastRevision, null, false);
+        GitOperationHelper goh = createGitOperationHelper(t.accessData);
+        goh.fetch(targetDir, false);
+        goh.checkout(emptyCache, targetDir, t.lastRevision, null);
 
         String contents = FileUtils.readFileToString(new File(targetDir, "file.txt"));
         Assert.assertEquals(contents, t.lastContents);
@@ -80,9 +80,9 @@ public class ObjectCacheLocalTest extends GitAbstractTest
 
         File targetDir = t.createDir("target");
 
-        GitOperationHelper goh = createGitOperationHelper();
-        goh.fetch(targetDir, t.accessData, false);
-        goh.checkout(t.cacheDir, targetDir, asyncRev, null, false);
+        GitOperationHelper goh = createGitOperationHelper(t.accessData);
+        goh.fetch(targetDir, false);
+        goh.checkout(t.cacheDir, targetDir, asyncRev, null);
 
         String contents = FileUtils.readFileToString(new File(targetDir, "file.txt"));
         Assert.assertEquals(contents, asyncContents);
@@ -122,8 +122,8 @@ public class ObjectCacheLocalTest extends GitAbstractTest
 
             accessData = createAccessData(sourceRepositoryDir.getAbsolutePath());
 
-            GitOperationHelper goh = createGitOperationHelper();
-            goh.fetch(cacheDir, accessData, false);
+            GitOperationHelper goh = createGitOperationHelper(accessData);
+            goh.fetch(cacheDir, false);
             return this;
         }
 
