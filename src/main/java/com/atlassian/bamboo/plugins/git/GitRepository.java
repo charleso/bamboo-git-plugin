@@ -5,6 +5,7 @@ import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.commit.CommitContextImpl;
+import com.atlassian.bamboo.plan.PlanKey;
 import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.plan.branch.VcsBranch;
 import com.atlassian.bamboo.plan.branch.VcsBranchImpl;
@@ -34,7 +35,6 @@ import com.atlassian.bamboo.v2.build.agent.remote.RemoteBuildDirectoryManager;
 import com.atlassian.bamboo.v2.build.repository.CustomSourceDirectoryAwareRepository;
 import com.atlassian.bamboo.v2.build.repository.RequirementsAwareRepository;
 import com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration;
-import com.atlassian.bamboo.plan.PlanKey;
 import com.atlassian.util.concurrent.LazyReference;
 import com.atlassian.util.concurrent.Supplier;
 import com.google.common.base.Function;
@@ -74,7 +74,8 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
                                                                            RequirementsAwareRepository,
                                                                            AdvancedConfigurationAwareRepository,
                                                                            BranchDetectionCapableRepository,
-                                                                           CachingAwareRepository
+                                                                           CachingAwareRepository/*,
+                                                                           BranchMergingCapableRepository*/
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -164,17 +165,20 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
 
     // ----------------------------------------------------------------------------------------------- Interface Methods
 
+    @Override
     @NotNull
     public String getName()
     {
         return textProvider.getText(REPOSITORY_GIT_NAME);
     }
 
+    @Override
     public String getHost()
     {
-        return null;
+        return "";
     }
 
+    @Override
     public boolean isRepositoryDifferent(@NotNull Repository repository)
     {
         if (repository instanceof GitRepository)
@@ -193,6 +197,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         }
     }
 
+    @Override
     @NotNull
     public BuildRepositoryChanges collectChangesSinceLastBuild(@NotNull String planKey, @Nullable final String lastVcsRevisionKey) throws RepositoryException
     {
@@ -285,12 +290,14 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         }
     }
 
+    @Override
     @Deprecated
     @NotNull
     public String retrieveSourceCode(@NotNull final BuildContext buildContext, @Nullable final String vcsRevisionKey) throws RepositoryException {
         throw new NotImplementedException("Not implemented - use instead retrieveSourceCode(bctx, rev, src)");
     }
 
+    @Override
     @NotNull
     public String retrieveSourceCode(@NotNull final BuildContext buildContext, @Nullable final String nullableTargetRevision, @NotNull final File sourceDirectory) throws RepositoryException
     {
@@ -396,19 +403,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         return cachableOperation==CachableOperation.BRANCH_DETECTION;
     }
 
-    @NotNull
     @Override
-    public VcsBranch getCurrentVcsBranch()
-    {
-        return getVcsBranch();
-    }
-
-    @Override
-    public void setCurrentVcsBranch(@NotNull final VcsBranch branch)
-    {
-        setVcsBranch(branch);
-    }
-
     @NotNull
     public VcsBranch getVcsBranch()
     {
@@ -416,9 +411,17 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         return new VcsBranchImpl(StringUtils.defaultIfEmpty(substitutedAccessData.branch, "master"));
     }
 
+    @Override
     public void setVcsBranch(@NotNull final VcsBranch branch)
     {
         this.accessData.branch = branch.getName();
+    }
+
+
+    public boolean mergeWorkspaceWith(@NotNull final BuildContext buildContext, @NotNull final File workspaceDir, @NotNull final String targetRevision) throws RepositoryException
+    {
+        //git merge --no-commit 1ef00fef5018deec710706aa94d71bf39b81056f
+        return false;
     }
 
     @Override
