@@ -291,23 +291,12 @@ public class GitHubRepository extends AbstractStandaloneRepository implements Cu
 
     @Override
     @NotNull
-    public VcsBranch getCurrentVcsBranch()
-    {
-        return gitRepository.getVcsBranch();
-    }
-
-    @Override
-    public void setCurrentVcsBranch(@NotNull final VcsBranch vcsBranch)
-    {
-        gitRepository.setVcsBranch(vcsBranch);
-    }
-
-    @NotNull
     public VcsBranch getVcsBranch()
     {
         return gitRepository.getVcsBranch();
     }
 
+    @Override
     public void setVcsBranch(@NotNull final VcsBranch vcsBranch)
     {
         gitRepository.setVcsBranch(vcsBranch);
