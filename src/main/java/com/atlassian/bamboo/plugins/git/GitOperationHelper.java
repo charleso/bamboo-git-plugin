@@ -31,6 +31,8 @@ import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.storage.file.RefDirectory;
 import org.eclipse.jgit.transport.FetchConnection;
+import org.eclipse.jgit.transport.FetchResult;
+import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
@@ -97,6 +99,49 @@ public abstract class GitOperationHelper
     // -------------------------------------------------------------------------------------------------- Action Methods
     // -------------------------------------------------------------------------------------------------- Public Methods
 
+    /**
+     * Pushes arbitrary revision (refspec?) back to the upstream repo.
+     */
+    public void pushRevision(@NotNull final File sourceDirectory, @NotNull String revision) throws RepositoryException
+    {
+        Transport transport = null;
+        FileRepository localRepository = null;
+        try
+        {
+            final String resolvedBranch;
+            localRepository = createLocalRepository(sourceDirectory, null);
+            transport = open(localRepository, accessData);
+            final FetchConnection fetchConnection = transport.openFetch();
+            try
+            {
+                resolvedBranch = resolveRefSpec(accessData, fetchConnection).getName();
+            }
+            finally
+            {
+                fetchConnection.close();
+            }
+
+            RefSpec refSpec = new RefSpec()
+                    .setForceUpdate(true)
+                    .setSource(resolvedBranch)
+                    .setDestination(resolvedBranch);
+
+            PushResult pushResult = transport.push(new BuildLoggerProgressMonitor(buildLogger), transport.findRemoteRefUpdatesFor(Arrays.asList(refSpec)));
+            buildLogger.addBuildLogEntry("Git: " + pushResult.getMessages());
+        }
+        catch (IOException e)
+        {
+            throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.pushFailed", Arrays.asList(revision))) + e.getMessage(), e);
+        }
+        finally
+        {
+            if (transport != null)
+            {
+                transport.close();
+            }
+        }
+    }
+    
     /*
      * returns revision found after checkout in sourceDirectory
      */

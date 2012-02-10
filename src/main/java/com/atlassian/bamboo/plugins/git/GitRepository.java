@@ -12,13 +12,14 @@ import com.atlassian.bamboo.plan.branch.VcsBranchImpl;
 import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
 import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
 import com.atlassian.bamboo.repository.BranchDetectionCapableRepository;
-import com.atlassian.bamboo.repository.BranchMergingCapableRepository;
+import com.atlassian.bamboo.repository.BranchMergingAwareRepository;
 import com.atlassian.bamboo.repository.CacheId;
 import com.atlassian.bamboo.repository.CachingAwareRepository;
 import com.atlassian.bamboo.repository.CustomVariableProviderRepository;
 import com.atlassian.bamboo.repository.MavenPomAccessor;
 import com.atlassian.bamboo.repository.MavenPomAccessorCapableRepository;
 import com.atlassian.bamboo.repository.NameValuePair;
+import com.atlassian.bamboo.repository.PushCapableRepository;
 import com.atlassian.bamboo.repository.Repository;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.repository.SelectableAuthenticationRepository;
@@ -75,8 +76,9 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
                                                                            RequirementsAwareRepository,
                                                                            AdvancedConfigurationAwareRepository,
                                                                            BranchDetectionCapableRepository,
+                                                                           PushCapableRepository,
                                                                            CachingAwareRepository,
-                                                                           BranchMergingCapableRepository
+                                                                           BranchMergingAwareRepository
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -387,6 +389,14 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     }
 
     @Override
+    public void pushRevision(@Nullable String vcsRevisionKey, @NotNull File sourceDirectory) throws RepositoryException
+    {
+        final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
+        final JGitOperationHelper helper = new JGitOperationHelper(accessData, new NullBuildLogger(), textProvider);
+        helper.pushRevision(sourceDirectory, vcsRevisionKey);
+    }
+
+    @Override
     public CacheId getCacheId(@NotNull final CachableOperation cachableOperation)
     {
         switch (cachableOperation)
@@ -427,7 +437,13 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     }
 
     @Override
-    public Date getLastCommitDate(@NotNull PlanKey planKey) throws RepositoryException
+    public boolean isMergingSupported()
+    {
+        return isGitExecutableSet();
+    }
+
+    @Override
+    public CommitContext getLastCommit(@NotNull PlanKey planKey) throws RepositoryException
     {
         return null;
     }

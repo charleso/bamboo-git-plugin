@@ -1,6 +1,7 @@
 package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
+import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.repository.NameValuePair;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
@@ -18,6 +19,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.List;
 
 import static org.testng.Assert.*;
 
@@ -201,5 +203,31 @@ public class GitRepositoryTest extends GitAbstractTest
 
         BuildRepositoryChanges changes = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
         assertEquals(changes.getChanges().size(), 0);
+    }
+    
+    @Test
+    public void testPushingRevision() throws Exception
+    {
+        File testRepository = createTempDirectory();
+        ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
+        int commitsBeforePushCount = createGitOperationHelper(null).extractCommits(testRepository, null, "HEAD").getChanges().size();
+
+        GitRepository gitRepository = createGitRepository();
+        setRepositoryProperties(gitRepository, testRepository, "master");
+
+        BuildRepositoryChanges buildChanges = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
+        
+        File checkoutDir = getCheckoutDir(gitRepository);
+
+        gitRepository.retrieveSourceCode(mockBuildContext(), buildChanges.getVcsRevisionKey(), checkoutDir);
+
+        GitTestRepository srcRepo = new GitTestRepository(checkoutDir);
+        String commitedRevision = srcRepo.commitFileContents("contents").name();
+        gitRepository.pushRevision(commitedRevision, checkoutDir);
+
+        //verify somehow that testRepository contain commited revision...
+        List<CommitContext> commitsAfterPush = createGitOperationHelper(null).extractCommits(testRepository, null, "HEAD").getChanges();
+        assertEquals(commitsAfterPush.size(), commitsBeforePushCount + 1);
+        assertEquals(commitsAfterPush.get(0).getChangeSetId(), commitedRevision);
     }
 }

@@ -2,6 +2,7 @@ package com.atlassian.bamboo.plugins.git;
 
 import com.atlassian.bamboo.build.BuildLoggerManager;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
+import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.plan.PlanKey;
 import com.atlassian.bamboo.plan.branch.VcsBranch;
 import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
@@ -320,8 +321,8 @@ public class GitHubRepository extends AbstractStandaloneRepository implements Cu
     }
 
     @Override
-    public Date getLastCommitDate(@NotNull final PlanKey planKey) throws RepositoryException
+    public CommitContext getLastCommit(@NotNull final PlanKey planKey) throws RepositoryException
     {
-        return gitRepository.getLastCommitDate(planKey);
+        return gitRepository.getLastCommit(planKey);
     }
 }

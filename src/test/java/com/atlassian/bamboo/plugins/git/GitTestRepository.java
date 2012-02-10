@@ -20,8 +20,12 @@ class GitTestRepository
     GitTestRepository(File srcDir) throws IOException
     {
         this.srcDir = srcDir;
-        srcRepo = new FileRepository(new File(srcDir, Constants.DOT_GIT));
-        srcRepo.create();
+        File gitDir = new File(srcDir, Constants.DOT_GIT);
+        srcRepo = new FileRepository(gitDir);
+        if (!gitDir.exists())
+        {
+            srcRepo.create();
+        }
         textFile = getTextFile(srcDir);
         git = new Git(srcRepo);
     }
