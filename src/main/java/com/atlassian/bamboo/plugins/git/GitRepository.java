@@ -206,8 +206,8 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     {
         try
         {
-            final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(PlanKeys.getPlanKey(planKey));
+            final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
             final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
 
             final String targetRevision = helper.obtainLatestRevision();
@@ -287,10 +287,6 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         {
             throw new RepositoryException(textProvider.getText("repository.git.messages.runtimeException"), e);
         }
-        catch (URISyntaxException e)
-        {
-            throw new RepositoryException(textProvider.getText("repository.git.messages.runtimeException"), e);
-        }
     }
 
     @Override
@@ -308,13 +304,14 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         {
             final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(buildContext.getPlanResultKey());
-            final boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones;
-            final boolean isOnLocalAgent = !(buildDirectoryManager instanceof RemoteBuildDirectoryManager);
             final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
+
+            final boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones;
+
             final String targetRevision = nullableTargetRevision != null ? nullableTargetRevision : helper.obtainLatestRevision();
             final String previousRevision = helper.getCurrentRevision(sourceDirectory);
 
-            if (isOnLocalAgent)
+            if (isOnLocalAgent())
             {
                 final File cacheDirectory = getCacheDirectory();
                 return GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Callable<String>()
@@ -379,6 +376,11 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         }
     }
 
+    private boolean isOnLocalAgent()
+    {
+        return !(buildDirectoryManager instanceof RemoteBuildDirectoryManager);
+    }
+
     @NotNull
     @Override
     public Set<VcsBranch> getOpenBranches() throws RepositoryException
@@ -428,18 +430,69 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         this.accessData.branch = branch.getName();
     }
 
-
+    @Override
     public boolean mergeWorkspaceWith(@NotNull final BuildContext buildContext, @NotNull final File workspaceDir, @NotNull final String targetRevision) throws RepositoryException
     {
-        //final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
-        //git merge --no-commit 1ef00fef5018deec710706aa94d71bf39b81056f
-        return false;
+        final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(PlanKeys.getPlanKey(buildContext.getPlanKey()));
+        final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
+        final GitOperationHelper connector = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
+
+        final boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones;
+
+        final File cacheDirectory = getCacheDirectory();
+
+        try
+        {
+            if (isOnLocalAgent())
+            {
+                GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Callable<Void>()
+                {
+                    @Override
+                    public Void call() throws Exception
+                    {
+                        try
+                        {
+                            connector.fetch(cacheDirectory, doShallowFetch);
+                            connector.checkRevisionExistsInCacheRepository(cacheDirectory, targetRevision);
+                        }
+                        catch (Exception e)
+                        {
+                            rethrowOrRemoveDirectory(e, buildLogger, cacheDirectory, "repository.git.messages.rsRecover.failedToFetchCache");
+                            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedCacheDirectory", Arrays.asList(cacheDirectory)));
+                            connector.fetch(cacheDirectory, false);
+                            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.fetchingCacheCompleted", Arrays.asList(cacheDirectory)));
+                        }
+                        return null;
+                    }
+                });
+
+            }
+            else
+            {
+                try
+                {
+                    connector.fetch(workspaceDir, doShallowFetch);
+                }
+                catch (Exception e)
+                {
+                    rethrowOrRemoveDirectory(e, buildLogger, workspaceDir, "repository.git.messages.rsRecover.failedToCheckout");
+                    buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(workspaceDir)));
+                    connector.fetch(workspaceDir, false);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            throw new RepositoryException(textProvider.getText("repository.git.messages.runtimeException"), e);
+        }
+
+        return connector.merge(workspaceDir, targetRevision);
     }
 
     @Override
     public boolean isMergingSupported()
     {
-        return isGitExecutableSet();
+        return GitOperationHelperFactory.isNativeGitEnabled(this);
     }
 
     @Override
@@ -763,11 +816,6 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     public Set<Requirement> getRequirements()
     {
         return Sets.newHashSet();
-    }
-
-    public boolean isGitExecutableSet()
-    {
-        return (StringUtils.isNotBlank(getGitCapability()));
     }
 
     @Nullable

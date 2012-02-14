@@ -128,6 +128,12 @@ public class JGitOperationHelper extends GitOperationHelper
         }
     }
 
+    @Override
+    public boolean merge(final File workspaceDir, final String targetRevision)
+    {
+        throw new UnsupportedOperationException("JGit implementation does not support merging, please use native Git");
+    }
+
     // -------------------------------------------------------------------------------------------------- Action Methods
     // -------------------------------------------------------------------------------------------------- Public Methods
     // -------------------------------------------------------------------------------------- Basic Accessors / Mutators

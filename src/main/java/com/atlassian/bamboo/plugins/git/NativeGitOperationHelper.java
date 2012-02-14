@@ -24,8 +24,6 @@ public class NativeGitOperationHelper extends GitOperationHelper
 {
     @SuppressWarnings("UnusedDeclaration")
     private static final Logger log = Logger.getLogger(NativeGitOperationHelper.class);
-    @NotNull
-    private final GitRepository.GitRepositoryAccessData accessData;
     // ------------------------------------------------------------------------------------------------------- Constants
     // ------------------------------------------------------------------------------------------------- Type Properties
     protected SshProxyService sshProxyService;
@@ -40,7 +38,6 @@ public class NativeGitOperationHelper extends GitOperationHelper
                                     final @NotNull TextProvider textProvider) throws RepositoryException
     {
         super(accessData, buildLogger, textProvider);
-        this.accessData = accessData;
         this.sshProxyService = sshProxyService;
         this.gitCommandProcessor = new GitCommandProcessor(repository.getGitCapability(), buildLogger, accessData.commandTimeout, accessData.verboseLogs);
         this.gitCommandProcessor.checkGitExistenceInSystem(repository.getWorkingDirectory());
@@ -157,15 +154,17 @@ public class NativeGitOperationHelper extends GitOperationHelper
         return accessData;
     }
 
+    @Override
+    public boolean merge(@NotNull final File workspaceDir, @NotNull final String targetRevision) throws RepositoryException
+    {
+        return gitCommandProcessor.runMergeCommand(workspaceDir, targetRevision);
+    }
+
     @Nullable
     private String extractUsername(final String repositoryUrl) throws URISyntaxException
     {
         URIish uri = new URIish(repositoryUrl);
 
-        if (uri == null)
-        {
-            return null;
-        }
         final String auth = uri.getUser();
         if (auth == null)
         {

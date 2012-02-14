@@ -8,8 +8,6 @@ import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.net.URISyntaxException;
-
 public class GitOperationHelperFactory
 {
     private GitOperationHelperFactory()
@@ -20,9 +18,9 @@ public class GitOperationHelperFactory
                                                               final @NotNull GitRepository.GitRepositoryAccessData accessData,
                                                               final @NotNull SshProxyService sshProxyService,
                                                               final @NotNull BuildLogger buildLogger,
-                                                              final @NotNull TextProvider textProvider) throws RepositoryException, URISyntaxException
+                                                              final @NotNull TextProvider textProvider) throws RepositoryException
     {
-        if (StringUtils.isNotBlank(repository.getGitCapability()))
+        if (isNativeGitEnabled(repository))
         {
             return new NativeGitOperationHelper(repository, accessData, sshProxyService, buildLogger, textProvider);
         }
@@ -30,5 +28,10 @@ public class GitOperationHelperFactory
         {
             return new JGitOperationHelper(accessData, buildLogger, textProvider);
         }
+    }
+
+    public static boolean isNativeGitEnabled(final GitRepository repository)
+    {
+        return StringUtils.isNotBlank(repository.getGitCapability());
     }
 }

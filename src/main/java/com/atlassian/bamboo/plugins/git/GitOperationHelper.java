@@ -31,7 +31,6 @@ import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.storage.file.RefDirectory;
 import org.eclipse.jgit.transport.FetchConnection;
-import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.SshSessionFactory;
@@ -114,7 +113,7 @@ public abstract class GitOperationHelper
             final FetchConnection fetchConnection = transport.openFetch();
             try
             {
-                resolvedBranch = resolveRefSpec(accessData, fetchConnection).getName();
+                resolvedBranch = resolveRefSpec(accessData.branch, fetchConnection).getName();
             }
             finally
             {
@@ -168,29 +167,34 @@ public abstract class GitOperationHelper
         {
             throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.checkoutFailed", Arrays.asList(targetRevision))) + e.getMessage(), e);
         }
-   }
+    }
 
     public void fetch(@NotNull final File sourceDirectory, boolean useShallow) throws RepositoryException
     {
+        fetch(sourceDirectory, accessData.branch, useShallow);
+    }
+
+    private void fetch(@NotNull final File sourceDirectory, String branch, boolean useShallow) throws RepositoryException
+    {
         Transport transport = null;
         FileRepository localRepository = null;
-        String branchDescription = "(unresolved) " + accessData.branch;
+        String branchDescription = "(unresolved) " + branch;
         try
         {
             localRepository = createLocalRepository(sourceDirectory, null);
 
             transport = open(localRepository, accessData);
             final String resolvedBranch;
-            if (StringUtils.startsWithAny(accessData.branch, FQREF_PREFIXES))
+            if (StringUtils.startsWithAny(branch, FQREF_PREFIXES))
             {
-                resolvedBranch = accessData.branch;
+                resolvedBranch = branch;
             }
             else
             {
                 final FetchConnection fetchConnection = transport.openFetch();
                 try
                 {
-                    resolvedBranch = resolveRefSpec(accessData, fetchConnection).getName();
+                    resolvedBranch = resolveRefSpec(branch, fetchConnection).getName();
                 }
                 finally
                 {
@@ -269,7 +273,7 @@ public abstract class GitOperationHelper
         {
             transport = open(new FileRepository(""), accessData);
             fetchConnection = transport.openFetch();
-            Ref headRef = resolveRefSpec(accessData, fetchConnection);
+            Ref headRef = resolveRefSpec(accessData.branch, fetchConnection);
             if (headRef == null)
             {
                 throw new RepositoryException(textProvider.getText("repository.git.messages.cannotDetermineHead", Arrays.asList(accessData.repositoryUrl, accessData.branch)));
@@ -354,20 +358,20 @@ public abstract class GitOperationHelper
     // -------------------------------------------------------------------------------------- Basic Accessors / Mutators
 
     @Nullable
-    protected static Ref resolveRefSpec(GitRepositoryAccessData repositoryData, FetchConnection fetchConnection)
+    protected static Ref resolveRefSpec(String branch, FetchConnection fetchConnection)
     {
         final Collection<String> candidates;
-        if (StringUtils.isBlank(repositoryData.branch))
+        if (StringUtils.isBlank(branch))
         {
             candidates = Arrays.asList(Constants.R_HEADS + Constants.MASTER, Constants.HEAD);
         }
-        else if (StringUtils.startsWithAny(repositoryData.branch, FQREF_PREFIXES))
+        else if (StringUtils.startsWithAny(branch, FQREF_PREFIXES))
         {
-            candidates = Collections.singletonList(repositoryData.branch);
+            candidates = Collections.singletonList(branch);
         }
         else
         {
-            candidates = Arrays.asList(repositoryData.branch, Constants.R_HEADS + repositoryData.branch, Constants.R_TAGS + repositoryData.branch);
+            candidates = Arrays.asList(branch, Constants.R_HEADS + branch, Constants.R_TAGS + branch);
         }
 
         for (String candidate : candidates)
@@ -603,4 +607,6 @@ public abstract class GitOperationHelper
             throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.failedToOpenTransport", Arrays.asList(accessData.repositoryUrl))), e);
         }
     }
+
+    public abstract boolean merge(final File workspaceDir, final String targetRevision) throws RepositoryException;
 }

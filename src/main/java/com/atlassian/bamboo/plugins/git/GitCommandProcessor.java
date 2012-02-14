@@ -202,9 +202,10 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
             }
             buildLogger.addBuildLogEntry(stringBuilder.toString());
         }
+        //log.info("Running in " + workingDirectory + ": '" + StringUtils.join(commandArgs, "' '") + "'");
 
         final ExternalProcessBuilder externalProcessBuilder = new ExternalProcessBuilder()
-                .command((commandArgs), workingDirectory)
+                .command(commandArgs, workingDirectory)
                 .handler(handler);
 
         final Map<String, String> environment = commandBuilder.prepareEnvironment();
@@ -226,6 +227,14 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
                                           outputHandler.getStdout(),
                                           proxyErrorMessage != null ? "SSH Proxy error: " + proxyErrorMessage : outputHandler.getStdout());
         }
+    }
+
+    public boolean runMergeCommand(final File workspaceDir, final String targetRevision) throws RepositoryException
+    {
+        GitCommandBuilder commandBuilder = createCommandBuilder("merge", "--no-commit", targetRevision);
+        final LoggingOutputHandler outputHandler = new LoggingOutputHandler(buildLogger);
+        runCommand(commandBuilder, workspaceDir, outputHandler);
+        return outputHandler.getStdout().contains("+"); //0 files changed, 0 insertions(+), 0 deletions(-)
     }
 
     interface GitOutputHandler extends OutputHandler
