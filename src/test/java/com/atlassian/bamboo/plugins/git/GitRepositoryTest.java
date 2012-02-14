@@ -223,11 +223,32 @@ public class GitRepositoryTest extends GitAbstractTest
 
         GitTestRepository srcRepo = new GitTestRepository(checkoutDir);
         String commitedRevision = srcRepo.commitFileContents("contents").name();
-        gitRepository.pushRevision(commitedRevision, checkoutDir);
+        gitRepository.pushRevision(checkoutDir, commitedRevision);
 
         //verify somehow that testRepository contain commited revision...
-        List<CommitContext> commitsAfterPush = createGitOperationHelper(null).extractCommits(testRepository, null, "HEAD").getChanges();
+        List<CommitContext> commitsAfterPush = createGitOperationHelper(null).extractCommits(checkoutDir, null, "HEAD").getChanges();
         assertEquals(commitsAfterPush.size(), commitsBeforePushCount + 1);
         assertEquals(commitsAfterPush.get(0).getChangeSetId(), commitedRevision);
+    }
+
+    @Test
+    public void testCommitting() throws Exception
+    {
+        File testRepository = createTempDirectory();
+        ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
+        int commitsBeforeCommitCount = createGitOperationHelper(null).extractCommits(testRepository, null, "HEAD").getChanges().size();
+
+        GitRepository gitRepository = createGitRepository();
+        setRepositoryProperties(gitRepository, testRepository, "master");
+
+        BuildRepositoryChanges buildChanges = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
+        File checkoutDir = getCheckoutDir(gitRepository);
+        gitRepository.retrieveSourceCode(mockBuildContext(), buildChanges.getVcsRevisionKey(), checkoutDir);
+        String commitedRevision = gitRepository.commit(checkoutDir, "Message", "Author");
+
+        //verify somehow that testRepository contain commited revision...
+        List<CommitContext> commitsAfterCommit = createGitOperationHelper(null).extractCommits(checkoutDir, null, "HEAD").getChanges();
+        assertEquals(commitsAfterCommit.size(), commitsBeforeCommitCount + 1);
+        assertEquals(commitsAfterCommit.get(0).getChangeSetId(), commitedRevision);
     }
 }

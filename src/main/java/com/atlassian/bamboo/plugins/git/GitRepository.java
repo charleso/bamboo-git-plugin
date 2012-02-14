@@ -391,11 +391,17 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     }
 
     @Override
-    public void pushRevision(@Nullable String vcsRevisionKey, @NotNull File sourceDirectory) throws RepositoryException
+    public void pushRevision(@NotNull File sourceDirectory, @Nullable String vcsRevisionKey) throws RepositoryException
     {
         final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
         final JGitOperationHelper helper = new JGitOperationHelper(accessData, new NullBuildLogger(), textProvider);
         helper.pushRevision(sourceDirectory, vcsRevisionKey);
+    }
+    
+    public String commit(@NotNull File sourceDirectory, @NotNull String message, @NotNull String author) throws RepositoryException
+    {
+        final JGitOperationHelper helper = new JGitOperationHelper(accessData, new NullBuildLogger(), textProvider);
+        return helper.commit(sourceDirectory, message, author);
     }
 
     @Override

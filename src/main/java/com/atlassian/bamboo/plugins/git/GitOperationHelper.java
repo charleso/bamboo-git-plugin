@@ -18,9 +18,17 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.ConcurrentRefUpdateException;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.NoFilepatternException;
+import org.eclipse.jgit.api.errors.NoHeadException;
+import org.eclipse.jgit.api.errors.NoMessageException;
+import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.NotSupportedException;
 import org.eclipse.jgit.errors.TransportException;
+import org.eclipse.jgit.errors.UnmergedPathException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
@@ -138,6 +146,26 @@ public abstract class GitOperationHelper
             {
                 transport.close();
             }
+        }
+    }
+    
+    public String commit(@NotNull File sourceDirectory, @NotNull String message, @NotNull String author) throws RepositoryException
+    {
+        try
+        {
+            File gitDir = new File(sourceDirectory, Constants.DOT_GIT);
+            FileRepository fileRepository = new FileRepository(gitDir);
+            Git git = new Git(fileRepository);
+            git.add().addFilepattern(".").call();
+            return git.commit().setMessage(message).setCommitter(author, "").call().name();
+        }
+        catch (IOException e)
+        {
+            throw new RepositoryException("IOException during committing", e);
+        }
+        catch (GitAPIException e)
+        {
+            throw new RepositoryException("GitAPIException during committing", e);
         }
     }
     
