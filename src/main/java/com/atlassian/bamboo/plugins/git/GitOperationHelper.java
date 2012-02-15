@@ -112,7 +112,7 @@ public abstract class GitOperationHelper
     public void pushRevision(@NotNull final File sourceDirectory, @NotNull String revision) throws RepositoryException
     {
         Transport transport = null;
-        FileRepository localRepository = null;
+        FileRepository localRepository;
         try
         {
             final String resolvedBranch;

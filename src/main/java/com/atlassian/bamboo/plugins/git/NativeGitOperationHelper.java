@@ -47,6 +47,35 @@ public class NativeGitOperationHelper extends GitOperationHelper
     // ----------------------------------------------------------------------------------------------- Interface Methods
 
     @Override
+    public void pushRevision(@NotNull final File sourceDirectory, @NotNull String revision) throws RepositoryException
+    {
+        String possibleBranch = gitCommandProcessor.getPossibleBranchNameForCheckout(sourceDirectory, revision);
+        if (StringUtils.isBlank(possibleBranch))
+        {
+            throw new RepositoryException("Can't guess branch name for revision " + revision + " when trying to perform push.");
+        }
+        final GitRepository.GitRepositoryAccessData proxiedAccessData = adjustRepositoryAccess(accessData);
+        GitCommandBuilder commandBuilder = new GitCommandBuilder("push", proxiedAccessData.repositoryUrl, possibleBranch);
+        if (proxiedAccessData.verboseLogs)
+        {
+            commandBuilder.verbose(true);
+        }
+        gitCommandProcessor.runCommand(commandBuilder, sourceDirectory);
+    }
+
+    @Override
+    public String commit(@NotNull File sourceDirectory, @NotNull String message, @NotNull String author) throws RepositoryException
+    {
+        GitCommandBuilder commandBuilder = new GitCommandBuilder("commit", "-m", message, "--author="+author);
+        if (accessData.verboseLogs)
+        {
+            commandBuilder.verbose(true);
+        }
+        gitCommandProcessor.runCommand(commandBuilder, sourceDirectory);
+        return getCurrentRevision(sourceDirectory);
+    }
+
+    @Override
     protected void doFetch(@NotNull final Transport transport, @NotNull final File sourceDirectory, final RefSpec refSpec, final boolean useShallow) throws RepositoryException
     {
         final GitRepository.GitRepositoryAccessData proxiedAccessData = adjustRepositoryAccess(accessData);

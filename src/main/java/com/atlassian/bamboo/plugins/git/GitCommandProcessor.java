@@ -145,7 +145,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
 
     // -------------------------------------------------------------------------------------------------- Helper Methods
 
-    private String getPossibleBranchNameForCheckout(File workingDirectory, String revision) throws RepositoryException
+    public String getPossibleBranchNameForCheckout(File workingDirectory, String revision) throws RepositoryException
     {
         GitCommandBuilder commandBuilder = createCommandBuilder("log", "-1", "--format=%d", "--decorate=full");
         commandBuilder.append(revision);
@@ -182,7 +182,12 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         proxyException = exception;
     }
 
-    private void runCommand(@NotNull final GitCommandBuilder commandBuilder, @NotNull final File workingDirectory,
+    public void runCommand(@NotNull final GitCommandBuilder commandBuilder, @NotNull final File workingDirectory) throws RepositoryException
+    {
+        runCommand(commandBuilder, workingDirectory, new LoggingOutputHandler(buildLogger));
+    }
+
+    public void runCommand(@NotNull final GitCommandBuilder commandBuilder, @NotNull final File workingDirectory,
                             @NotNull final GitOutputHandler outputHandler) throws RepositoryException
     {
         //noinspection ResultOfMethodCallIgnored

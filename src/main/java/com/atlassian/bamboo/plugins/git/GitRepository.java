@@ -394,13 +394,14 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     public void pushRevision(@NotNull File sourceDirectory, @Nullable String vcsRevisionKey) throws RepositoryException
     {
         final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
-        final JGitOperationHelper helper = new JGitOperationHelper(accessData, new NullBuildLogger(), textProvider);
+        final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, new NullBuildLogger(), textProvider);
         helper.pushRevision(sourceDirectory, vcsRevisionKey);
     }
     
     public String commit(@NotNull File sourceDirectory, @NotNull String message, @NotNull String author) throws RepositoryException
     {
-        final JGitOperationHelper helper = new JGitOperationHelper(accessData, new NullBuildLogger(), textProvider);
+        final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
+        final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, new NullBuildLogger(), textProvider);
         return helper.commit(sourceDirectory, message, author);
     }
 
