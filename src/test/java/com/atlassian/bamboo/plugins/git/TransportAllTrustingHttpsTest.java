@@ -75,7 +75,7 @@ public class TransportAllTrustingHttpsTest extends GitAbstractTest
     {
         String url = "https://localhost:" + port + "/repository"; // path necessary or jGit will not parse properly
 
-        GitOperationHelper goh = createGitOperationHelper(null);
+        GitOperationHelper goh = createJGitOperationHelper(null);
         GitRepository.GitRepositoryAccessData accessData = createAccessData(url);
         FileRepository fileRepository = new FileRepository(createTempDirectory());
         Transport transport = goh.open(fileRepository, accessData);
@@ -97,7 +97,7 @@ public class TransportAllTrustingHttpsTest extends GitAbstractTest
     {
         String url = "https://localhost:" + port + "/repository"; // path necessary or jGit will not parse properly
 
-        GitOperationHelper goh = createGitOperationHelper(null);
+        GitOperationHelper goh = createJGitOperationHelper(null);
         GitRepository.GitRepositoryAccessData accessData = createAccessData(url);
         FileRepository fileRepository = new FileRepository(createTempDirectory());
         Transport transport = goh.open(fileRepository, accessData);

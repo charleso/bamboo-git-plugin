@@ -94,7 +94,7 @@ public class TimeoutsTest extends GitAbstractTest
     @Test
     public void testTimeoutIsSufficientToCheckOutBigRepo() throws Exception
     {
-        GitOperationHelper helper = createGitOperationHelper(createAccessData("git://git.jetbrains.org/idea/community.git"));
+        GitOperationHelper helper = createJGitOperationHelper(createAccessData("git://git.jetbrains.org/idea/community.git"));
         String s = helper.obtainLatestRevision();
         File directory = createTempDirectory();
         System.out.println(directory);
@@ -115,16 +115,16 @@ public class TimeoutsTest extends GitAbstractTest
     @Test(dataProvider = "urlsToHang", expectedExceptions = RepositoryException.class, timeOut = 5000)
     public void testTimeoutOnObtainingLatestRevision(String url) throws Exception
     {
-        String rev = createGitOperationHelper(createAccessData(url)).obtainLatestRevision();
+        String rev = createJGitOperationHelper(createAccessData(url)).obtainLatestRevision();
     }
 
     @Test(dataProvider = "urlsToHang", expectedExceptions = RepositoryException.class, timeOut = 5000)
     public void testTimeoutOnFetch(String url) throws Exception
     {
         File directory = createTempDirectory();
-        String targetRevision = createGitOperationHelper(createAccessData(url)).obtainLatestRevision();
-        createGitOperationHelper(createAccessData(url)).fetch(directory, false);
-        createGitOperationHelper(createAccessData(url)).checkout(null, directory, targetRevision, null);
+        String targetRevision = createJGitOperationHelper(createAccessData(url)).obtainLatestRevision();
+        createJGitOperationHelper(createAccessData(url)).fetch(directory, false);
+        createJGitOperationHelper(createAccessData(url)).checkout(null, directory, targetRevision, null);
     }
 
 }

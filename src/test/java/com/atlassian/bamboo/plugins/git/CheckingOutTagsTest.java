@@ -233,7 +233,7 @@ public class CheckingOutTagsTest extends GitAbstractTest
     {
         boolean useShallow = false; // this doesn't matter until jgit has server support for shallow clones over local repositories
         File src = createTempDirectory();
-        GitOperationHelper helper = createGitOperationHelper(createAccessData(srcDir, branch));
+        GitOperationHelper helper = createJGitOperationHelper(createAccessData(srcDir, branch));
 
         File cache = null;
 
@@ -262,7 +262,7 @@ public class CheckingOutTagsTest extends GitAbstractTest
         // {rest of commits}
 
         File src = createTempDirectory();
-        GitOperationHelper helper = createGitOperationHelper(createAccessData("https://github.com/github/git.git", "dup-post-receive-refs-patch"));
+        GitOperationHelper helper = createJGitOperationHelper(createAccessData("https://github.com/github/git.git", "dup-post-receive-refs-patch"));
         helper.fetch(src, true);
         helper.checkout(null, src, "v1.7.0.2", null);
         helper.checkout(null, src, "5565f47c", "v1.7.0.2");

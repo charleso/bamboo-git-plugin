@@ -8,6 +8,7 @@ import com.atlassian.bamboo.plan.PlanKey;
 import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
 import com.atlassian.bamboo.project.Project;
+import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
 import com.atlassian.bamboo.ssh.SshProxyService;
 import com.atlassian.bamboo.util.BambooFileUtils;
@@ -116,10 +117,20 @@ public class GitAbstractTest
         gitRepository.populateFromConfig(buildConfiguration);
     }
 
-    public GitOperationHelper createGitOperationHelper(final GitRepositoryAccessData accessData)
+    public GitOperationHelper createJGitOperationHelper(final GitRepositoryAccessData accessData)
     {
         TextProvider textProvider = Mockito.mock(TextProvider.class);
         return new JGitOperationHelper(accessData, new NullBuildLogger(), textProvider);
+    }
+
+    public NativeGitOperationHelper createNativeGitOperationHelper(final GitRepositoryAccessData accessData) throws RepositoryException
+    {
+        TextProvider textProvider = Mockito.mock(TextProvider.class);
+        final GitRepository repository = Mockito.mock(GitRepository.class);
+        Mockito.when(repository.getWorkingDirectory()).thenReturn(new File("/"));
+        Mockito.when(repository.getGitCapability()).thenReturn("/usr/bin/git");
+        final SshProxyService sshProxyService = Mockito.mock(SshProxyService.class);
+        return new NativeGitOperationHelper(repository, accessData, sshProxyService, new NullBuildLogger(), textProvider);
     }
 
     public GitRepository createGitRepository() throws Exception

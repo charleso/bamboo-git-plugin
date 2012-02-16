@@ -4,19 +4,27 @@ import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.commit.CommitContextImpl;
 import com.atlassian.bamboo.commit.CommitFile;
 import com.atlassian.bamboo.commit.CommitFileImpl;
+import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.testtools.ZipResourceDirectory;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.transport.Transport;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class GitOperationHelperTest extends GitAbstractTest
 {
@@ -45,7 +53,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         File repository = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory(zipFile, repository);
 
-        String result = createGitOperationHelper(createAccessData(repository, branch)).obtainLatestRevision();
+        String result = createJGitOperationHelper(createAccessData(repository, branch)).obtainLatestRevision();
         assertEquals(result, expectedRevision);
     }
 
@@ -73,7 +81,7 @@ public class GitOperationHelperTest extends GitAbstractTest
     {
         File tmp = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory(repositoryZip, tmp);
-        GitOperationHelper helper = createGitOperationHelper(createAccessData(null));
+        GitOperationHelper helper = createJGitOperationHelper(createAccessData(null));
         String previousRevision = null;
 
         for(String[] testCase : targetRevisions)
@@ -254,7 +262,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         File tmp = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory(repositoryZip, tmp);
 
-        List<CommitContext> commits = createGitOperationHelper(null).extractCommits(tmp, previousRevision, targetRevision).getChanges();
+        List<CommitContext> commits = createJGitOperationHelper(null).extractCommits(tmp, previousRevision, targetRevision).getChanges();
 
         assertEquals(commits.size(), expectedCommits.length);
         for (int i = 0; i < commits.size(); i++)
@@ -275,6 +283,48 @@ public class GitOperationHelperTest extends GitAbstractTest
             }
         }
     }
+    
+    @Test
+    public void testMerges() throws IOException, URISyntaxException, RepositoryException
+    {
+        File tmp = createTempDirectory();
+        try
+        {
+            ZipResourceDirectory.copyZipResourceToDirectory("detect-branches/detect-branches-repo.zip", tmp);
+
+            final String branchName = "a_branch";
+            final String masterBranch = "master";
+            final String createdFile = "branch.txt";
+
+            final NativeGitOperationHelper connector = createNativeGitOperationHelper(createAccessData(tmp, branchName));
+
+            assertTrue(connector.merge(tmp, masterBranch));
+            assertFalse(connector.merge(tmp, masterBranch));
+
+            String rev = connector.commit(tmp, "message", "A U Thor <author@example.com[1]>");
+            assertTrue(StringUtils.isNotBlank(rev));
+
+            connector.gitCommandProcessor.runCheckoutCommand(tmp, branchName);
+
+            FileUtils.writeStringToFile(new File(tmp, createdFile), "data");
+            connector.gitCommandProcessor.runCommand(new GitCommandBuilder("add", createdFile), tmp);
+            rev = connector.commit(tmp, "message2", "A U Thor <author@example.com[1]>");
+            assertTrue(StringUtils.isNotBlank(rev));
+
+            try
+            {
+                connector.merge(tmp, masterBranch);
+                fail("A conflicting merge was succesful");
+            }
+            catch (GitCommandException e)
+            {
+            }
+        }
+        finally
+        {
+            FileUtils.deleteQuietly(tmp);
+        }
+    }
 
     @Test
     public void testChangesetLimit() throws Exception
@@ -282,7 +332,7 @@ public class GitOperationHelperTest extends GitAbstractTest
         File tmp = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory("150changes.zip", tmp);
 
-        BuildRepositoryChanges buildChanges = createGitOperationHelper(null).extractCommits(tmp, null, "HEAD");
+        BuildRepositoryChanges buildChanges = createJGitOperationHelper(null).extractCommits(tmp, null, "HEAD");
         assertEquals(buildChanges.getChanges().size(), 100);
         assertEquals(buildChanges.getSkippedCommitsCount(), 50);
 
@@ -308,7 +358,7 @@ public class GitOperationHelperTest extends GitAbstractTest
     @Test(dataProvider = "transportMappingData")
     public void testOpenConnectionUsesCustomizedTransport(String url, boolean expectCustomized) throws Exception
     {
-        GitOperationHelper goh = createGitOperationHelper(null);
+        GitOperationHelper goh = createJGitOperationHelper(null);
         GitRepository.GitRepositoryAccessData accessData = createAccessData(url);
         FileRepository fileRepository = new FileRepository(createTempDirectory());
         Transport transport = goh.open(fileRepository, accessData);

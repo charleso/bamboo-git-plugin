@@ -210,7 +210,7 @@ public class GitRepositoryTest extends GitAbstractTest
     {
         File testRepository = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
-        int commitsBeforePushCount = createGitOperationHelper(null).extractCommits(testRepository, null, "HEAD").getChanges().size();
+        int commitsBeforePushCount = createJGitOperationHelper(null).extractCommits(testRepository, null, "HEAD").getChanges().size();
 
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, testRepository, "master");
@@ -226,7 +226,7 @@ public class GitRepositoryTest extends GitAbstractTest
         gitRepository.pushRevision(checkoutDir, commitedRevision);
 
         //verify somehow that testRepository contain commited revision...
-        List<CommitContext> commitsAfterPush = createGitOperationHelper(null).extractCommits(checkoutDir, null, "HEAD").getChanges();
+        List<CommitContext> commitsAfterPush = createJGitOperationHelper(null).extractCommits(checkoutDir, null, "HEAD").getChanges();
         assertEquals(commitsAfterPush.size(), commitsBeforePushCount + 1);
         assertEquals(commitsAfterPush.get(0).getChangeSetId(), commitedRevision);
     }
@@ -236,7 +236,7 @@ public class GitRepositoryTest extends GitAbstractTest
     {
         File testRepository = createTempDirectory();
         ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
-        int commitsBeforeCommitCount = createGitOperationHelper(null).extractCommits(testRepository, null, "HEAD").getChanges().size();
+        int commitsBeforeCommitCount = createJGitOperationHelper(null).extractCommits(testRepository, null, "HEAD").getChanges().size();
 
         GitRepository gitRepository = createGitRepository();
         setRepositoryProperties(gitRepository, testRepository, "master");
@@ -247,7 +247,7 @@ public class GitRepositoryTest extends GitAbstractTest
         String commitedRevision = gitRepository.commit(checkoutDir, "Message", "Author");
 
         //verify somehow that testRepository contain commited revision...
-        List<CommitContext> commitsAfterCommit = createGitOperationHelper(null).extractCommits(checkoutDir, null, "HEAD").getChanges();
+        List<CommitContext> commitsAfterCommit = createJGitOperationHelper(null).extractCommits(checkoutDir, null, "HEAD").getChanges();
         assertEquals(commitsAfterCommit.size(), commitsBeforeCommitCount + 1);
         assertEquals(commitsAfterCommit.get(0).getChangeSetId(), commitedRevision);
     }

@@ -25,7 +25,7 @@ public class ObjectCacheLocalTest extends GitAbstractTest
 
         File targetDir = t.createDir("target");
 
-        GitOperationHelper goh = createGitOperationHelper(t.accessData);
+        GitOperationHelper goh = createJGitOperationHelper(t.accessData);
         goh.checkout(t.cacheDir, targetDir, t.lastRevision, null);
 
         String contents = FileUtils.readFileToString(new File(targetDir, "file.txt"));
@@ -42,7 +42,7 @@ public class ObjectCacheLocalTest extends GitAbstractTest
         TestSetup t = new TestSetup().prepare();
         File targetDir = t.createDir("target");
 
-        GitOperationHelper goh = createGitOperationHelper(t.accessData);
+        GitOperationHelper goh = createJGitOperationHelper(t.accessData);
         goh.fetch(targetDir, false);
         goh.checkout(null, targetDir, t.lastRevision, null);
 
@@ -61,7 +61,7 @@ public class ObjectCacheLocalTest extends GitAbstractTest
         File targetDir = t.createDir("target");
         File emptyCache = new File(createTempDirectory(), "not_created");
 
-        GitOperationHelper goh = createGitOperationHelper(t.accessData);
+        GitOperationHelper goh = createJGitOperationHelper(t.accessData);
         goh.fetch(targetDir, false);
         goh.checkout(emptyCache, targetDir, t.lastRevision, null);
 
@@ -80,7 +80,7 @@ public class ObjectCacheLocalTest extends GitAbstractTest
 
         File targetDir = t.createDir("target");
 
-        GitOperationHelper goh = createGitOperationHelper(t.accessData);
+        GitOperationHelper goh = createJGitOperationHelper(t.accessData);
         goh.fetch(targetDir, false);
         goh.checkout(t.cacheDir, targetDir, asyncRev, null);
 
@@ -122,7 +122,7 @@ public class ObjectCacheLocalTest extends GitAbstractTest
 
             accessData = createAccessData(sourceRepositoryDir.getAbsolutePath());
 
-            GitOperationHelper goh = createGitOperationHelper(accessData);
+            GitOperationHelper goh = createJGitOperationHelper(accessData);
             goh.fetch(cacheDir, false);
             return this;
         }

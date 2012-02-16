@@ -27,7 +27,7 @@ public class NativeGitOperationHelper extends GitOperationHelper
     // ------------------------------------------------------------------------------------------------------- Constants
     // ------------------------------------------------------------------------------------------------- Type Properties
     protected SshProxyService sshProxyService;
-    protected GitCommandProcessor gitCommandProcessor;
+    GitCommandProcessor gitCommandProcessor;
     // ---------------------------------------------------------------------------------------------------- Dependencies
     // ---------------------------------------------------------------------------------------------------- Constructors
 
@@ -66,7 +66,7 @@ public class NativeGitOperationHelper extends GitOperationHelper
     @Override
     public String commit(@NotNull File sourceDirectory, @NotNull String message, @NotNull String author) throws RepositoryException
     {
-        GitCommandBuilder commandBuilder = new GitCommandBuilder("commit", "-m", message, "--author="+author);
+        GitCommandBuilder commandBuilder = new GitCommandBuilder("commit", "-m", message, "--author="+author, "--all");
         if (accessData.verboseLogs)
         {
             commandBuilder.verbose(true);
