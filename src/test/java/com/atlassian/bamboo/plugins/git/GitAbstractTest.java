@@ -133,29 +133,37 @@ public class GitAbstractTest
         return new NativeGitOperationHelper(repository, accessData, sshProxyService, new NullBuildLogger(), textProvider);
     }
 
+    public GitRepository createNativeGitRepository() throws Exception
+    {
+        return _createGitRepository(new NativeGitRepositoryFixture());
+    }
+
     public GitRepository createGitRepository() throws Exception
+    {
+        return _createGitRepository(new GitRepositoryFixture());
+    }
+
+    public GitRepository _createGitRepository(GitRepository fixture) throws Exception
     {
         File workingDirectory = createTempDirectory();
 
-        final GitRepository gitRepository = new GitRepositoryFixture();
-
         BuildLoggerManager buildLoggerManager = Mockito.mock(BuildLoggerManager.class, new Returns(new NullBuildLogger()));
-        gitRepository.setBuildLoggerManager(buildLoggerManager);
+        fixture.setBuildLoggerManager(buildLoggerManager);
 
         BuildDirectoryManager buildDirectoryManager = Mockito.mock(BuildDirectoryManager.class, new Returns(workingDirectory));
-        gitRepository.setBuildDirectoryManager(buildDirectoryManager);
-        gitRepository.setTextProvider(getTextProvider());
+        fixture.setBuildDirectoryManager(buildDirectoryManager);
+        fixture.setTextProvider(getTextProvider());
 
         CustomVariableContext customVariableContext = new CustomVariableContextImpl();
         customVariableContext.setVariables(Maps.<String, VariableDefinitionContext>newHashMap());
-        gitRepository.setCustomVariableContext(customVariableContext);
+        fixture.setCustomVariableContext(customVariableContext);
         
-        gitRepository.setCapabilityContext(mock(CapabilityContext.class));
+        fixture.setCapabilityContext(mock(CapabilityContext.class));
 
         SshProxyService sshProxyService = mock(SshProxyService.class);
-        gitRepository.setSshProxyService(sshProxyService);
+        fixture.setSshProxyService(sshProxyService);
 
-        return gitRepository;
+        return fixture;
     }
 
     public File createTempDirectory() throws IOException
@@ -266,6 +274,15 @@ public class GitAbstractTest
         public File getCacheDirectory()
         {
             return GitCacheDirectory.getCacheDirectory(getWorkingDirectory(), getSubstitutedAccessData());
+        }
+    }
+
+    static class NativeGitRepositoryFixture extends GitRepositoryFixture
+    {
+        @Override
+        public String getGitCapability()
+        {
+            return "/usr/bin/git";
         }
     }
 }

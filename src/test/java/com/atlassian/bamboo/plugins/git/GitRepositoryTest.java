@@ -244,11 +244,77 @@ public class GitRepositoryTest extends GitAbstractTest
         BuildRepositoryChanges buildChanges = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
         File checkoutDir = getCheckoutDir(gitRepository);
         gitRepository.retrieveSourceCode(mockBuildContext(), buildChanges.getVcsRevisionKey(), checkoutDir);
-        String commitedRevision = gitRepository.commit(checkoutDir, "Message", "Author");
+        String committedRevision = gitRepository.commit(checkoutDir, "Message", "Author");
 
         //verify somehow that testRepository contain commited revision...
         List<CommitContext> commitsAfterCommit = createJGitOperationHelper(null).extractCommits(checkoutDir, null, "HEAD").getChanges();
         assertEquals(commitsAfterCommit.size(), commitsBeforeCommitCount + 1);
-        assertEquals(commitsAfterCommit.get(0).getChangeSetId(), commitedRevision);
+        assertEquals(commitsAfterCommit.get(0).getChangeSetId(), committedRevision);
+    }
+
+    @Test
+    public void testCommittingWithNativeGit() throws Exception
+    {
+        final String author = "Author <author@author.com>";
+        final String filename = "sparta.txt";
+        final String commitMessage = "Message\n";
+
+        File testRepository = createTempDirectory();
+        ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
+
+        GitRepository gitRepository = createNativeGitRepository();
+        setRepositoryProperties(gitRepository, testRepository, "master");
+
+        String revisionBeforeCommit = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null).getVcsRevisionKey();
+        File checkoutDir = getCheckoutDir(gitRepository);
+        gitRepository.retrieveSourceCode(mockBuildContext(), revisionBeforeCommit, checkoutDir);
+        
+        File modifiedFile = new File(checkoutDir, filename);
+        FileUtils.writeStringToFile(modifiedFile, "miej serce... i paczaj w serce...");
+        String committedRevision = gitRepository.commit(checkoutDir, commitMessage, author);
+
+        //verify
+        List<CommitContext> commitsAfterCommit = createNativeGitOperationHelper(createAccessData(testRepository.getAbsolutePath())).extractCommits(checkoutDir, revisionBeforeCommit, "HEAD").getChanges();
+        assertEquals(commitsAfterCommit.size(), 1);
+        CommitContext commit = commitsAfterCommit.get(0);
+        assertEquals(commit.getChangeSetId(), committedRevision);
+        assertEquals(commit.getAuthor().getName(), author);
+        assertEquals(commit.getComment(), commitMessage);
+        assertEquals(commit.getFiles().get(0).getName(), filename);
+    }
+
+    @Test
+    public void testPushingWithNativeGit() throws Exception
+    {
+        final String author = "Author <author@author.com>";
+        final String filename = "sparta.txt";
+        final String commitMessage = "Message\n";
+
+        File testRepository = createTempDirectory();
+        ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
+        File gitConfig = new File(new File(testRepository, ".git"), "config");
+        FileUtils.writeStringToFile(gitConfig, FileUtils.readFileToString(gitConfig) + "\n[receive]\n    denyCurrentBranch = ignore\n");
+
+        GitRepository gitRepository = createNativeGitRepository();
+        setRepositoryProperties(gitRepository, testRepository, "master");
+
+        String revisionBeforeCommit = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null).getVcsRevisionKey();
+        File checkoutDir = getCheckoutDir(gitRepository);
+        gitRepository.retrieveSourceCode(mockBuildContext(), revisionBeforeCommit, checkoutDir);
+
+        File modifiedFile = new File(checkoutDir, filename);
+        FileUtils.writeStringToFile(modifiedFile, "miej serce... i paczaj w serce...");
+        String committedRevision = gitRepository.commit(checkoutDir, commitMessage, author);
+
+        gitRepository.pushRevision(checkoutDir, committedRevision);
+
+        //verify
+        List<CommitContext> commitsAfterCommit = createNativeGitOperationHelper(createAccessData(testRepository.getAbsolutePath())).extractCommits(testRepository, revisionBeforeCommit, "HEAD").getChanges();
+        assertEquals(commitsAfterCommit.size(), 1);
+        CommitContext commit = commitsAfterCommit.get(0);
+        assertEquals(commit.getChangeSetId(), committedRevision);
+        assertEquals(commit.getAuthor().getName(), author);
+        assertEquals(commit.getComment(), commitMessage);
+        assertEquals(commit.getFiles().get(0).getName(), filename);
     }
 }
