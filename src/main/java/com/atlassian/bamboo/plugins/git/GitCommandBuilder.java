@@ -156,7 +156,8 @@ public class GitCommandBuilder
         if (StringUtils.isNotBlank(sshCommand))
         {
             environment.put("GIT_SSH", sshCommand);
-            environment.put("GIT_COMMITTER_EMAIL", "bamboo@atlassian.com");
+            environment.put("GIT_COMMITTER_EMAIL", "bamboo@atlassian.com"); //needed to get rid of a warning
+            environment.put("GIT_AUTHOR_NAME", "Bamboo"); //needed for merge
         }
         return environment;
     }
