@@ -1,6 +1,5 @@
 package com.atlassian.bamboo.plugins.git;
 
-import de.schlichtherle.truezip.util.Maps;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
@@ -157,6 +156,7 @@ public class GitCommandBuilder
         if (StringUtils.isNotBlank(sshCommand))
         {
             environment.put("GIT_SSH", sshCommand);
+            environment.put("GIT_COMMITTER_EMAIL", "bamboo@atlassian.com");
         }
         return environment;
     }

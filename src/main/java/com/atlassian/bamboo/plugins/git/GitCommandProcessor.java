@@ -240,7 +240,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
 
     public boolean runMergeCommand(final File workspaceDir, final String targetRevision) throws RepositoryException
     {
-        GitCommandBuilder commandBuilder = createCommandBuilder("merge", "--no-commit", targetRevision);
+        GitCommandBuilder commandBuilder = createCommandBuilder("merge", "--no-commit", "--author=\"Bamboo <bamboo@atlassian.com>\"", targetRevision);
         final LoggingOutputHandler outputHandler = new LoggingOutputHandler(buildLogger);
         runCommand(commandBuilder, workspaceDir, outputHandler);
         return outputHandler.getStdout().contains("+"); //0 files changed, 0 insertions(+), 0 deletions(-)
