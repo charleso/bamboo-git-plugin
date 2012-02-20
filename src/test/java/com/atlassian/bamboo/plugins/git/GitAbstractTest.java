@@ -231,6 +231,7 @@ public class GitAbstractTest
         accessData.password = password;
         accessData.sshKey = sshKey;
         accessData.sshPassphrase = sshPassphrase;
+        accessData.commandTimeout = 1;
         return accessData;
     }
 

@@ -11,6 +11,7 @@ import com.atlassian.utils.process.OutputHandler;
 import com.atlassian.utils.process.PluggableProcessHandler;
 import com.atlassian.utils.process.StringOutputHandler;
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
@@ -53,6 +54,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
     {
         this.gitExecutable = gitExecutable;
         this.buildLogger = buildLogger;
+        Preconditions.checkArgument(commandTimeoutInMinutes>0, "Command timeout must be greater than 0");
         this.commandTimeoutInMinutes = commandTimeoutInMinutes;
         this.maxVerboseOutput = maxVerboseOutput;
     }
@@ -75,13 +77,13 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
 
         try
         {
-            runCommand(commandBuilder, workingDirectory, outputHandler);
+            final int exitCode = runCommand(commandBuilder, workingDirectory, outputHandler);
             String output = outputHandler.getOutput();
             Matcher matcher = gitVersionPattern.matcher(output);
             if (!matcher.find())
             {
                 String errorMessage = "Git Executable capability `" + gitExecutable + "' does not seem to be a git client. Is it properly set?";
-                log.error(errorMessage + " Output:\n" + output);
+                log.error(errorMessage + " Exit code: " + exitCode + " Output:\n" + output);
                 throw new RepositoryException(errorMessage);
             }
         }
@@ -187,8 +189,8 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         runCommand(commandBuilder, workingDirectory, new LoggingOutputHandler(buildLogger));
     }
 
-    public void runCommand(@NotNull final GitCommandBuilder commandBuilder, @NotNull final File workingDirectory,
-                            @NotNull final GitOutputHandler outputHandler) throws RepositoryException
+    public int runCommand(@NotNull final GitCommandBuilder commandBuilder, @NotNull final File workingDirectory,
+                          @NotNull final GitOutputHandler outputHandler) throws RepositoryException
     {
         //noinspection ResultOfMethodCallIgnored
         workingDirectory.mkdirs();
@@ -226,12 +228,14 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         if (!handler.succeeded())
         {
             // command may contain user password (url) in plaintext -> hide it from bamboo plan/build logs. see BAM-5781
-            throw new GitCommandException("command " + RepositoryUrlObfuscator.obfuscatePasswordsInUrls(commandArgs) + " failed. Working directory was `"
-                                          + workingDirectory + "'.",
-                                          proxyException != null ? proxyException : handler.getException(),
-                                          outputHandler.getStdout(),
-                                          proxyErrorMessage != null ? "SSH Proxy error: " + proxyErrorMessage : outputHandler.getStdout());
+            throw new GitCommandException(
+                    "command " + RepositoryUrlObfuscator.obfuscatePasswordsInUrls(commandArgs) + " failed with code " + handler.getExitCode() + "." +
+                    " Working directory was ["+ workingDirectory + "].", proxyException != null ? proxyException : handler.getException(),
+                    outputHandler.getStdout(),
+                    proxyErrorMessage != null ? "SSH Proxy error: " + proxyErrorMessage : outputHandler.getStdout());
         }
+
+        return handler.getExitCode();
     }
 
     public boolean runMergeCommand(final File workspaceDir, final String targetRevision) throws RepositoryException
