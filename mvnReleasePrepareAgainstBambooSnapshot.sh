@@ -1,10 +1,19 @@
 #!/bin/bash
 
+m2RepoPath=$(grep localRepository ~/.m2/settings.xml | sed -e 's/.[^<]*$//' -e 's/[^>]*.//')
+
+if [ -z "$m2RepoPath" ] ; then
+	m2RepoPath=~/.m2/repository
+fi
+
+
+
+
 getArtifactDir() {
 	local group=$1
 	local artifact=$2
 	local version=$3
-	echo ~/.m2/repository/$(echo $1/$2 | sed 's@\.@/@g')/$3
+	echo $m2RepoPath/$(echo $1/$2 | sed 's@\.@/@g')/$3
 }
 
 getArtifactName() {
@@ -33,6 +42,7 @@ fi
 parentPoms="com.atlassian.bamboo:atlassian-bamboo-components:jar:$snapshotBambooVersion
 com.atlassian.bamboo:atlassian-bamboo:jar:$snapshotBambooVersion
 com.atlassian.bamboo:atlassian-bamboo-plugins:jar:$snapshotBambooVersion"
+#com.atlassian.bamboo.plugins:atlassian-bamboo-plugin-ssh:jar:$snapshotBambooVersion"
 
 for dependency in $snapshotDependencies $parentPoms; do
 	splitDep=( $(echo $dependency | sed s/:/" "/g) )
@@ -45,7 +55,7 @@ for dependency in $snapshotDependencies $parentPoms; do
 	echo Faking release of $group $artifact $version
 	snapshotDir=$(getArtifactDir $group $artifact $version)
 	fakeReleaseDir=$(getArtifactDir $group $artifact $fakeVersion)
-	
+
 	snapshotArtifact=$(getArtifactName $artifact $version)
 
 	for snapshotArtifactFile in $snapshotDir/${snapshotArtifact}*; do
