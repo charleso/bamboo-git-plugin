@@ -244,7 +244,7 @@ public class GitRepositoryTest extends GitAbstractTest
         BuildRepositoryChanges buildChanges = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
         File checkoutDir = getCheckoutDir(gitRepository);
         gitRepository.retrieveSourceCode(mockBuildContext(), buildChanges.getVcsRevisionKey(), checkoutDir);
-        String committedRevision = gitRepository.commit(checkoutDir, "Message", "Author");
+        String committedRevision = gitRepository.commit(checkoutDir, "Message");
 
         //verify somehow that testRepository contain commited revision...
         List<CommitContext> commitsAfterCommit = createJGitOperationHelper(null).extractCommits(checkoutDir, null, "HEAD").getChanges();
@@ -271,7 +271,7 @@ public class GitRepositoryTest extends GitAbstractTest
         
         File modifiedFile = new File(checkoutDir, filename);
         FileUtils.writeStringToFile(modifiedFile, "miej serce... i paczaj w serce...");
-        String committedRevision = gitRepository.commit(checkoutDir, commitMessage, author);
+        String committedRevision = gitRepository.commit(checkoutDir, commitMessage);
 
         //verify
         List<CommitContext> commitsAfterCommit = createNativeGitOperationHelper(createAccessData(testRepository.getAbsolutePath())).extractCommits(checkoutDir, revisionBeforeCommit, "HEAD").getChanges();
@@ -304,7 +304,7 @@ public class GitRepositoryTest extends GitAbstractTest
 
         File modifiedFile = new File(checkoutDir, filename);
         FileUtils.writeStringToFile(modifiedFile, "miej serce... i paczaj w serce...");
-        String committedRevision = gitRepository.commit(checkoutDir, commitMessage, author);
+        String committedRevision = gitRepository.commit(checkoutDir, commitMessage);
 
         gitRepository.pushRevision(checkoutDir, committedRevision);
 

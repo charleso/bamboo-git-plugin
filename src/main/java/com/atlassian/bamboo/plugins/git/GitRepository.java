@@ -398,11 +398,18 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         helper.pushRevision(sourceDirectory, vcsRevisionKey);
     }
     
-    public String commit(@NotNull File sourceDirectory, @NotNull String message, @NotNull String author) throws RepositoryException
+    @NotNull
+    @Override
+    public String commit(@NotNull File sourceDirectory, @NotNull String message) throws RepositoryException
     {
         final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
         final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, new NullBuildLogger(), textProvider);
-        return helper.commit(sourceDirectory, message, author);
+        return helper.commit(sourceDirectory, message, getCommitterName());
+    }
+
+    private String getCommitterName()
+    {
+        return "Bamboo";
     }
 
     @Override
