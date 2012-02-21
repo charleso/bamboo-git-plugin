@@ -444,7 +444,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
         final GitOperationHelper connector = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
 
-        final boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones;
+        final boolean doShallowFetch = false; //USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones;
 
         final File cacheDirectory = getCacheDirectory();
 
