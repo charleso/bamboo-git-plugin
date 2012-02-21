@@ -2,6 +2,8 @@ package com.atlassian.bamboo.plugins.git;
 
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +13,7 @@ import java.util.Map;
 public class GitCommandBuilder
 {
     private final List<String> commands = new ArrayList<String>();
+    private final Map<String, String> env = Maps.newHashMap();
     private String executable;
     private String branch;
     private String revision;
@@ -99,6 +102,12 @@ public class GitCommandBuilder
         commands.add(argument);
         return this;
     }
+    
+    public GitCommandBuilder env(@Nullable Map<String, String> env)
+    {
+        this.env.putAll(env);
+        return this;
+    }
 
     public List<String> build()
     {
@@ -150,20 +159,15 @@ public class GitCommandBuilder
         return commandArgs;
     }
 
-    public Map<String, String> prepareEnvironment()
+    @NotNull
+    public Map<String, String> getEnv()
     {
-        Map<String, String> environment = Maps.newHashMap();
         if (StringUtils.isNotBlank(sshCommand))
         {
-            environment.put("GIT_SSH", sshCommand);
+            env.put("GIT_SSH", sshCommand);
         }
 
-        environment.put("GIT_COMMITTER_NAME", "Bamboo"); //needed for merge
-        environment.put("GIT_COMMITTER_EMAIL", "bamboo@atlassian.com"); //otherwise warning on commit
-        environment.put("GIT_AUTHOR_NAME", "Bamboo"); //needed for commit
-        //GIT_AUTHOR_EMAIL will be system_user@bamboo_server
-
-        return environment;
+        return env;
     }
 
     public String toString() {

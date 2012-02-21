@@ -19,16 +19,10 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.ConcurrentRefUpdateException;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.NoFilepatternException;
-import org.eclipse.jgit.api.errors.NoHeadException;
-import org.eclipse.jgit.api.errors.NoMessageException;
-import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.NotSupportedException;
 import org.eclipse.jgit.errors.TransportException;
-import org.eclipse.jgit.errors.UnmergedPathException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
@@ -149,7 +143,7 @@ public abstract class GitOperationHelper
         }
     }
     
-    public String commit(@NotNull File sourceDirectory, @NotNull String message, @NotNull String author) throws RepositoryException
+    public String commit(@NotNull File sourceDirectory, @NotNull String message, @NotNull String comitterName, @NotNull String comitterEmail) throws RepositoryException
     {
         try
         {
@@ -157,7 +151,7 @@ public abstract class GitOperationHelper
             FileRepository fileRepository = new FileRepository(gitDir);
             Git git = new Git(fileRepository);
             git.add().addFilepattern(".").call();
-            return git.commit().setMessage(message).setCommitter(author, "").call().name();
+            return git.commit().setMessage(message).setCommitter(comitterName, comitterEmail).call().name();
         }
         catch (IOException e)
         {
@@ -636,5 +630,5 @@ public abstract class GitOperationHelper
         }
     }
 
-    public abstract boolean merge(final File workspaceDir, final String targetRevision) throws RepositoryException;
+    public abstract boolean merge(@NotNull final File workspaceDir, @NotNull final String targetRevision, @NotNull String committerName, @NotNull String committerEmail) throws RepositoryException;
 }

@@ -5,6 +5,7 @@ import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.ssh.ProxyConnectionData;
 import com.atlassian.bamboo.ssh.ProxyException;
 import com.atlassian.bamboo.ssh.SshProxyService;
+import com.google.common.collect.ImmutableMap;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -55,7 +56,7 @@ public class NativeGitOperationHelper extends GitOperationHelper
             throw new RepositoryException("Can't guess branch name for revision " + revision + " when trying to perform push.");
         }
         final GitRepository.GitRepositoryAccessData proxiedAccessData = adjustRepositoryAccess(accessData);
-        GitCommandBuilder commandBuilder = new GitCommandBuilder("push", proxiedAccessData.repositoryUrl, possibleBranch);
+        GitCommandBuilder commandBuilder = gitCommandProcessor.createCommandBuilder("push", proxiedAccessData.repositoryUrl, possibleBranch);
         if (proxiedAccessData.verboseLogs)
         {
             commandBuilder.verbose(true);
@@ -64,15 +65,27 @@ public class NativeGitOperationHelper extends GitOperationHelper
     }
 
     @Override
-    public String commit(@NotNull File sourceDirectory, @NotNull String message, @NotNull String author) throws RepositoryException
+    public String commit(@NotNull File sourceDirectory, @NotNull String message, @NotNull String comitterName, @NotNull String comitterEmail) throws RepositoryException
     {
-        GitCommandBuilder commandBuilder = new GitCommandBuilder("commit", "-m", message, "--author="+author, "--all");
+        GitCommandBuilder commandBuilder = gitCommandProcessor
+                .createCommandBuilder("commit", "-m", message, "--all")
+                .env(identificationVariables(comitterName, comitterEmail));
+
         if (accessData.verboseLogs)
         {
             commandBuilder.verbose(true);
         }
         gitCommandProcessor.runCommand(commandBuilder, sourceDirectory);
         return getCurrentRevision(sourceDirectory);
+    }
+
+    public ImmutableMap<String, String> identificationVariables(@NotNull String name, @NotNull String email)
+    {
+        return ImmutableMap.of(
+                "GIT_COMMITTER_NAME", name, //needed for merge
+                "GIT_COMMITTER_EMAIL", email, //otherwise warning on commit
+                "GIT_AUTHOR_NAME", name, //needed for commit
+                "GIT_AUTHOR_EMAIL", email); //not required
     }
 
     @Override
@@ -184,9 +197,15 @@ public class NativeGitOperationHelper extends GitOperationHelper
     }
 
     @Override
-    public boolean merge(@NotNull final File workspaceDir, @NotNull final String targetRevision) throws RepositoryException
+    public boolean merge(@NotNull final File workspaceDir, @NotNull final String targetRevision,
+                         @NotNull String committerName, @NotNull String committerEmail) throws RepositoryException
     {
-        return gitCommandProcessor.runMergeCommand(workspaceDir, targetRevision);
+        GitCommandBuilder commandBuilder =
+                gitCommandProcessor
+                        .createCommandBuilder("merge", "--no-commit", targetRevision)
+                        .env(identificationVariables(committerName, committerEmail));
+
+        return gitCommandProcessor.runMergeCommand(commandBuilder, workspaceDir);
     }
 
     @Nullable

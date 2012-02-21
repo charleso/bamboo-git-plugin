@@ -7,6 +7,7 @@ import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.commit.CommitContextImpl;
 import com.atlassian.bamboo.plan.PlanKey;
 import com.atlassian.bamboo.plan.PlanKeys;
+import com.atlassian.bamboo.plan.branch.BranchIntegrationHelper;
 import com.atlassian.bamboo.plan.branch.VcsBranch;
 import com.atlassian.bamboo.plan.branch.VcsBranchImpl;
 import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
@@ -110,6 +111,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     // ------------------------------------------------------------------------------------------------- Type Properties
 
     private static final Logger log = Logger.getLogger(GitRepository.class);
+    private BranchIntegrationHelper branchIntegrationHelper;
 
     static class GitRepositoryAccessData implements Serializable
     {
@@ -403,13 +405,9 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     public String commit(@NotNull File sourceDirectory, @NotNull String message) throws RepositoryException
     {
         final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
-        final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, new NullBuildLogger(), textProvider);
-        return helper.commit(sourceDirectory, message, getCommitterName());
-    }
-
-    private String getCommitterName()
-    {
-        return "Bamboo <bamboo@example.com>";
+        final GitOperationHelper helper =
+                GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, new NullBuildLogger(), textProvider);
+        return helper.commit(sourceDirectory, message, branchIntegrationHelper.getCommitterName(this), branchIntegrationHelper.getCommitterEmail(this));
     }
 
     @Override
@@ -500,7 +498,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
             throw new RepositoryException(textProvider.getText("repository.git.messages.runtimeException"), e);
         }
 
-        return connector.merge(workspaceDir, targetRevision);
+        return connector.merge(workspaceDir, targetRevision, branchIntegrationHelper.getCommitterName(this), branchIntegrationHelper.getCommitterEmail(this));
     }
 
     @Override
@@ -852,5 +850,10 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     public void setSshProxyService(SshProxyService sshProxyService)
     {
         this.sshProxyService = sshProxyService;
+    }
+
+    public void setBranchIntegrationHelper(final BranchIntegrationHelper branchIntegrationHelper)
+    {
+        this.branchIntegrationHelper = branchIntegrationHelper;
     }
 }

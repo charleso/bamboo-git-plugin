@@ -6,6 +6,7 @@ import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.chains.Chain;
 import com.atlassian.bamboo.plan.PlanKey;
 import com.atlassian.bamboo.plan.PlanKeys;
+import com.atlassian.bamboo.plan.branch.BranchIntegrationHelper;
 import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
 import com.atlassian.bamboo.project.Project;
 import com.atlassian.bamboo.repository.RepositoryException;
@@ -55,6 +56,9 @@ public class GitAbstractTest
     private final Collection<File> filesToCleanUp = Collections.synchronizedCollection(new ArrayList<File>());
     private final Collection<Repository> repositoriesToCleanUp = Collections.synchronizedCollection(new ArrayList<Repository>());
     private static final ResourceBundle resourceBundle = ResourceBundle.getBundle("com.atlassian.bamboo.plugins.git.i18n", Locale.US);
+
+    protected static final String COMITTER_NAME = "Committer";
+    protected static final String COMITTER_EMAIL = "committer@example.com";
 
     public static void setRepositoryProperties(GitRepository gitRepository, File repositorySourceDir, String branch) throws Exception
     {
@@ -162,6 +166,11 @@ public class GitAbstractTest
 
         SshProxyService sshProxyService = mock(SshProxyService.class);
         fixture.setSshProxyService(sshProxyService);
+
+        final BranchIntegrationHelper branchIntegrationHelper = mock(BranchIntegrationHelper.class);
+        Mockito.when(branchIntegrationHelper.getCommitterName(fixture)).thenReturn(COMITTER_NAME);
+        Mockito.when(branchIntegrationHelper.getCommitterEmail(fixture)).thenReturn(COMITTER_EMAIL);
+        fixture.setBranchIntegrationHelper(branchIntegrationHelper);
 
         return fixture;
     }

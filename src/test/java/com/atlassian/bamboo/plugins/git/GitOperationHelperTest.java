@@ -298,22 +298,22 @@ public class GitOperationHelperTest extends GitAbstractTest
 
             final NativeGitOperationHelper connector = createNativeGitOperationHelper(createAccessData(tmp, branchName));
 
-            assertTrue(connector.merge(tmp, masterBranch));
-            assertFalse(connector.merge(tmp, masterBranch));
+            assertTrue(connector.merge(tmp, masterBranch, COMITTER_NAME, COMITTER_EMAIL));
+            assertFalse(connector.merge(tmp, masterBranch, COMITTER_NAME, COMITTER_EMAIL));
 
-            String rev = connector.commit(tmp, "message", "A U Thor <author@example.com[1]>");
+            String rev = connector.commit(tmp, "message", COMITTER_NAME, COMITTER_EMAIL);
             assertTrue(StringUtils.isNotBlank(rev));
 
             connector.gitCommandProcessor.runCheckoutCommand(tmp, branchName);
 
             FileUtils.writeStringToFile(new File(tmp, createdFile), "data");
             connector.gitCommandProcessor.runCommand(new GitCommandBuilder("add", createdFile), tmp);
-            rev = connector.commit(tmp, "message2", "A U Thor <author@example.com[1]>");
+            rev = connector.commit(tmp, "message2", "A U Thor", "author@example.com[1]");
             assertTrue(StringUtils.isNotBlank(rev));
 
             try
             {
-                connector.merge(tmp, masterBranch);
+                connector.merge(tmp, masterBranch, COMITTER_NAME, COMITTER_EMAIL);
                 fail("A conflicting merge was succesful");
             }
             catch (GitCommandException e)

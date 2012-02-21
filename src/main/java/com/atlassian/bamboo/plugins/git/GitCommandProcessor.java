@@ -24,7 +24,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -171,7 +170,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         return "";
     }
 
-    private GitCommandBuilder createCommandBuilder(String... commands)
+    public GitCommandBuilder createCommandBuilder(String... commands)
     {
         return new GitCommandBuilder(commands)
                 .executable(gitExecutable)
@@ -213,13 +212,9 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
 
         final ExternalProcessBuilder externalProcessBuilder = new ExternalProcessBuilder()
                 .command(commandArgs, workingDirectory)
-                .handler(handler);
+                .handler(handler)
+                .env(commandBuilder.getEnv());
 
-        final Map<String, String> environment = commandBuilder.prepareEnvironment();
-        if (!environment.isEmpty())
-        {
-            externalProcessBuilder.env(environment);
-        }
         ExternalProcess process = externalProcessBuilder.build();
 
         process.setTimeout(TimeUnit.MINUTES.toMillis(commandTimeoutInMinutes));
@@ -238,9 +233,8 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         return handler.getExitCode();
     }
 
-    public boolean runMergeCommand(final File workspaceDir, final String targetRevision) throws RepositoryException
+    public boolean runMergeCommand(@NotNull final GitCommandBuilder commandBuilder, @NotNull final File workspaceDir) throws RepositoryException
     {
-        GitCommandBuilder commandBuilder = createCommandBuilder("merge", "--no-commit", targetRevision);
         final LoggingOutputHandler outputHandler = new LoggingOutputHandler(buildLogger);
         runCommand(commandBuilder, workspaceDir, outputHandler);
         return outputHandler.getStdout().contains("+"); //0 files changed, 0 insertions(+), 0 deletions(-)
