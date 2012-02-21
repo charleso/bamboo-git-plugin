@@ -255,7 +255,7 @@ public class GitRepositoryTest extends GitAbstractTest
     @Test
     public void testCommittingWithNativeGit() throws Exception
     {
-        final String author = "Author <author@author.com>";
+        final String author = "Bamboo <bamboo@example.com>";
         final String filename = "sparta.txt";
         final String commitMessage = "Message\n";
 
@@ -286,7 +286,7 @@ public class GitRepositoryTest extends GitAbstractTest
     @Test
     public void testPushingWithNativeGit() throws Exception
     {
-        final String author = "Author <author@author.com>";
+        final String author = "Bamboo <bamboo@example.com>";
         final String filename = "sparta.txt";
         final String commitMessage = "Message\n";
 

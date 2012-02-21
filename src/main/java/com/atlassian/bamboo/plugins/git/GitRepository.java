@@ -409,7 +409,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
 
     private String getCommitterName()
     {
-        return "Bamboo";
+        return "Bamboo <bamboo@example.com>";
     }
 
     @Override
