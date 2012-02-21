@@ -1,10 +1,10 @@
 package com.atlassian.bamboo.plugins.git;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -152,15 +152,17 @@ public class GitCommandBuilder
 
     public Map<String, String> prepareEnvironment()
     {
-        Map<String, String> environment = new HashMap<String, String>();
+        Map<String, String> environment = Maps.newHashMap();
         if (StringUtils.isNotBlank(sshCommand))
         {
             environment.put("GIT_SSH", sshCommand);
-            environment.put("GIT_COMMITTER_NAME", "Bamboo"); //needed for merge
-            environment.put("GIT_COMMITTER_EMAIL", "bamboo@atlassian.com"); //otherwise warning on commit
-            environment.put("GIT_AUTHOR_NAME", "Bamboo"); //needed for commit
-            //GIT_AUTHOR_EMAIL will be system_user@bamboo_server
         }
+
+        environment.put("GIT_COMMITTER_NAME", "Bamboo"); //needed for merge
+        environment.put("GIT_COMMITTER_EMAIL", "bamboo@atlassian.com"); //otherwise warning on commit
+        environment.put("GIT_AUTHOR_NAME", "Bamboo"); //needed for commit
+        //GIT_AUTHOR_EMAIL will be system_user@bamboo_server
+
         return environment;
     }
 
