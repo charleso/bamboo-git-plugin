@@ -5,7 +5,6 @@ import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.commit.CommitContextImpl;
-import com.atlassian.bamboo.plan.PlanKey;
 import com.atlassian.bamboo.plan.PlanKeys;
 import com.atlassian.bamboo.plan.branch.BranchIntegrationHelper;
 import com.atlassian.bamboo.plan.branch.VcsBranch;
@@ -507,8 +506,15 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         return GitOperationHelperFactory.isNativeGitEnabled(this);
     }
 
+
     @Override
-    public CommitContext getLastCommit(@NotNull PlanKey planKey) throws RepositoryException
+    public CommitContext getFirstCommit() throws RepositoryException
+    {
+        return null;
+    }
+
+    @Override
+    public CommitContext getLastCommit() throws RepositoryException
     {
         return null;
     }
