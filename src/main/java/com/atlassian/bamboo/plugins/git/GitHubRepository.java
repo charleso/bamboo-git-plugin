@@ -3,7 +3,6 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.build.BuildLoggerManager;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.commit.CommitContext;
-import com.atlassian.bamboo.plan.PlanKey;
 import com.atlassian.bamboo.plan.branch.VcsBranch;
 import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
 import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
@@ -31,7 +30,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Date;
 import java.util.Set;
 
 public class GitHubRepository extends AbstractStandaloneRepository implements CustomSourceDirectoryAwareRepository,
@@ -321,8 +319,14 @@ public class GitHubRepository extends AbstractStandaloneRepository implements Cu
     }
 
     @Override
-    public CommitContext getLastCommit(@NotNull final PlanKey planKey) throws RepositoryException
+    public CommitContext getLastCommit() throws RepositoryException
     {
-        return gitRepository.getLastCommit(planKey);
+        return gitRepository.getLastCommit();
+    }
+
+    @Override
+    public CommitContext getFirstCommit() throws RepositoryException
+    {
+        return gitRepository.getFirstCommit();
     }
 }
