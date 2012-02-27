@@ -6,6 +6,7 @@ import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.commit.CommitContextImpl;
 import com.atlassian.bamboo.plan.PlanKeys;
+import com.atlassian.bamboo.plan.branch.BranchIntegrationConfiguration;
 import com.atlassian.bamboo.plan.branch.BranchIntegrationHelper;
 import com.atlassian.bamboo.plan.branch.VcsBranch;
 import com.atlassian.bamboo.plan.branch.VcsBranchImpl;
@@ -48,7 +49,6 @@ import com.opensymphony.xwork.TextProvider;
 import com.opensymphony.xwork.util.LocalizedTextUtil;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.log4j.Logger;
@@ -291,10 +291,8 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     }
 
     @Override
-    @Deprecated
-    @NotNull
-    public String retrieveSourceCode(@NotNull final BuildContext buildContext, @Nullable final String vcsRevisionKey) throws RepositoryException {
-        throw new NotImplementedException("Not implemented - use instead retrieveSourceCode(bctx, rev, src)");
+    public void setBranchIntegrationConfiguration(@NotNull final BranchIntegrationConfiguration branchIntegrationConfiguration)
+    {
     }
 
     @Override

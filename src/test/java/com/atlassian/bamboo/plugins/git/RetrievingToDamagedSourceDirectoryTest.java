@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 
-public class RetrievingToDamagedSourceDirectory extends GitAbstractTest
+public class RetrievingToDamagedSourceDirectoryTest extends GitAbstractTest
 {
     @DataProvider(parallel = true)
     Object[][] variants()
@@ -146,7 +146,7 @@ public class RetrievingToDamagedSourceDirectory extends GitAbstractTest
         Assert.assertEquals(new File(gitRepository.getCacheDirectory(), Constants.DOT_GIT).isDirectory(), useCache, "Precondition");
         Assert.assertEquals(gitRepository.getCacheDirectory().isDirectory(), useCache, "Precondition");
 
-        gitRepository.retrieveSourceCode(mockBuildContext(), null);
+        gitRepository.retrieveSourceCode(mockBuildContext(), null, gitRepository.getSourceCodeDirectory(PLAN_KEY));
         return gtr;
     }
 
@@ -161,7 +161,7 @@ public class RetrievingToDamagedSourceDirectory extends GitAbstractTest
             String collectedRevision = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null).getVcsRevisionKey();
             Assert.assertEquals(collectedRevision, target);
         }
-        String actualTarget = gitRepository.retrieveSourceCode(mockBuildContext(), target);
+        String actualTarget = gitRepository.retrieveSourceCode(mockBuildContext(), target, gitRepository.getSourceCodeDirectory(PLAN_KEY));
 
         final File textFile = gtr.getTextFile(gitRepository.getSourceCodeDirectory(PLAN_KEY));
         Assert.assertEquals(actualTarget, target);
