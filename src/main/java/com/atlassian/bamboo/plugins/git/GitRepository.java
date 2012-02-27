@@ -502,6 +502,18 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     }
 
     @Override
+    public CommitContext getFirstCommit() throws RepositoryException
+    {
+        return null;
+    }
+
+    @Override
+    public CommitContext getLastCommit() throws RepositoryException
+    {
+        return null;
+    }
+
+    @Override
     public void setBranchIntegrationConfiguration(@NotNull BranchIntegrationConfiguration branchIntegrationConfiguration)
     {
         this.branchIntegrationConfiguration = branchIntegrationConfiguration;
