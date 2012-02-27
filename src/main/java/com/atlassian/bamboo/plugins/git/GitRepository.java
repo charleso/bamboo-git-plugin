@@ -5,8 +5,8 @@ import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.commit.CommitContextImpl;
-import com.atlassian.bamboo.plan.PlanKey;
 import com.atlassian.bamboo.plan.PlanKeys;
+import com.atlassian.bamboo.plan.branch.BranchIntegrationConfiguration;
 import com.atlassian.bamboo.plan.branch.BranchIntegrationHelper;
 import com.atlassian.bamboo.plan.branch.VcsBranch;
 import com.atlassian.bamboo.plan.branch.VcsBranchImpl;
@@ -49,7 +49,6 @@ import com.opensymphony.xwork.TextProvider;
 import com.opensymphony.xwork.util.LocalizedTextUtil;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.log4j.Logger;
@@ -162,6 +161,8 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
             return new StringEncrypter();
         }
     };
+
+    private transient BranchIntegrationConfiguration branchIntegrationConfiguration;
 
     // ---------------------------------------------------------------------------------------------------- Dependencies
     private transient CapabilityContext capabilityContext;
@@ -289,13 +290,6 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         {
             throw new RepositoryException(textProvider.getText("repository.git.messages.runtimeException"), e);
         }
-    }
-
-    @Override
-    @Deprecated
-    @NotNull
-    public String retrieveSourceCode(@NotNull final BuildContext buildContext, @Nullable final String vcsRevisionKey) throws RepositoryException {
-        throw new NotImplementedException("Not implemented - use instead retrieveSourceCode(bctx, rev, src)");
     }
 
     @Override
@@ -508,9 +502,9 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     }
 
     @Override
-    public CommitContext getLastCommit(@NotNull PlanKey planKey) throws RepositoryException
+    public void setBranchIntegrationConfiguration(@NotNull BranchIntegrationConfiguration branchIntegrationConfiguration)
     {
-        return null;
+        this.branchIntegrationConfiguration = branchIntegrationConfiguration;
     }
 
     @Override
@@ -722,6 +716,8 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
 
     GitRepositoryAccessData getSubstitutedAccessData()
     {
+        boolean enforceDeepClones = branchIntegrationConfiguration != null && branchIntegrationConfiguration.isEnabled();
+
         GitRepositoryAccessData substituted = new GitRepositoryAccessData();
         substituted.repositoryUrl = substituteString(accessData.repositoryUrl);
         substituted.branch = substituteString(accessData.branch);
@@ -730,7 +726,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         substituted.sshKey = encrypterRef.get().decrypt(accessData.sshKey);
         substituted.sshPassphrase = encrypterRef.get().decrypt(accessData.sshPassphrase);
         substituted.authenticationType = accessData.authenticationType;
-        substituted.useShallowClones = accessData.useShallowClones;
+        substituted.useShallowClones = !enforceDeepClones && accessData.useShallowClones;
         substituted.commandTimeout = accessData.commandTimeout;
         substituted.verboseLogs = accessData.verboseLogs;
         return substituted;
