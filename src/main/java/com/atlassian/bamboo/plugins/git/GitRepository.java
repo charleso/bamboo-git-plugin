@@ -486,7 +486,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
                 }
                 catch (Exception e)
                 {
-                    rethrowOrRemoveDirectory(e, buildLogger, workspaceDir, "repository.git.messages.rsRecover.failedToCheckout");
+                    rethrowOrRemoveDirectory(e, buildLogger, workspaceDir, "repository.git.messages.rsRecover.failedToFetchWorkingDir");
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(workspaceDir)));
                     connector.fetch(workspaceDir, false);
                 }
