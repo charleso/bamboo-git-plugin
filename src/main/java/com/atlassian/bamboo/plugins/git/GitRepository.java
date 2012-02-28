@@ -49,6 +49,7 @@ import com.opensymphony.xwork.TextProvider;
 import com.opensymphony.xwork.util.LocalizedTextUtil;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.log4j.Logger;
@@ -481,7 +482,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
                 }
                 catch (Exception e)
                 {
-                    rethrowOrRemoveDirectory(e, buildLogger, workspaceDir, "repository.git.messages.rsRecover.failedToCheckout");
+                    rethrowOrRemoveDirectory(e, buildLogger, workspaceDir, "repository.git.messages.rsRecover.failedToFetchWorkingDir");
                     buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.rsRecover.cleanedSourceDirectory", Arrays.asList(workspaceDir)));
                     connector.fetch(workspaceDir, false);
                 }
