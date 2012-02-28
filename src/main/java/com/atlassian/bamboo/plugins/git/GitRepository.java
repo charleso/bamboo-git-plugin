@@ -515,10 +515,22 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     }
 
     @Override
+    public String getMessageOnBranchIntegrationEnabled()
+    {
+        if (accessData.useShallowClones)
+        {
+            return textProvider.getText("repository.git.messages.branchIntegration.shallowClonesWillBeDisabled");
+        }
+        return null;
+    }
+
+    @Override
     public void setBranchIntegrationConfiguration(@NotNull BranchIntegrationConfiguration branchIntegrationConfiguration)
     {
         this.branchIntegrationConfiguration = branchIntegrationConfiguration;
     }
+
+
 
     @Override
     public void addDefaultValues(@NotNull BuildConfiguration buildConfiguration)
@@ -865,4 +877,6 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     {
         this.branchIntegrationHelper = branchIntegrationHelper;
     }
+
+
 }
