@@ -105,41 +105,46 @@ public abstract class GitOperationHelper
      */
     public void pushRevision(@NotNull final File sourceDirectory, @NotNull String revision) throws RepositoryException
     {
-        Transport transport = null;
-        FileRepository localRepository;
         try
         {
             final String resolvedBranch;
-            localRepository = createLocalRepository(sourceDirectory, null);
-            transport = open(localRepository, accessData);
-            final FetchConnection fetchConnection = transport.openFetch();
+            final FileRepository localRepository = createLocalRepository(sourceDirectory, null);
             try
             {
-                resolvedBranch = resolveRefSpec(accessData.branch, fetchConnection).getName();
+                final Transport transport = open(localRepository, accessData);
+                try
+                {
+                    final FetchConnection fetchConnection = transport.openFetch();
+                    try
+                    {
+                        resolvedBranch = resolveRefSpec(accessData.branch, fetchConnection).getName();
+                    }
+                    finally
+                    {
+                        fetchConnection.close();
+                    }
+
+                    RefSpec refSpec = new RefSpec()
+                            .setForceUpdate(true)
+                            .setSource(resolvedBranch)
+                            .setDestination(resolvedBranch);
+
+                    PushResult pushResult = transport.push(new BuildLoggerProgressMonitor(buildLogger), transport.findRemoteRefUpdatesFor(Arrays.asList(refSpec)));
+                    buildLogger.addBuildLogEntry("Git: " + pushResult.getMessages());
+                }
+                finally
+                {
+                    transport.close();
+                }
             }
             finally
             {
-                fetchConnection.close();
+                localRepository.close();
             }
-
-            RefSpec refSpec = new RefSpec()
-                    .setForceUpdate(true)
-                    .setSource(resolvedBranch)
-                    .setDestination(resolvedBranch);
-
-            PushResult pushResult = transport.push(new BuildLoggerProgressMonitor(buildLogger), transport.findRemoteRefUpdatesFor(Arrays.asList(refSpec)));
-            buildLogger.addBuildLogEntry("Git: " + pushResult.getMessages());
         }
         catch (IOException e)
         {
             throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.pushFailed", Arrays.asList(revision))) + e.getMessage(), e);
-        }
-        finally
-        {
-            if (transport != null)
-            {
-                transport.close();
-            }
         }
     }
     
@@ -177,13 +182,19 @@ public abstract class GitOperationHelper
 
         try
         {
-            FileRepository localRepository = createLocalRepository(sourceDirectory, cacheDirectory);
+            final FileRepository localRepository = createLocalRepository(sourceDirectory, cacheDirectory);
+            try
+            {
+                //try to clean .git/index.lock file prior to checkout, otherwise checkout would fail with Exception
+                File lck = new File(localRepository.getIndexFile().getParentFile(), localRepository.getIndexFile().getName() + ".lock");
+                FileUtils.deleteQuietly(lck);
 
-            //try to clean .git/index.lock file prior to checkout, otherwise checkout would fail with Exception
-            File lck = new File(localRepository.getIndexFile().getParentFile(), localRepository.getIndexFile().getName() + ".lock");
-            FileUtils.deleteQuietly(lck);
-
-            return doCheckout(localRepository, sourceDirectory, targetRevision, previousRevision, accessData.useSubmodules);
+                return doCheckout(localRepository, sourceDirectory, targetRevision, previousRevision, accessData.useSubmodules);
+            }
+            finally
+            {
+                localRepository.close();
+            }
         }
         catch (IOException e)
         {
@@ -198,62 +209,63 @@ public abstract class GitOperationHelper
 
     private void fetch(@NotNull final File sourceDirectory, String branch, boolean useShallow) throws RepositoryException
     {
-        Transport transport = null;
-        FileRepository localRepository = null;
         String branchDescription = "(unresolved) " + branch;
         try
         {
-            localRepository = createLocalRepository(sourceDirectory, null);
+            final FileRepository localRepository = createLocalRepository(sourceDirectory, null);
 
-            transport = open(localRepository, accessData);
-            final String resolvedBranch;
-            if (StringUtils.startsWithAny(branch, FQREF_PREFIXES))
+            try
             {
-                resolvedBranch = branch;
-            }
-            else
-            {
-                final FetchConnection fetchConnection = transport.openFetch();
+                final Transport transport = open(localRepository, accessData);
                 try
                 {
-                    resolvedBranch = resolveRefSpec(branch, fetchConnection).getName();
+                    final String resolvedBranch;
+                    if (StringUtils.startsWithAny(branch, FQREF_PREFIXES))
+                    {
+                        resolvedBranch = branch;
+                    }
+                    else
+                    {
+                        final FetchConnection fetchConnection = transport.openFetch();
+                        try
+                        {
+                            resolvedBranch = resolveRefSpec(branch, fetchConnection).getName();
+                        }
+                        finally
+                        {
+                            fetchConnection.close();
+                        }
+                    }
+                    branchDescription = resolvedBranch;
+
+                    buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.fetchingBranch", Arrays.asList(branchDescription, accessData.repositoryUrl))
+                            + (useShallow ? " " + textProvider.getText("repository.git.messages.doingShallowFetch") : ""));
+                    RefSpec refSpec = new RefSpec()
+                            .setForceUpdate(true)
+                            .setSource(resolvedBranch)
+                            .setDestination(resolvedBranch);
+
+                    doFetch(transport, sourceDirectory, refSpec, useShallow);
+
+                    if (resolvedBranch.startsWith(Constants.R_HEADS))
+                    {
+                        localRepository.updateRef(Constants.HEAD).link(resolvedBranch);
+                    }
                 }
                 finally
                 {
-                    fetchConnection.close();
+                    transport.close();
                 }
             }
-            branchDescription = resolvedBranch;
-
-            buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.fetchingBranch", Arrays.asList(branchDescription, accessData.repositoryUrl))
-                    + (useShallow ? " " + textProvider.getText("repository.git.messages.doingShallowFetch") : ""));
-            RefSpec refSpec = new RefSpec()
-                    .setForceUpdate(true)
-                    .setSource(resolvedBranch)
-                    .setDestination(resolvedBranch);
-
-            doFetch(transport, sourceDirectory, refSpec, useShallow);
-
-            if (resolvedBranch.startsWith(Constants.R_HEADS))
+            finally
             {
-                localRepository.updateRef(Constants.HEAD).link(resolvedBranch);
+                localRepository.close();
             }
         }
         catch (IOException e)
         {
             String message = textProvider.getText("repository.git.messages.fetchingFailed", Arrays.asList(accessData.repositoryUrl, branchDescription, sourceDirectory));
             throw new RepositoryException(buildLogger.addErrorLogEntry(message + " " + e.getMessage()), e);
-        }
-        finally
-        {
-            if (localRepository != null)
-            {
-                localRepository.close();
-            }
-            if (transport != null)
-            {
-                transport.close();
-            }
         }
     }
 
@@ -289,20 +301,32 @@ public abstract class GitOperationHelper
     @NotNull
     public String obtainLatestRevision() throws RepositoryException
     {
-        Transport transport = null;
-        FetchConnection fetchConnection = null;
         try
         {
-            transport = open(new FileRepository(""), accessData);
-            fetchConnection = transport.openFetch();
-            Ref headRef = resolveRefSpec(accessData.branch, fetchConnection);
-            if (headRef == null)
+            final Transport transport = open(new FileRepository(""), accessData);
+            try
             {
-                throw new RepositoryException(textProvider.getText("repository.git.messages.cannotDetermineHead", Arrays.asList(accessData.repositoryUrl, accessData.branch)));
+                final FetchConnection fetchConnection = transport.openFetch();
+                try
+                {
+                    Ref headRef = resolveRefSpec(accessData.branch, fetchConnection);
+                    if (headRef == null)
+                    {
+                        throw new RepositoryException(textProvider.getText("repository.git.messages.cannotDetermineHead", Arrays.asList(accessData.repositoryUrl, accessData.branch)));
+                    }
+                    else
+                    {
+                        return headRef.getObjectId().getName();
+                    }
+                }
+                finally
+                {
+                    fetchConnection.close();
+                }
             }
-            else
+            finally
             {
-                return headRef.getObjectId().getName();
+                transport.close();
             }
         }
         catch (NotSupportedException e)
@@ -317,17 +341,6 @@ public abstract class GitOperationHelper
         {
             throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.failedToCreateFileRepository")), e);
         }
-        finally
-        {
-            if (fetchConnection != null)
-            {
-                fetchConnection.close();
-            }
-            if (transport != null)
-            {
-                transport.close();
-            }
-        }
     }
 
     @NotNull
@@ -335,18 +348,31 @@ public abstract class GitOperationHelper
     {
         try
         {
-            Transport transport = open(new FileRepository(""), repositoryData);
-            FetchConnection fetchConnection = transport.openFetch();
-
-            Set<VcsBranch> openBranches = Sets.newHashSet();
-            for (Ref ref : fetchConnection.getRefs())
+            final Transport transport = open(new FileRepository(""), repositoryData);
+            try
             {
-                if (ref.getName().startsWith(Constants.R_HEADS))
+                final FetchConnection fetchConnection = transport.openFetch();
+                try
                 {
-                    openBranches.add(new VcsBranchImpl(ref.getName().substring(Constants.R_HEADS.length())));
+                    Set<VcsBranch> openBranches = Sets.newHashSet();
+                    for (Ref ref : fetchConnection.getRefs())
+                    {
+                        if (ref.getName().startsWith(Constants.R_HEADS))
+                        {
+                            openBranches.add(new VcsBranchImpl(ref.getName().substring(Constants.R_HEADS.length())));
+                        }
+                    }
+                    return openBranches;
+                }
+                finally
+                {
+                    fetchConnection.close();
                 }
             }
-            return openBranches;
+            finally
+            {
+                transport.close();
+            }
         }
         catch (NotSupportedException e)
         {
@@ -371,10 +397,17 @@ public abstract class GitOperationHelper
      */
     public boolean checkRevisionExistsInCacheRepository(@NotNull File repositoryDirectory, @NotNull String targetRevision) throws IOException
     {
-        FileRepository localRepository = createLocalRepository(repositoryDirectory, null);
-        RevWalk revWalk = new RevWalk(localRepository);
-        final RevCommit targetCommit = revWalk.parseCommit(localRepository.resolve(targetRevision));
-        return targetCommit != null;
+        final FileRepository localRepository = createLocalRepository(repositoryDirectory, null);
+        try
+        {
+            RevWalk revWalk = new RevWalk(localRepository);
+            final RevCommit targetCommit = revWalk.parseCommit(localRepository.resolve(targetRevision));
+            return targetCommit != null;
+        }
+        finally
+        {
+            localRepository.close();
+        }
     }
     
     // -------------------------------------------------------------------------------------- Basic Accessors / Mutators
@@ -567,7 +600,15 @@ public abstract class GitOperationHelper
         return new AuthorImpl(String.format("%s <%s>", gitPerson.getName(), gitPerson.getEmailAddress()));
     }
 
-    //user of this method has responsibility to finally .close() returned Transport!
+    /**
+     * Caller of this method has responsibility to finally .close() returned Transport!
+     *
+     * @param localRepository
+     * @param accessData
+     * @return
+     * @throws RepositoryException
+     */
+    @NotNull
     Transport open(@NotNull final FileRepository localRepository, @NotNull final GitRepositoryAccessData accessData) throws RepositoryException
     {
         try
