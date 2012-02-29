@@ -12,6 +12,7 @@ import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChangesImpl;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
@@ -344,7 +345,7 @@ public abstract class GitOperationHelper
     }
 
     @NotNull
-    public Set<VcsBranch> getOpenBranches(@NotNull final GitRepositoryAccessData repositoryData) throws RepositoryException
+    public List<VcsBranch> getOpenBranches(@NotNull final GitRepositoryAccessData repositoryData) throws RepositoryException
     {
         try
         {
@@ -354,7 +355,7 @@ public abstract class GitOperationHelper
                 final FetchConnection fetchConnection = transport.openFetch();
                 try
                 {
-                    Set<VcsBranch> openBranches = Sets.newHashSet();
+                    List<VcsBranch> openBranches = Lists.newArrayList();
                     for (Ref ref : fetchConnection.getRefs())
                     {
                         if (ref.getName().startsWith(Constants.R_HEADS))
