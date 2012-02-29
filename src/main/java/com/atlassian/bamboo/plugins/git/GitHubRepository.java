@@ -30,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.List;
 import java.util.Set;
 
 public class GitHubRepository extends AbstractStandaloneRepository implements CustomSourceDirectoryAwareRepository,
@@ -283,7 +284,7 @@ public class GitHubRepository extends AbstractStandaloneRepository implements Cu
 
     @NotNull
     @Override
-    public Set<VcsBranch> getOpenBranches() throws RepositoryException
+    public List<VcsBranch> getOpenBranches() throws RepositoryException
     {
         return gitRepository.getOpenBranches();
     }
