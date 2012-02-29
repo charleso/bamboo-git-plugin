@@ -13,7 +13,6 @@ import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChangesImpl;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -54,7 +53,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Class used for issuing various git operations. We don't want to hold this logic in
@@ -108,35 +106,27 @@ public abstract class GitOperationHelper
     {
         try
         {
-            final String resolvedBranch;
             final FileRepository localRepository = createLocalRepository(sourceDirectory, null);
             try
             {
-                final Transport transport = open(localRepository, accessData);
-                try
-                {
-                    final FetchConnection fetchConnection = transport.openFetch();
-                    try
+                withFetchConnection(localRepository, accessData, new WithFetchConnectionCallback<IOException, Void>()
+                {                    
+                    @Override
+                    public Void doWithFetchConnection(@NotNull Transport transport, @NotNull FetchConnection connection) throws IOException
                     {
-                        resolvedBranch = resolveRefSpec(accessData.branch, fetchConnection).getName();
-                    }
-                    finally
-                    {
-                        fetchConnection.close();
-                    }
+                        final String resolvedBranch = resolveRefSpec(accessData.branch, connection).getName();
 
-                    RefSpec refSpec = new RefSpec()
-                            .setForceUpdate(true)
-                            .setSource(resolvedBranch)
-                            .setDestination(resolvedBranch);
+                        RefSpec refSpec = new RefSpec()
+                                .setForceUpdate(true)
+                                .setSource(resolvedBranch)
+                                .setDestination(resolvedBranch);
 
-                    PushResult pushResult = transport.push(new BuildLoggerProgressMonitor(buildLogger), transport.findRemoteRefUpdatesFor(Arrays.asList(refSpec)));
-                    buildLogger.addBuildLogEntry("Git: " + pushResult.getMessages());
-                }
-                finally
-                {
-                    transport.close();
-                }
+                        PushResult pushResult = transport.push(new BuildLoggerProgressMonitor(buildLogger), transport.findRemoteRefUpdatesFor(Arrays.asList(refSpec)));
+                        buildLogger.addBuildLogEntry("Git: " + pushResult.getMessages());
+                        
+                        return null;
+                    }
+                });
             }
             finally
             {
@@ -208,64 +198,63 @@ public abstract class GitOperationHelper
         fetch(sourceDirectory, accessData.branch, useShallow);
     }
 
-    private void fetch(@NotNull final File sourceDirectory, String branch, boolean useShallow) throws RepositoryException
+    private void fetch(@NotNull final File sourceDirectory, final String branch, final boolean useShallow) throws RepositoryException
     {
-        String branchDescription = "(unresolved) " + branch;
+        final String[] branchDescription = {"(unresolved) " + branch};
         try
         {
             final FileRepository localRepository = createLocalRepository(sourceDirectory, null);
-
             try
             {
-                final Transport transport = open(localRepository, accessData);
-                try
+                withTransport(localRepository, accessData, new WithTransportCallback<Exception, Void>()
                 {
-                    final String resolvedBranch;
-                    if (StringUtils.startsWithAny(branch, FQREF_PREFIXES))
+                    @Override
+                    public Void doWithTransport(@NotNull Transport transport) throws Exception
                     {
-                        resolvedBranch = branch;
-                    }
-                    else
-                    {
-                        final FetchConnection fetchConnection = transport.openFetch();
-                        try
+                        final String resolvedBranch;
+                        if (StringUtils.startsWithAny(branch, FQREF_PREFIXES))
                         {
-                            resolvedBranch = resolveRefSpec(branch, fetchConnection).getName();
+                            resolvedBranch = branch;
                         }
-                        finally
+                        else
                         {
-                            fetchConnection.close();
+                            resolvedBranch = withFetchConnection(transport, new WithFetchConnectionCallback<Exception, String>()
+                            {
+                                @Override
+                                public String doWithFetchConnection(@NotNull Transport transport, @NotNull FetchConnection connection) throws Exception
+                                {
+                                    return resolveRefSpec(branch, connection).getName();
+                                }
+                            });
                         }
+                        branchDescription[0] = resolvedBranch;
+
+                        buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.fetchingBranch", Arrays.asList(resolvedBranch, accessData.repositoryUrl))
+                                                             + (useShallow ? " " + textProvider.getText("repository.git.messages.doingShallowFetch") : ""));
+                        RefSpec refSpec = new RefSpec()
+                                .setForceUpdate(true)
+                                .setSource(resolvedBranch)
+                                .setDestination(resolvedBranch);
+
+                        doFetch(transport, sourceDirectory, refSpec, useShallow);
+
+                        if (resolvedBranch.startsWith(Constants.R_HEADS))
+                        {
+                            localRepository.updateRef(Constants.HEAD).link(resolvedBranch);
+                        }
+
+                        return null;
                     }
-                    branchDescription = resolvedBranch;
-
-                    buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.fetchingBranch", Arrays.asList(branchDescription, accessData.repositoryUrl))
-                            + (useShallow ? " " + textProvider.getText("repository.git.messages.doingShallowFetch") : ""));
-                    RefSpec refSpec = new RefSpec()
-                            .setForceUpdate(true)
-                            .setSource(resolvedBranch)
-                            .setDestination(resolvedBranch);
-
-                    doFetch(transport, sourceDirectory, refSpec, useShallow);
-
-                    if (resolvedBranch.startsWith(Constants.R_HEADS))
-                    {
-                        localRepository.updateRef(Constants.HEAD).link(resolvedBranch);
-                    }
-                }
-                finally
-                {
-                    transport.close();
-                }
+                });
             }
             finally
             {
                 localRepository.close();
             }
         }
-        catch (IOException e)
+        catch (Exception e)
         {
-            String message = textProvider.getText("repository.git.messages.fetchingFailed", Arrays.asList(accessData.repositoryUrl, branchDescription, sourceDirectory));
+            String message = textProvider.getText("repository.git.messages.fetchingFailed", Arrays.asList(accessData.repositoryUrl, branchDescription[0], sourceDirectory));
             throw new RepositoryException(buildLogger.addErrorLogEntry(message + " " + e.getMessage()), e);
         }
     }
@@ -304,13 +293,12 @@ public abstract class GitOperationHelper
     {
         try
         {
-            final Transport transport = open(new FileRepository(""), accessData);
-            try
+            return withFetchConnection(new FileRepository(""), accessData, new WithFetchConnectionCallback<RepositoryException, String>()
             {
-                final FetchConnection fetchConnection = transport.openFetch();
-                try
+                @Override
+                public String doWithFetchConnection(@NotNull Transport transport, @NotNull FetchConnection connection) throws RepositoryException
                 {
-                    Ref headRef = resolveRefSpec(accessData.branch, fetchConnection);
+                    Ref headRef = resolveRefSpec(accessData.branch, connection);
                     if (headRef == null)
                     {
                         throw new RepositoryException(textProvider.getText("repository.git.messages.cannotDetermineHead", Arrays.asList(accessData.repositoryUrl, accessData.branch)));
@@ -320,15 +308,7 @@ public abstract class GitOperationHelper
                         return headRef.getObjectId().getName();
                     }
                 }
-                finally
-                {
-                    fetchConnection.close();
-                }
-            }
-            finally
-            {
-                transport.close();
-            }
+            });
         }
         catch (NotSupportedException e)
         {
@@ -349,14 +329,13 @@ public abstract class GitOperationHelper
     {
         try
         {
-            final Transport transport = open(new FileRepository(""), repositoryData);
-            try
+            return withFetchConnection(new FileRepository(""), accessData, new WithFetchConnectionCallback<RepositoryException, List<VcsBranch>>()
             {
-                final FetchConnection fetchConnection = transport.openFetch();
-                try
+                @Override
+                public List<VcsBranch> doWithFetchConnection(@NotNull Transport transport, @NotNull FetchConnection connection) throws RepositoryException
                 {
                     List<VcsBranch> openBranches = Lists.newArrayList();
-                    for (Ref ref : fetchConnection.getRefs())
+                    for (Ref ref : connection.getRefs())
                     {
                         if (ref.getName().startsWith(Constants.R_HEADS))
                         {
@@ -365,15 +344,7 @@ public abstract class GitOperationHelper
                     }
                     return openBranches;
                 }
-                finally
-                {
-                    fetchConnection.close();
-                }
-            }
-            finally
-            {
-                transport.close();
-            }
+            });
         }
         catch (NotSupportedException e)
         {
@@ -602,7 +573,7 @@ public abstract class GitOperationHelper
     }
 
     /**
-     * Caller of this method has responsibility to finally .close() returned Transport!
+     * Should not be called directly but rather via {@link #withTransport(FileRepository, GitRepositoryAccessData, GitOperationHelper.WithTransportCallback)}
      *
      * @param localRepository
      * @param accessData
@@ -669,6 +640,68 @@ public abstract class GitOperationHelper
         catch (IOException e)
         {
             throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.failedToOpenTransport", Arrays.asList(accessData.repositoryUrl))), e);
+        }
+    }
+
+    protected interface WithTransportCallback<E extends java.lang.Throwable, T>
+    {
+        T doWithTransport(@NotNull Transport transport) throws E;
+    }
+
+    protected <E extends java.lang.Throwable, T> T withTransport(@NotNull FileRepository repository, 
+                                                                 @NotNull final GitRepositoryAccessData accessData, 
+                                                                 @NotNull WithTransportCallback<E, T> callback) throws E, RepositoryException
+    {
+        final Transport transport = open(repository, accessData);
+        try
+        {
+            return callback.doWithTransport(transport);
+        }
+        finally
+        {
+            transport.close();
+        }
+    }
+
+    protected interface WithFetchConnectionCallback<E extends java.lang.Throwable, T>
+    {
+        T doWithFetchConnection(@NotNull Transport transport, @NotNull FetchConnection connection) throws E;
+    }
+
+    protected <E extends java.lang.Throwable, T> T withFetchConnection(@NotNull final Transport transport,
+                                                                       @NotNull final WithFetchConnectionCallback<E, T> callback) throws E, NotSupportedException, TransportException
+    {
+        final FetchConnection connection = transport.openFetch();
+        try
+        {
+            return callback.doWithFetchConnection(transport, connection);
+        }
+        finally
+        {
+            connection.close();
+        }
+    }
+
+    protected <E extends java.lang.Throwable, T> T withFetchConnection(@NotNull final FileRepository repository,
+                                                                       @NotNull final GitRepositoryAccessData accessData,
+                                                                       @NotNull final WithFetchConnectionCallback<E, T> callback) throws E, RepositoryException, NotSupportedException, TransportException
+    {
+        final Transport transport = open(repository, accessData);
+        try
+        {
+            final FetchConnection connection = transport.openFetch();
+            try
+            {
+                return callback.doWithFetchConnection(transport, connection);
+            }
+            finally
+            {
+                connection.close();
+            }
+        }
+        finally
+        {
+            transport.close();
         }
     }
 
