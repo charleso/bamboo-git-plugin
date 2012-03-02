@@ -3,12 +3,15 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.build.BuildLoggerManager;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.commit.CommitContext;
+import com.atlassian.bamboo.plan.branch.BranchIntegrationConfiguration;
 import com.atlassian.bamboo.plan.branch.VcsBranch;
 import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
 import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
 import com.atlassian.bamboo.repository.BranchDetectionCapableRepository;
+import com.atlassian.bamboo.repository.BranchMergingAwareRepository;
 import com.atlassian.bamboo.repository.CacheId;
 import com.atlassian.bamboo.repository.CachingAwareRepository;
+import com.atlassian.bamboo.repository.PushCapableRepository;
 import com.atlassian.bamboo.repository.Repository;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.security.StringEncrypter;
@@ -36,7 +39,10 @@ import java.util.Set;
 public class GitHubRepository extends AbstractStandaloneRepository implements CustomSourceDirectoryAwareRepository,
                                                                               AdvancedConfigurationAwareRepository,
                                                                               BranchDetectionCapableRepository,
-                                                                              CachingAwareRepository
+                                                                              CachingAwareRepository,
+                                                                              PushCapableRepository,
+                                                                              BranchMergingAwareRepository
+
 {
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -300,6 +306,7 @@ public class GitHubRepository extends AbstractStandaloneRepository implements Cu
     public void setVcsBranch(@NotNull final VcsBranch vcsBranch)
     {
         gitRepository.setVcsBranch(vcsBranch);
+        branch = vcsBranch.getName();
     }
 
     @Override
@@ -329,5 +336,42 @@ public class GitHubRepository extends AbstractStandaloneRepository implements Cu
     public CommitContext getFirstCommit() throws RepositoryException
     {
         return gitRepository.getFirstCommit();
+    }
+
+    @Override
+    public boolean mergeWorkspaceWith(@NotNull final BuildContext buildContext, @NotNull final File file, @NotNull final String s) throws RepositoryException
+    {
+        return gitRepository.mergeWorkspaceWith(buildContext, file, s);
+    }
+
+    @Override
+    public boolean isMergingSupported()
+    {
+        return true;
+    }
+
+    @Override
+    public void setBranchIntegrationConfiguration(@NotNull final BranchIntegrationConfiguration branchIntegrationConfiguration)
+    {
+        gitRepository.setBranchIntegrationConfiguration(branchIntegrationConfiguration);
+    }
+
+    @Override
+    public String getMessageOnBranchIntegrationEnabled()
+    {
+        return gitRepository.getMessageOnBranchIntegrationEnabled();
+    }
+
+    @Override
+    public void pushRevision(@NotNull final File file, @Nullable final String s) throws RepositoryException
+    {
+        gitRepository.pushRevision(file, s);
+    }
+
+    @NotNull
+    @Override
+    public String commit(@NotNull final File file, @NotNull final String s) throws RepositoryException
+    {
+        return commit(file, s);
     }
 }
