@@ -49,7 +49,6 @@ import com.opensymphony.xwork.TextProvider;
 import com.opensymphony.xwork.util.LocalizedTextUtil;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.log4j.Logger;
@@ -147,6 +146,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
             return data;
         }
     }
+    private VcsBranch branch;
 
     final public GitRepositoryAccessData accessData = new GitRepositoryAccessData();
 
@@ -427,13 +427,13 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     @NotNull
     public VcsBranch getVcsBranch()
     {
-        final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
-        return new VcsBranchImpl(StringUtils.defaultIfEmpty(substitutedAccessData.branch, "master"));
+        return branch;
     }
 
     @Override
     public void setVcsBranch(@NotNull final VcsBranch branch)
     {
+        this.branch = branch;
         this.accessData.branch = branch.getName();
     }
 
@@ -584,6 +584,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         accessData.username = config.getString(REPOSITORY_GIT_USERNAME, "");
         accessData.password = config.getString(REPOSITORY_GIT_PASSWORD);
         accessData.branch = config.getString(REPOSITORY_GIT_BRANCH, "");
+        branch = new VcsBranchImpl(StringUtils.defaultIfEmpty(accessData.branch, "master"));
         accessData.sshKey = config.getString(REPOSITORY_GIT_SSH_KEY, "");
         accessData.sshPassphrase = config.getString(REPOSITORY_GIT_SSH_PASSPHRASE);
         accessData.authenticationType = safeParseAuthenticationType(config.getString(REPOSITORY_GIT_AUTHENTICATION_TYPE));
@@ -800,6 +801,11 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         return accessData.repositoryUrl;
     }
 
+    /**
+     * @deprecated since 4.0 use {@link com.atlassian.bamboo.repository.BranchAwareRepository methods)}
+     * @return
+     */
+    @Deprecated
     public String getBranch()
     {
         return accessData.branch;
