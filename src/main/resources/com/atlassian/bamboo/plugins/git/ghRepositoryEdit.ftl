@@ -156,23 +156,22 @@
 
         return {
             init:function (){
-                $(document).delegate("#loadGitHubRepositoriesButton", 'click', loadGitHubRepositories);
-                $(document).delegate("#repository_github_repository", 'change', function (){
-                    BAMBOO.DynamicFieldParameters.mutateSelectListContent($(this), $branches, repositoryBranchFilter);
-                });
-
                 $(function (){
+                  $username = $("input[name='repository.github.username']");
+                  $password = $("input[name='repository.github.temporary.password']");
+                  $repositories = $("#repository_github_repository").hide();
+                  $repositories_desc = $("#repository_github_repository_description").hide();
+                  $branches = $("select[name='repository.github.branch']");
+                  $loadGitHubRepositoriesButton = $("#loadGitHubRepositoriesButton");
+                  $loadGitHubRepositoriesSpinner = $("#loadGitHubRepositoriesSpinner");
+                  $loadedGitHubRepositoriesDiv = $("#loadedGitHubRepositoriesDiv");
+                  $form = $username.closest("form");
+                  $selectedRepository = $("#selectedRepository");
 
-                      $username = $("input[name='repository.github.username']");
-                      $password = $("input[name='repository.github.temporary.password']");
-                      $repositories = $("#repository_github_repository").hide();
-                      $repositories_desc = $("#repository_github_repository_description").hide();
-                      $branches = $("select[name='repository.github.branch']");
-                      $loadGitHubRepositoriesButton = $("#loadGitHubRepositoriesButton");
-                      $loadGitHubRepositoriesSpinner = $("#loadGitHubRepositoriesSpinner");
-                      $loadedGitHubRepositoriesDiv = $("#loadedGitHubRepositoriesDiv");
-                      $form = $username.closest("form");
-                      $selectedRepository = $("#selectedRepository");
+                  $loadGitHubRepositoriesButton.click(loadGitHubRepositories);
+                  $repositories.change(function (){
+                      BAMBOO.DynamicFieldParameters.mutateSelectListContent($(this), $branches, repositoryBranchFilter);
+                  });
 
                   [#if buildConfiguration.getString('repository.github.repository')?has_content]
                       if ($selectedRepository.val() == repositoryKey)
