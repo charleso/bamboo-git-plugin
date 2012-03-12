@@ -105,6 +105,12 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         runCommand(commandBuilder, workingDirectory, new LoggingOutputHandler(buildLogger));
     }
 
+    private void runStatusCommand(@NotNull final File workingDirectory, final GitOutputHandler outputHandler) throws RepositoryException
+    {
+        GitCommandBuilder commandBuilder = createCommandBuilder("status", "--porcelain");
+        runCommand(commandBuilder, workingDirectory, outputHandler);
+    }
+
     public void runFetchCommand(@NotNull final File workingDirectory, @NotNull final GitRepository.GitRepositoryAccessData accessData, RefSpec refSpec, boolean useShallow) throws RepositoryException
     {
         GitCommandBuilder commandBuilder = createCommandBuilder("fetch", accessData.repositoryUrl, refSpec.toString(), "--update-head-ok");
@@ -239,9 +245,15 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
 
     public boolean runMergeCommand(@NotNull final GitCommandBuilder commandBuilder, @NotNull final File workspaceDir) throws RepositoryException
     {
-        final LoggingOutputHandler outputHandler = new LoggingOutputHandler(buildLogger);
-        runCommand(commandBuilder, workspaceDir, outputHandler);
-        return outputHandler.getStdout().contains("+"); //0 files changed, 0 insertions(+), 0 deletions(-)
+        final LoggingOutputHandler mergeOutputHandler = new LoggingOutputHandler(buildLogger);
+        runCommand(commandBuilder, workspaceDir, mergeOutputHandler);
+        log.debug(mergeOutputHandler.getStdout());
+
+        final LoggingOutputHandler statusOutputHandler = new LoggingOutputHandler(buildLogger);
+        runStatusCommand(workspaceDir, statusOutputHandler);
+        final String statusOutput = statusOutputHandler.getStdout();
+        log.debug(statusOutput);
+        return !statusOutput.isEmpty();
     }
 
     interface GitOutputHandler extends OutputHandler
