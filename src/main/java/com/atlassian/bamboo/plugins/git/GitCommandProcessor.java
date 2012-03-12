@@ -107,7 +107,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
 
     private void runStatusCommand(@NotNull final File workingDirectory, final GitOutputHandler outputHandler) throws RepositoryException
     {
-        GitCommandBuilder commandBuilder = createCommandBuilder("status", "--porcelain");
+        GitCommandBuilder commandBuilder = createCommandBuilder("status", "--porcelain", "--untracked-files=no");
         runCommand(commandBuilder, workingDirectory, outputHandler);
     }
 
