@@ -15,7 +15,7 @@ import java.util.Arrays;
 
 public class GitMavenPomAccessor extends MavenPomAccessorAbstract<GitRepository>
 {
-    private static final Logger log = Logger.getLogger(GitMavenPomAccessor.class);
+    private static final Logger log = Logger.getLogger(GitRepository.class);
     // ------------------------------------------------------------------------------------------------------- Constants
     public static final String POM_XML = "pom.xml";
     // ------------------------------------------------------------------------------------------------- Type Properties

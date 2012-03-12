@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 
 class GitCommandProcessor implements Serializable, ProxyErrorReceiver
 {
-    private static final Logger log = Logger.getLogger(GitCommandProcessor.class);
+    private static final Logger log = Logger.getLogger(GitRepository.class);
 
     // ------------------------------------------------------------------------------------------------------- Constants
 
@@ -199,14 +199,18 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         handler.setErrorHandler(outputHandler);
 
         final List<String> commandArgs = commandBuilder.build();
-        if (maxVerboseOutput)
+        if (maxVerboseOutput || log.isDebugEnabled())
         {
             StringBuilder stringBuilder = new StringBuilder();
             for (String s : RepositoryUrlObfuscator.obfuscatePasswordsInUrls(commandArgs))
             {
                 stringBuilder.append(s).append(" ");
             }
-            buildLogger.addBuildLogEntry(stringBuilder.toString());
+            if (maxVerboseOutput)
+            {
+                buildLogger.addBuildLogEntry(stringBuilder.toString());
+            }
+            log.debug(stringBuilder.toString());
         }
         //log.info("Running in " + workingDirectory + ": '" + StringUtils.join(commandArgs, "' '") + "'");
 
