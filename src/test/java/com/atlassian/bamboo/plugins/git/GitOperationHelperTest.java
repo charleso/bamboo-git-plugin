@@ -299,7 +299,7 @@ public class GitOperationHelperTest extends GitAbstractTest
             final NativeGitOperationHelper connector = createNativeGitOperationHelper(createAccessData(tmp, branchName));
 
             assertTrue(connector.merge(tmp, masterBranch, COMITTER_NAME, COMITTER_EMAIL));
-            assertFalse(connector.merge(tmp, masterBranch, COMITTER_NAME, COMITTER_EMAIL));
+            assertTrue(connector.merge(tmp, masterBranch, COMITTER_NAME, COMITTER_EMAIL));
 
             String rev = connector.commit(tmp, "message", COMITTER_NAME, COMITTER_EMAIL);
             assertTrue(StringUtils.isNotBlank(rev));
