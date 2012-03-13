@@ -202,7 +202,7 @@ public class NativeGitOperationHelper extends GitOperationHelper
     {
         GitCommandBuilder commandBuilder =
                 gitCommandProcessor
-                        .createCommandBuilder("merge", "--no-commit", "--no-ff" ,targetRevision)
+                        .createCommandBuilder("merge", "--no-commit", targetRevision)
                         .env(identificationVariables(committerName, committerEmail));
 
         return gitCommandProcessor.runMergeCommand(commandBuilder, workspaceDir);
