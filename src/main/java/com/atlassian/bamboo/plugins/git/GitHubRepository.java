@@ -239,9 +239,17 @@ public class GitHubRepository extends AbstractStandaloneRepository implements Cu
     }
 
     @NotNull
-    public String retrieveSourceCode(@NotNull final BuildContext buildContext, @Nullable final String vcsRevision, @NotNull final File sourceDirectory) throws RepositoryException
+    @Override
+    public String retrieveSourceCode(@NotNull final BuildContext buildContext, @Nullable final String vcsRevisionKey, @NotNull final File sourceDirectory) throws RepositoryException
     {
-        return gitRepository.retrieveSourceCode(buildContext, vcsRevision, sourceDirectory);
+        return gitRepository.retrieveSourceCode(buildContext, vcsRevisionKey, sourceDirectory);
+    }
+
+    @NotNull
+    @Override
+    public String retrieveSourceCode(@NotNull final BuildContext buildContext, @Nullable final String vcsRevisionKey, @NotNull final File sourceDirectory, int depth) throws RepositoryException
+    {
+        return gitRepository.retrieveSourceCode(buildContext, vcsRevisionKey, sourceDirectory, depth);
     }
 
     // -------------------------------------------------------------------------------------------------- Public Methods
@@ -348,12 +356,6 @@ public class GitHubRepository extends AbstractStandaloneRepository implements Cu
     public boolean isMergingSupported()
     {
         return true;
-    }
-
-    @Override
-    public void setBranchIntegrationConfiguration(@NotNull final BranchIntegrationConfiguration branchIntegrationConfiguration)
-    {
-        gitRepository.setBranchIntegrationConfiguration(branchIntegrationConfiguration);
     }
 
     @Override

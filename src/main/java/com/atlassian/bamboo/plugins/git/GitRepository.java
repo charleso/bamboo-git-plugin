@@ -6,7 +6,6 @@ import com.atlassian.bamboo.build.logger.NullBuildLogger;
 import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.commit.CommitContextImpl;
 import com.atlassian.bamboo.plan.PlanKeys;
-import com.atlassian.bamboo.plan.branch.BranchIntegrationConfiguration;
 import com.atlassian.bamboo.plan.branch.BranchIntegrationHelper;
 import com.atlassian.bamboo.plan.branch.VcsBranch;
 import com.atlassian.bamboo.plan.branch.VcsBranchImpl;
@@ -163,8 +162,6 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         }
     };
 
-    private transient BranchIntegrationConfiguration branchIntegrationConfiguration;
-
     // ---------------------------------------------------------------------------------------------------- Dependencies
     private transient CapabilityContext capabilityContext;
     private transient SshProxyService sshProxyService;
@@ -295,7 +292,14 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
 
     @Override
     @NotNull
-    public String retrieveSourceCode(@NotNull final BuildContext buildContext, @Nullable final String nullableTargetRevision, @NotNull final File sourceDirectory) throws RepositoryException
+    public String retrieveSourceCode(@NotNull final BuildContext buildContext, @Nullable final String vcsRevisionKey, @NotNull final File sourceDirectory) throws RepositoryException
+    {
+        return retrieveSourceCode(buildContext, vcsRevisionKey, sourceDirectory, 1);
+    }
+
+    @Override
+    @NotNull
+    public String retrieveSourceCode(@NotNull final BuildContext buildContext, @Nullable final String vcsRevisionKey, @NotNull final File sourceDirectory, int depth) throws RepositoryException
     {
         try
         {
@@ -303,9 +307,9 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
             final BuildLogger buildLogger = buildLoggerManager.getBuildLogger(buildContext.getPlanResultKey());
             final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
 
-            final boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones;
+            final boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones && depth == 1;
 
-            final String targetRevision = nullableTargetRevision != null ? nullableTargetRevision : helper.obtainLatestRevision();
+            final String targetRevision = vcsRevisionKey != null ? vcsRevisionKey : helper.obtainLatestRevision();
             final String previousRevision = helper.getCurrentRevision(sourceDirectory);
 
             if (isOnLocalAgent())
@@ -525,14 +529,6 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     }
 
     @Override
-    public void setBranchIntegrationConfiguration(@NotNull BranchIntegrationConfiguration branchIntegrationConfiguration)
-    {
-        this.branchIntegrationConfiguration = branchIntegrationConfiguration;
-    }
-
-
-
-    @Override
     public void addDefaultValues(@NotNull BuildConfiguration buildConfiguration)
     {
         buildConfiguration.setProperty(REPOSITORY_GIT_COMMAND_TIMEOUT, Integer.valueOf(DEFAULT_COMMAND_TIMEOUT_IN_MINUTES));
@@ -742,8 +738,6 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
 
     GitRepositoryAccessData getSubstitutedAccessData()
     {
-        boolean enforceDeepClones = branchIntegrationConfiguration != null && branchIntegrationConfiguration.isEnabled();
-
         GitRepositoryAccessData substituted = new GitRepositoryAccessData();
         substituted.repositoryUrl = substituteString(accessData.repositoryUrl);
         substituted.branch = substituteString(accessData.branch);
@@ -752,7 +746,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         substituted.sshKey = encrypterRef.get().decrypt(accessData.sshKey);
         substituted.sshPassphrase = encrypterRef.get().decrypt(accessData.sshPassphrase);
         substituted.authenticationType = accessData.authenticationType;
-        substituted.useShallowClones = !enforceDeepClones && accessData.useShallowClones;
+        substituted.useShallowClones = accessData.useShallowClones;
         substituted.commandTimeout = accessData.commandTimeout;
         substituted.verboseLogs = accessData.verboseLogs;
         return substituted;
