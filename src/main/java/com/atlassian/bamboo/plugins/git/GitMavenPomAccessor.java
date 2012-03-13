@@ -76,7 +76,7 @@ public class GitMavenPomAccessor extends MavenPomAccessorAbstract<GitRepository>
         GitOperationHelper helper = new JGitOperationHelper(repository.getSubstitutedAccessData(), new NullBuildLogger(), textProvider);
         String targetRevision = helper.obtainLatestRevision();
         helper.fetch(destinationPath, true);
-        helper.checkout(null, destinationPath, targetRevision, helper.getCurrentRevision(destinationPath));
+        helper.checkout(null, destinationPath, targetRevision, helper.getCurrentRevisionIfExists(destinationPath));
         final File pomLocation = new File(destinationPath, pathToPom);
         if (pomLocation.isFile())
         {

@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -299,6 +298,7 @@ public class GitOperationHelperTest extends GitAbstractTest
             final NativeGitOperationHelper connector = createNativeGitOperationHelper(createAccessData(tmp, branchName));
 
             assertTrue(connector.merge(tmp, masterBranch, COMITTER_NAME, COMITTER_EMAIL));
+            //merge into a modified workspace, no changes
             assertTrue(connector.merge(tmp, masterBranch, COMITTER_NAME, COMITTER_EMAIL));
 
             String rev = connector.commit(tmp, "message", COMITTER_NAME, COMITTER_EMAIL);
@@ -308,6 +308,10 @@ public class GitOperationHelperTest extends GitAbstractTest
 
             FileUtils.writeStringToFile(new File(tmp, createdFile), "data");
             connector.gitCommandProcessor.runCommand(new GitCommandBuilder("add", createdFile), tmp);
+            rev = connector.commit(tmp, "message2", "A U Thor", "author@example.com[1]");
+            assertTrue(StringUtils.isNotBlank(rev));
+
+            //empty commit
             rev = connector.commit(tmp, "message2", "A U Thor", "author@example.com[1]");
             assertTrue(StringUtils.isNotBlank(rev));
 

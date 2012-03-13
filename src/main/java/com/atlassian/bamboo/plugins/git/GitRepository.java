@@ -310,7 +310,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
             final boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones && depth == 1;
 
             final String targetRevision = vcsRevisionKey != null ? vcsRevisionKey : helper.obtainLatestRevision();
-            final String previousRevision = helper.getCurrentRevision(sourceDirectory);
+            final String previousRevision = helper.getCurrentRevisionIfExists(sourceDirectory);
 
             if (isOnLocalAgent())
             {

@@ -13,6 +13,7 @@ import com.atlassian.utils.process.StringOutputHandler;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -105,10 +106,13 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         runCommand(commandBuilder, workingDirectory, new LoggingOutputHandler(buildLogger));
     }
 
-    private void runStatusCommand(@NotNull final File workingDirectory, final GitOutputHandler outputHandler) throws RepositoryException
+    public List<String> runStatusCommand(@NotNull final File workingDirectory) throws RepositoryException
     {
         GitCommandBuilder commandBuilder = createCommandBuilder("status", "--porcelain", "--untracked-files=no");
-        runCommand(commandBuilder, workingDirectory, outputHandler);
+        final LineOutputHandlerImpl gitOutputHandler = new LineOutputHandlerImpl();
+        runCommand(commandBuilder, workingDirectory, gitOutputHandler);
+        log.debug(gitOutputHandler.getStdout());
+        return gitOutputHandler.getLines();
     }
 
     public void runFetchCommand(@NotNull final File workingDirectory, @NotNull final GitRepository.GitRepositoryAccessData accessData, RefSpec refSpec, boolean useShallow) throws RepositoryException
@@ -243,17 +247,18 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         return handler.getExitCode();
     }
 
+    /**
+     * Returns true if there are modified files in the working directory after the merge
+     */
     public boolean runMergeCommand(@NotNull final GitCommandBuilder commandBuilder, @NotNull final File workspaceDir) throws RepositoryException
     {
         final LoggingOutputHandler mergeOutputHandler = new LoggingOutputHandler(buildLogger);
         runCommand(commandBuilder, workspaceDir, mergeOutputHandler);
         log.debug(mergeOutputHandler.getStdout());
 
-        final LoggingOutputHandler statusOutputHandler = new LoggingOutputHandler(buildLogger);
-        runStatusCommand(workspaceDir, statusOutputHandler);
-        final String statusOutput = statusOutputHandler.getStdout();
-        log.debug(statusOutput);
-        return !statusOutput.isEmpty();
+        final List<String> statusLines = runStatusCommand(workspaceDir);
+
+        return !statusLines.isEmpty();
     }
 
     interface GitOutputHandler extends OutputHandler
@@ -261,15 +266,39 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         String getStdout();
     }
 
-    class GitStringOutputHandler extends StringOutputHandler implements GitOutputHandler
+    static class GitStringOutputHandler extends StringOutputHandler implements GitOutputHandler
     {
+        @Override
         public String getStdout()
         {
             return getOutput();
         }
     }
 
-    class LoggingOutputHandler extends LineOutputHandler implements GitCommandProcessor.GitOutputHandler
+    static class LineOutputHandlerImpl extends LineOutputHandler implements GitOutputHandler
+    {
+        private final List<String> lines = Lists.newLinkedList();
+
+        @Override
+        protected void processLine(int i, String s)
+        {
+            lines.add(s);
+        }
+
+        @NotNull
+        public List<String> getLines()
+        {
+            return lines;
+        }
+
+        @Override
+        public String getStdout()
+        {
+            return lines.toString();
+        }
+    }
+
+    static class LoggingOutputHandler extends LineOutputHandler implements GitCommandProcessor.GitOutputHandler
     {
         final BuildLogger buildLogger;
         final StringBuilder stringBuilder;
@@ -287,6 +316,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
             stringBuilder.append(s);
         }
 
+        @Override
         public String getStdout()
         {
             return stringBuilder.toString();

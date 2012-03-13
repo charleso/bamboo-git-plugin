@@ -68,6 +68,29 @@ public class JGitOperationHelper extends GitOperationHelper
     }
 
     @Override
+    public String commit(@NotNull File sourceDirectory, @NotNull String message, @NotNull String comitterName, @NotNull String comitterEmail) throws RepositoryException
+    {
+        throw new UnsupportedOperationException("JGit implementation does not support commit, please use native Git");
+        //has to be modified to make empty commit a no-op
+        //try
+        //{
+        //    File gitDir = new File(sourceDirectory, Constants.DOT_GIT);
+        //    FileRepository fileRepository = new FileRepository(gitDir);
+        //    Git git = new Git(fileRepository);
+        //    git.add().addFilepattern(".").call();
+        //    return git.commit().setMessage(message).setCommitter(comitterName, comitterEmail).call().name();
+        //}
+        //catch (IOException e)
+        //{
+        //    throw new RepositoryException("IOException during committing", e);
+        //}
+        //catch (GitAPIException e)
+        //{
+        //    throw new RepositoryException("GitAPIException during committing", e);
+        //}
+    }
+
+    @Override
     protected String doCheckout(@NotNull final FileRepository localRepository, @NotNull final File sourceDirectory, @NotNull final String targetRevision, @Nullable final String previousRevision, final boolean useSubmodules) throws RepositoryException
     {
         if (useSubmodules)
