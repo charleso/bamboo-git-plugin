@@ -521,16 +521,6 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     }
 
     @Override
-    public String getMessageOnBranchIntegrationEnabled()
-    {
-        if (accessData.useShallowClones)
-        {
-            return textProvider.getText("repository.git.messages.branchIntegration.shallowClonesWillBeDisabled");
-        }
-        return null;
-    }
-
-    @Override
     public void addDefaultValues(@NotNull BuildConfiguration buildConfiguration)
     {
         buildConfiguration.setProperty(REPOSITORY_GIT_COMMAND_TIMEOUT, Integer.valueOf(DEFAULT_COMMAND_TIMEOUT_IN_MINUTES));

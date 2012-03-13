@@ -1,3 +1,5 @@
+[#-- @ftlvariable name="buildConfiguration" type="com.atlassian.bamboo.ww2.actions.build.admin.create.BuildConfiguration" --]
+[#-- @ftlvariable name="plan" type="com.atlassian.bamboo.plan.Plan" --]
 [#-- @ftlvariable name="repository" type="com.atlassian.bamboo.plugins.git.GitRepository" --]
 [@ui.bambooSection]
     [@ww.textfield labelKey='repository.git.repositoryUrl' name='repository.git.repositoryUrl' required='true' helpKey='git.fields' /]
@@ -48,6 +50,13 @@
         [/#if]
     [/@ui.bambooSection]
 
-    [@ww.checkbox labelKey='repository.git.useShallowClones' name='repository.git.useShallowClones' /]
+    [@ww.checkbox labelKey='repository.git.useShallowClones' toggle='true' name='repository.git.useShallowClones' /]
+    [@ui.bambooSection dependsOn='repository.git.useShallowClones' showOn='true']
+        [#if (plan.buildDefinition.branchIntegrationConfiguration.enabled)!false ]
+            [@ui.messageBox type='info']
+                [@ww.text name='repository.git.messages.branchIntegration.shallowClonesWillBeDisabled'/]
+            [/@ui.messageBox]
+        [/#if]
+    [/@ui.bambooSection]
 
 [/@ui.bambooSection]
