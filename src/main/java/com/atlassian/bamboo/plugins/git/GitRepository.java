@@ -308,13 +308,14 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
             final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
 
             final boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones && depth == 1;
+            substitutedAccessData.useShallowClones = doShallowFetch;
 
             final String targetRevision = vcsRevisionKey != null ? vcsRevisionKey : helper.obtainLatestRevision();
             final String previousRevision = helper.getCurrentRevision(sourceDirectory);
 
             if (isOnLocalAgent())
             {
-                final File cacheDirectory = getCacheDirectory();
+                final File cacheDirectory = getCacheDirectory(substitutedAccessData);
                 return GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Callable<String>()
                 {
                     public String call() throws Exception
@@ -449,8 +450,9 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         final GitOperationHelper connector = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
 
         final boolean doShallowFetch = false; //USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones;
+        substitutedAccessData.useShallowClones = doShallowFetch;
 
-        final File cacheDirectory = getCacheDirectory();
+        final File cacheDirectory = getCacheDirectory(substitutedAccessData);
 
         try
         {
@@ -822,7 +824,12 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
 
     public File getCacheDirectory()
     {
-        return GitCacheDirectory.getCacheDirectory(buildDirectoryManager.getBaseBuildWorkingDirectory(), getSubstitutedAccessData());
+        return getCacheDirectory(getSubstitutedAccessData());
+    }
+
+    public File getCacheDirectory(GitRepositoryAccessData accessData)
+    {
+        return GitCacheDirectory.getCacheDirectory(buildDirectoryManager.getBaseBuildWorkingDirectory(), accessData);
     }
 
     @Override
