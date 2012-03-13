@@ -228,26 +228,29 @@ public class GitRepositoryTest extends GitAbstractTest
         assertEquals(commitsAfterPush.get(0).getChangeSetId(), commitedRevision);
     }
 
-    @Test
-    public void testCommitting() throws Exception
-    {
-        File testRepository = createTempDirectory();
-        ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
-        int commitsBeforeCommitCount = createJGitOperationHelper(null).extractCommits(testRepository, null, "HEAD").getChanges().size();
-
-        GitRepository gitRepository = createGitRepository();
-        setRepositoryProperties(gitRepository, testRepository, "master");
-
-        BuildRepositoryChanges buildChanges = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
-        File checkoutDir = getCheckoutDir(gitRepository);
-        gitRepository.retrieveSourceCode(mockBuildContext(), buildChanges.getVcsRevisionKey(), checkoutDir);
-        String committedRevision = gitRepository.commit(checkoutDir, "Message");
-
-        //verify somehow that testRepository contain commited revision...
-        List<CommitContext> commitsAfterCommit = createJGitOperationHelper(null).extractCommits(checkoutDir, null, "HEAD").getChanges();
-        assertEquals(commitsAfterCommit.size(), commitsBeforeCommitCount + 1);
-        assertEquals(commitsAfterCommit.get(0).getChangeSetId(), committedRevision);
-    }
+    //@Test
+    //public void testCommitting() throws Exception
+    //{
+    //    File testRepository = createTempDirectory();
+    //    ZipResourceDirectory.copyZipResourceToDirectory("basic-repository.zip", testRepository);
+    //    int commitsBeforeCommitCount = createJGitOperationHelper(null).extractCommits(testRepository, null, "HEAD").getChanges().size();
+    //
+    //    GitRepository gitRepository = createGitRepository();
+    //    setRepositoryProperties(gitRepository, testRepository, "master");
+    //
+    //    BuildRepositoryChanges buildChanges = gitRepository.collectChangesSinceLastBuild(PLAN_KEY.getKey(), null);
+    //    File checkoutDir = getCheckoutDir(gitRepository);
+    //    gitRepository.retrieveSourceCode(mockBuildContext(), buildChanges.getVcsRevisionKey(), checkoutDir);
+    //    String committedRevision1 = gitRepository.commit(checkoutDir, "Message");
+    //
+    //    //verify somehow that testRepository contain commited revision...
+    //    List<CommitContext> commitsAfterCommit = createJGitOperationHelper(null).extractCommits(checkoutDir, null, "HEAD").getChanges();
+    //    assertEquals(commitsAfterCommit.size(), commitsBeforeCommitCount + 1);
+    //    assertEquals(commitsAfterCommit.get(0).getChangeSetId(), committedRevision1);
+    //
+    //    String committedRevision2 = gitRepository.commit(checkoutDir, "Message");
+    //    assertEquals(committedRevision1, committedRevision1);
+    //}
 
     @Test
     public void testCommittingWithNativeGit() throws Exception

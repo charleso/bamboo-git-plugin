@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 public class NativeGitOperationHelper extends GitOperationHelper
 {
@@ -67,6 +68,13 @@ public class NativeGitOperationHelper extends GitOperationHelper
     @Override
     public String commit(@NotNull File sourceDirectory, @NotNull String message, @NotNull String comitterName, @NotNull String comitterEmail) throws RepositoryException
     {
+        final List<String> strings = gitCommandProcessor.runStatusCommand(sourceDirectory);
+        if (strings.isEmpty())
+        {
+            log.debug("Nothing to commit");
+            return getCurrentRevision(sourceDirectory);
+        }
+
         GitCommandBuilder commandBuilder = gitCommandProcessor
                 .createCommandBuilder("commit", "-m", message, "--all")
                 .env(identificationVariables(comitterName, comitterEmail));
@@ -196,6 +204,9 @@ public class NativeGitOperationHelper extends GitOperationHelper
         return accessData;
     }
 
+    /**
+     * @return true if modified files exist in the directory or current revision in the directory has changed
+     */
     @Override
     public boolean merge(@NotNull final File workspaceDir, @NotNull final String targetRevision,
                          @NotNull String committerName, @NotNull String committerEmail) throws RepositoryException
@@ -205,7 +216,17 @@ public class NativeGitOperationHelper extends GitOperationHelper
                         .createCommandBuilder("merge", "--no-commit", targetRevision)
                         .env(identificationVariables(committerName, committerEmail));
 
-        return gitCommandProcessor.runMergeCommand(commandBuilder, workspaceDir);
+        String headRevisionBeforeMerge = getCurrentRevision(workspaceDir);
+        final boolean hasModifiedFiles = gitCommandProcessor.runMergeCommand(commandBuilder, workspaceDir);
+
+        if (hasModifiedFiles)
+        {
+            return true;
+        }
+        //fast forward merge check
+        String headRevisionAfterMerge = getCurrentRevision(workspaceDir);
+        log.debug("Revision before merge: " + headRevisionBeforeMerge + ", after merge: " + headRevisionAfterMerge);
+        return !headRevisionAfterMerge.equals(headRevisionBeforeMerge);
     }
 
     @Nullable

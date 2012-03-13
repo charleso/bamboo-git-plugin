@@ -18,8 +18,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.NotSupportedException;
 import org.eclipse.jgit.errors.TransportException;
@@ -139,26 +137,8 @@ public abstract class GitOperationHelper
         }
     }
     
-    public String commit(@NotNull File sourceDirectory, @NotNull String message, @NotNull String comitterName, @NotNull String comitterEmail) throws RepositoryException
-    {
-        try
-        {
-            File gitDir = new File(sourceDirectory, Constants.DOT_GIT);
-            FileRepository fileRepository = new FileRepository(gitDir);
-            Git git = new Git(fileRepository);
-            git.add().addFilepattern(".").call();
-            return git.commit().setMessage(message).setCommitter(comitterName, comitterEmail).call().name();
-        }
-        catch (IOException e)
-        {
-            throw new RepositoryException("IOException during committing", e);
-        }
-        catch (GitAPIException e)
-        {
-            throw new RepositoryException("GitAPIException during committing", e);
-        }
-    }
-    
+    public abstract String commit(@NotNull File sourceDirectory, @NotNull String message, @NotNull String comitterName, @NotNull String comitterEmail) throws RepositoryException;
+
     /*
      * returns revision found after checkout in sourceDirectory
      */
@@ -259,25 +239,30 @@ public abstract class GitOperationHelper
         }
     }
 
-    @Nullable
-    public String getCurrentRevision(@NotNull final File sourceDirectory)
+    @NotNull
+    public String getCurrentRevision(@NotNull final File sourceDirectory) throws RepositoryException
     {
         File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);
         if (!gitDirectory.exists())
         {
-            return null;
+            throw new RepositoryException(sourceDirectory + " does not exist");
         }
         FileRepository localRepository = null;
         try
         {
             localRepository = new FileRepository(new File(sourceDirectory, Constants.DOT_GIT));
-            ObjectId objId = localRepository.resolve(Constants.HEAD);
-            return(objId != null ? objId.getName() : null);
+            final String rev = Constants.HEAD;
+            ObjectId objId = localRepository.resolve(rev);
+            if (objId==null)
+            {
+                throw new RepositoryException("Cannot resolve " + rev);
+            }
+            return objId.getName();
         }
         catch (IOException e)
         {
             log.warn(buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.cannotDetermineRevision", Arrays.asList(sourceDirectory)) + " " + e.getMessage()), e);
-            return null;
+            throw new RepositoryException("Cannot resolve HEAD revision in " + sourceDirectory, e);
         }
         finally
         {
@@ -285,6 +270,19 @@ public abstract class GitOperationHelper
             {
                 localRepository.close();
             }
+        }
+    }
+
+    @Nullable
+    public String getCurrentRevisionIfExists(@NotNull final File sourceDirectory)
+    {
+        try
+        {
+            return getCurrentRevision(sourceDirectory);
+        }
+        catch (RepositoryException e)
+        {
+            return null;
         }
     }
 

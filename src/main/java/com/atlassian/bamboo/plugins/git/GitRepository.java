@@ -311,7 +311,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
             substitutedAccessData.useShallowClones = doShallowFetch;
 
             final String targetRevision = vcsRevisionKey != null ? vcsRevisionKey : helper.obtainLatestRevision();
-            final String previousRevision = helper.getCurrentRevision(sourceDirectory);
+            final String previousRevision = helper.getCurrentRevisionIfExists(sourceDirectory);
 
             if (isOnLocalAgent())
             {
