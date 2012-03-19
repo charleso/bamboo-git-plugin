@@ -248,15 +248,9 @@ public class NativeGitOperationHelper extends GitOperationHelper
     {
         try
         {
-            final String username = repositoryAccessData.username;
-            final String password = repositoryAccessData.password;
-            final boolean usePassword = repositoryAccessData.authenticationType == GitAuthenticationType.PASSWORD && StringUtils.isNotBlank(password);
-            final String authority = StringUtils.isEmpty(username) ? null :
-                                     usePassword ? (username + ":" + password) : username;
-
             URI remoteUri = new URI(repositoryAccessData.repositoryUrl);
             return new URI(remoteUri.getScheme(),
-                           authority,
+                           getAuthority(repositoryAccessData),
                            remoteUri.getHost(),
                            remoteUri.getPort(),
                            remoteUri.getPath(),
@@ -270,6 +264,31 @@ public class NativeGitOperationHelper extends GitOperationHelper
             NativeGitOperationHelper.log.error(message, e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Nullable
+    private String getAuthority(final GitRepository.GitRepositoryAccessData repositoryAccessData) {
+        final String username = repositoryAccessData.username;
+        if (StringUtils.isEmpty(username))
+        {
+            return null;
+        }
+
+        if (repositoryAccessData.authenticationType != GitAuthenticationType.PASSWORD)
+        {
+            return username;
+        }
+
+        String password = repositoryAccessData.password;
+        String repositoryUrl = repositoryAccessData.repositoryUrl;
+
+        final boolean isHttpBased = repositoryUrl.startsWith("http://") || repositoryUrl.startsWith("https://");
+        if (isHttpBased && StringUtils.isBlank(password))
+        {
+            password = "none"; //otherwise we'll get a password prompt
+        }
+
+        return StringUtils.isNotBlank(password) ? (username + ":" + password) : username;
     }
 
     protected void closeProxy(@NotNull final GitRepository.GitRepositoryAccessData accessData)
