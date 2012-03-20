@@ -242,6 +242,10 @@ public abstract class GitOperationHelper
     @NotNull
     public String getCurrentRevision(@NotNull final File sourceDirectory) throws RepositoryException
     {
+        return getRevision(sourceDirectory, Constants.HEAD);
+    }
+
+    protected String getRevision(File sourceDirectory, @NotNull final String revision) throws RepositoryException {
         File gitDirectory = new File(sourceDirectory, Constants.DOT_GIT);
         if (!gitDirectory.exists())
         {
@@ -251,11 +255,10 @@ public abstract class GitOperationHelper
         try
         {
             localRepository = new FileRepository(new File(sourceDirectory, Constants.DOT_GIT));
-            final String rev = Constants.HEAD;
-            ObjectId objId = localRepository.resolve(rev);
+            ObjectId objId = localRepository.resolve(revision);
             if (objId==null)
             {
-                throw new RepositoryException("Cannot resolve " + rev);
+                throw new RepositoryException("Cannot resolve " + revision);
             }
             return objId.getName();
         }
@@ -274,11 +277,11 @@ public abstract class GitOperationHelper
     }
 
     @Nullable
-    public String getCurrentRevisionIfExists(@NotNull final File sourceDirectory)
+    public String getRevisionIfExists(@NotNull final File sourceDirectory, @NotNull final String revision)
     {
         try
         {
-            return getCurrentRevision(sourceDirectory);
+            return getRevision(sourceDirectory, revision);
         }
         catch (RepositoryException e)
         {

@@ -111,7 +111,7 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
         GitCommandBuilder commandBuilder = createCommandBuilder("status", "--porcelain", "--untracked-files=no");
         final LineOutputHandlerImpl gitOutputHandler = new LineOutputHandlerImpl();
         runCommand(commandBuilder, workingDirectory, gitOutputHandler);
-        log.debug(gitOutputHandler.getStdout());
+        log.debug("git status output: " + gitOutputHandler.getStdout());
         return gitOutputHandler.getLines();
     }
 
@@ -248,17 +248,13 @@ class GitCommandProcessor implements Serializable, ProxyErrorReceiver
     }
 
     /**
-     * Returns true if there are modified files in the working directory after the merge
+     * Returns true if there are modified files in the working directory or repository index after the merge
      */
-    public boolean runMergeCommand(@NotNull final GitCommandBuilder commandBuilder, @NotNull final File workspaceDir) throws RepositoryException
+    public void runMergeCommand(@NotNull final GitCommandBuilder commandBuilder, @NotNull final File workspaceDir) throws RepositoryException
     {
         final LoggingOutputHandler mergeOutputHandler = new LoggingOutputHandler(buildLogger);
         runCommand(commandBuilder, workspaceDir, mergeOutputHandler);
         log.debug(mergeOutputHandler.getStdout());
-
-        final List<String> statusLines = runStatusCommand(workspaceDir);
-
-        return !statusLines.isEmpty();
     }
 
     interface GitOutputHandler extends OutputHandler

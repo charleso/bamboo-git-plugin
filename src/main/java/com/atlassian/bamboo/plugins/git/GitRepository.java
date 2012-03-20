@@ -52,6 +52,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.errors.TransportException;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.URIish;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -311,7 +312,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
             substitutedAccessData.useShallowClones = doShallowFetch;
 
             final String targetRevision = vcsRevisionKey != null ? vcsRevisionKey : helper.obtainLatestRevision();
-            final String previousRevision = helper.getCurrentRevisionIfExists(sourceDirectory);
+            final String previousRevision = helper.getRevisionIfExists(sourceDirectory, Constants.HEAD);
 
             if (isOnLocalAgent())
             {

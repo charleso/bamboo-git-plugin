@@ -7,6 +7,7 @@ import com.atlassian.bamboo.ssh.SshProxyService;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.eclipse.jgit.lib.Constants;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -76,7 +77,7 @@ public class GitMavenPomAccessor extends MavenPomAccessorAbstract<GitRepository>
         GitOperationHelper helper = new JGitOperationHelper(repository.getSubstitutedAccessData(), new NullBuildLogger(), textProvider);
         String targetRevision = helper.obtainLatestRevision();
         helper.fetch(destinationPath, true);
-        helper.checkout(null, destinationPath, targetRevision, helper.getCurrentRevisionIfExists(destinationPath));
+        helper.checkout(null, destinationPath, targetRevision, helper.getRevisionIfExists(destinationPath, Constants.HEAD));
         final File pomLocation = new File(destinationPath, pathToPom);
         if (pomLocation.isFile())
         {

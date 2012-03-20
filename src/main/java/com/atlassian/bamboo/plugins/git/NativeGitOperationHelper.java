@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import com.opensymphony.xwork.TextProvider;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.Transport;
@@ -25,7 +26,7 @@ import java.util.List;
 public class NativeGitOperationHelper extends GitOperationHelper
 {
     @SuppressWarnings("UnusedDeclaration")
-    private static final Logger log = Logger.getLogger(NativeGitOperationHelper.class);
+    private static final Logger log = Logger.getLogger(GitRepository.class);
     // ------------------------------------------------------------------------------------------------------- Constants
     // ------------------------------------------------------------------------------------------------- Type Properties
     protected SshProxyService sshProxyService;
@@ -68,8 +69,7 @@ public class NativeGitOperationHelper extends GitOperationHelper
     @Override
     public String commit(@NotNull File sourceDirectory, @NotNull String message, @NotNull String comitterName, @NotNull String comitterEmail) throws RepositoryException
     {
-        final List<String> strings = gitCommandProcessor.runStatusCommand(sourceDirectory);
-        if (strings.isEmpty())
+        if (!containsSomethingToCommit(sourceDirectory))
         {
             log.debug("Nothing to commit");
             return getCurrentRevision(sourceDirectory);
@@ -217,9 +217,9 @@ public class NativeGitOperationHelper extends GitOperationHelper
                         .env(identificationVariables(committerName, committerEmail));
 
         String headRevisionBeforeMerge = getCurrentRevision(workspaceDir);
-        final boolean hasModifiedFiles = gitCommandProcessor.runMergeCommand(commandBuilder, workspaceDir);
+        gitCommandProcessor.runMergeCommand(commandBuilder, workspaceDir);
 
-        if (hasModifiedFiles)
+        if (containsSomethingToCommit(workspaceDir))
         {
             return true;
         }
@@ -227,6 +227,25 @@ public class NativeGitOperationHelper extends GitOperationHelper
         String headRevisionAfterMerge = getCurrentRevision(workspaceDir);
         log.debug("Revision before merge: " + headRevisionBeforeMerge + ", after merge: " + headRevisionAfterMerge);
         return !headRevisionAfterMerge.equals(headRevisionBeforeMerge);
+    }
+
+    private boolean containsSomethingToCommit(@NotNull File workspaceDir) throws RepositoryException
+    {
+        //check for merge with no changes to files, but with changes to index
+        final String mergeHead = getRevisionIfExists(workspaceDir, Constants.MERGE_HEAD);
+        if (mergeHead!=null)
+        {
+            log.debug("Has modified index");
+            return true;
+        }
+
+        final List<String> strings = gitCommandProcessor.runStatusCommand(workspaceDir);
+        final boolean hasModifiedFiles = !strings.isEmpty();
+        if (hasModifiedFiles)
+        {
+            log.debug("Has modified files");
+        }
+        return hasModifiedFiles;
     }
 
     @Nullable
