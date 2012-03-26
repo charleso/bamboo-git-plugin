@@ -193,6 +193,8 @@ public class GitHubRepository extends AbstractStandaloneRepository implements Cu
         gitRepository.accessData.useSubmodules = useSubmodules;
         gitRepository.accessData.commandTimeout = commandTimeout;
         gitRepository.accessData.verboseLogs = verboseLogs;
+
+        gitRepository.setVcsBranch(new VcsBranchImpl(branch));
     }
 
     @NotNull
@@ -306,8 +308,7 @@ public class GitHubRepository extends AbstractStandaloneRepository implements Cu
     @NotNull
     public VcsBranch getVcsBranch()
     {
-        VcsBranch vcsBranch = gitRepository.getVcsBranch();
-        return vcsBranch == null ? new VcsBranchImpl(this.branch) : vcsBranch;
+        return gitRepository.getVcsBranch();
     }
 
     @Override
