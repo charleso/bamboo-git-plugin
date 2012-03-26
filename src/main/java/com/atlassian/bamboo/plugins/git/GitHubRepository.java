@@ -4,6 +4,7 @@ import com.atlassian.bamboo.build.BuildLoggerManager;
 import com.atlassian.bamboo.build.fileserver.BuildDirectoryManager;
 import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.plan.branch.VcsBranch;
+import com.atlassian.bamboo.plan.branch.VcsBranchImpl;
 import com.atlassian.bamboo.repository.AbstractStandaloneRepository;
 import com.atlassian.bamboo.repository.AdvancedConfigurationAwareRepository;
 import com.atlassian.bamboo.repository.BranchDetectionCapableRepository;
@@ -305,7 +306,8 @@ public class GitHubRepository extends AbstractStandaloneRepository implements Cu
     @NotNull
     public VcsBranch getVcsBranch()
     {
-        return gitRepository.getVcsBranch();
+        VcsBranch vcsBranch = gitRepository.getVcsBranch();
+        return vcsBranch == null ? new VcsBranchImpl(this.branch) : vcsBranch;
     }
 
     @Override
