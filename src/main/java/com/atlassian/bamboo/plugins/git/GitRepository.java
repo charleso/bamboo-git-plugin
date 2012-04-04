@@ -740,6 +740,7 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
         substituted.sshPassphrase = encrypterRef.get().decrypt(accessData.sshPassphrase);
         substituted.authenticationType = accessData.authenticationType;
         substituted.useShallowClones = accessData.useShallowClones;
+        substituted.useSubmodules = accessData.useSubmodules;
         substituted.commandTimeout = accessData.commandTimeout;
         substituted.verboseLogs = accessData.verboseLogs;
         return substituted;
