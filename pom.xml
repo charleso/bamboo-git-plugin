@@ -29,6 +29,12 @@
         </dependency>
         <dependency>
             <groupId>com.atlassian.bamboo</groupId>
+            <artifactId>atlassian-bamboo-core</artifactId>
+            <version>${bamboo.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.bamboo</groupId>
             <artifactId>atlassian-bamboo-web</artifactId>
             <version>${bamboo.version}</version>
             <scope>provided</scope>
@@ -40,6 +46,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.4-backport-IO-168</version>
+            <scope>provided</scope>
+        </dependency>
+      <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
             <version>1.1.0.201109151100-r-ATLASSIAN-4</version>
@@ -178,7 +190,7 @@
     </build>
 
     <properties>
-        <bamboo.version>4.0-SNAPSHOT</bamboo.version>
+        <bamboo.version>4.0.1</bamboo.version>
         <bamboo.data.version>3.2.2</bamboo.data.version>
     </properties>
 
