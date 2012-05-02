@@ -252,7 +252,7 @@ public class CheckingOutTagsTest extends GitAbstractTest
         Assert.assertEquals(contents, expectedContents);
     }
 
-    @Test
+    //@Test
     public void testShallowTagIsTheSecondCommit() throws Exception
     {
         //see BAM-8240
