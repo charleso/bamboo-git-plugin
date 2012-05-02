@@ -3,6 +3,7 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.ssh.ProxyConnectionData;
+import com.atlassian.bamboo.ssh.ProxyConnectionDataBuilder;
 import com.atlassian.bamboo.ssh.ProxyException;
 import com.atlassian.bamboo.ssh.SshProxyService;
 import com.google.common.collect.ImmutableMap;
@@ -27,6 +28,8 @@ public class NativeGitOperationHelper extends GitOperationHelper
 {
     @SuppressWarnings("UnusedDeclaration")
     private static final Logger log = Logger.getLogger(GitRepository.class);
+    private static final String SSH_SCHEME = "ssh";
+    private static final String GIT_SCHEME = "git";
     // ------------------------------------------------------------------------------------------------------- Constants
     // ------------------------------------------------------------------------------------------------- Type Properties
     protected SshProxyService sshProxyService;
@@ -127,17 +130,20 @@ public class NativeGitOperationHelper extends GitOperationHelper
 
     protected GitRepository.GitRepositoryAccessData adjustRepositoryAccess(@NotNull final GitRepository.GitRepositoryAccessData accessData) throws RepositoryException
     {
-        if (accessData.authenticationType == GitAuthenticationType.SSH_KEYPAIR)
+        final boolean needsProxy =
+                accessData.authenticationType == GitAuthenticationType.SSH_KEYPAIR ||
+                (isSsh(accessData.repositoryUrl) && accessData.authenticationType == GitAuthenticationType.PASSWORD);
+        if (needsProxy)
         {
             GitRepository.GitRepositoryAccessData proxyAccessData = accessData.cloneAccessData();
 
             if (!StringUtils.contains(proxyAccessData.repositoryUrl, "://"))
             {
-                proxyAccessData.repositoryUrl = "ssh://" + proxyAccessData.repositoryUrl.replaceFirst(":", "/");
+                proxyAccessData.repositoryUrl = SSH_SCHEME + "://" + proxyAccessData.repositoryUrl.replaceFirst(":", "/");
             }
 
             URI repositoryUri = URI.create(proxyAccessData.repositoryUrl);
-            if ("git".equals(repositoryUri.getScheme()) || "ssh".equals(repositoryUri.getScheme()))
+            if (GIT_SCHEME.equals(repositoryUri.getScheme()) || SSH_SCHEME.equals(repositoryUri.getScheme()))
             {
                 try
                 {
@@ -147,12 +153,24 @@ public class NativeGitOperationHelper extends GitOperationHelper
                         proxyAccessData.username = username;
                     }
 
-                    ProxyConnectionData connectionData = sshProxyService.createProxyConnectionDataBuilder()
+                    final ProxyConnectionDataBuilder proxyConnectionDataBuilder = sshProxyService.createProxyConnectionDataBuilder()
                             .withRemoteAddress(repositoryUri.getHost(), repositoryUri.getPort() == -1 ? 22 : repositoryUri.getPort())
                             .withRemoteUserName(StringUtils.defaultIfEmpty(proxyAccessData.username, repositoryUri.getUserInfo()))
-                            .withErrorReceiver(gitCommandProcessor)
-                            .withKeyFromString(proxyAccessData.sshKey, proxyAccessData.sshPassphrase)
-                            .build();
+                            .withErrorReceiver(gitCommandProcessor);
+
+                    switch (accessData.authenticationType)
+                    {
+                        case SSH_KEYPAIR:
+                            proxyConnectionDataBuilder.withKeyFromString(proxyAccessData.sshKey, proxyAccessData.sshPassphrase);
+                            break;
+                        case PASSWORD:
+                            proxyConnectionDataBuilder.withRemotePassword(StringUtils.defaultString(proxyAccessData.password));
+                            break;
+                        default:
+                            throw new IllegalArgumentException("Proxy does not know how to handle " + accessData.authenticationType);
+                    }
+
+                    ProxyConnectionData connectionData = proxyConnectionDataBuilder.build();
 
                     proxyAccessData.proxyRegistrationInfo = sshProxyService.register(connectionData);
 
@@ -202,6 +220,11 @@ public class NativeGitOperationHelper extends GitOperationHelper
         }
 
         return accessData;
+    }
+
+    private boolean isSsh(final String repositoryUrl)
+    {
+        return repositoryUrl.startsWith(SSH_SCHEME + "://");
     }
 
     /**
@@ -293,13 +316,16 @@ public class NativeGitOperationHelper extends GitOperationHelper
             return null;
         }
 
-        if (repositoryAccessData.authenticationType != GitAuthenticationType.PASSWORD)
+        String repositoryUrl = repositoryAccessData.repositoryUrl;
+        
+        final boolean passwordAuthentication = repositoryAccessData.authenticationType == GitAuthenticationType.PASSWORD;
+
+        if (!passwordAuthentication || isSsh(repositoryUrl))
         {
             return username;
         }
 
         String password = repositoryAccessData.password;
-        String repositoryUrl = repositoryAccessData.repositoryUrl;
 
         final boolean isHttpBased = repositoryUrl.startsWith("http://") || repositoryUrl.startsWith("https://");
         if (isHttpBased && StringUtils.isBlank(password))

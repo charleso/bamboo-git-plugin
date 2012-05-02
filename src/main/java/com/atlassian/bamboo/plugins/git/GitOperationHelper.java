@@ -203,7 +203,8 @@ public abstract class GitOperationHelper
                                 @Override
                                 public String doWithFetchConnection(@NotNull Transport transport, @NotNull FetchConnection connection) throws Exception
                                 {
-                                    return resolveRefSpec(branch, connection).getName();
+                                    final Ref ref = resolveRefSpec(branch, connection);
+                                    return ref.getName();
                                 }
                             });
                         }
