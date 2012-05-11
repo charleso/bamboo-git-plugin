@@ -8,6 +8,7 @@ import com.atlassian.bamboo.commit.CommitImpl;
 import com.atlassian.bamboo.plan.branch.VcsBranch;
 import com.atlassian.bamboo.plan.branch.VcsBranchImpl;
 import com.atlassian.bamboo.plugins.git.GitRepository.GitRepositoryAccessData;
+import com.atlassian.bamboo.repository.InvalidRepositoryException;
 import com.atlassian.bamboo.repository.RepositoryException;
 import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
@@ -303,7 +304,7 @@ public abstract class GitOperationHelper
                     Ref headRef = resolveRefSpec(accessData.branch, connection);
                     if (headRef == null)
                     {
-                        throw new RepositoryException(textProvider.getText("repository.git.messages.cannotDetermineHead", Arrays.asList(accessData.repositoryUrl, accessData.branch)));
+                        throw new InvalidRepositoryException(textProvider.getText("repository.git.messages.cannotDetermineHead", Arrays.asList(accessData.repositoryUrl, accessData.branch)));
                     }
                     else
                     {
