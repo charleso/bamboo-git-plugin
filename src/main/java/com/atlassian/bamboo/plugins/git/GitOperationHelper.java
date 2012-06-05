@@ -573,7 +573,7 @@ public abstract class GitOperationHelper
         PersonIdent gitPerson = commit.getAuthorIdent();
         if (gitPerson == null)
             return new AuthorImpl(AuthorImpl.UNKNOWN_AUTHOR);
-        return new AuthorImpl(String.format("%s <%s>", gitPerson.getName(), gitPerson.getEmailAddress()));
+        return new AuthorImpl(String.format("%s <%s>", gitPerson.getName(), gitPerson.getEmailAddress()), null, gitPerson.getEmailAddress());
     }
 
     /**

@@ -279,6 +279,7 @@ public class GitRepositoryTest extends GitAbstractTest
         CommitContext commit = commitsAfterCommit.get(0);
         assertEquals(commit.getChangeSetId(), committedRevision);
         assertEquals(commit.getAuthor().getName(), author);
+        assertEquals(commit.getAuthor().getEmail(), COMITTER_EMAIL);
         assertEquals(commit.getComment(), commitMessage);
         assertEquals(commit.getFiles().get(0).getName(), filename);
     }
@@ -314,6 +315,7 @@ public class GitRepositoryTest extends GitAbstractTest
         CommitContext commit = commitsAfterCommit.get(0);
         assertEquals(commit.getChangeSetId(), committedRevision);
         assertEquals(commit.getAuthor().getName(), author);
+        assertEquals(commit.getAuthor().getEmail(), COMITTER_EMAIL);
         assertEquals(commit.getComment(), commitMessage);
         assertEquals(commit.getFiles().get(0).getName(), filename);
     }
