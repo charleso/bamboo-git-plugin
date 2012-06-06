@@ -28,6 +28,7 @@ import com.atlassian.bamboo.ssh.ProxyRegistrationInfo;
 import com.atlassian.bamboo.ssh.SshProxyService;
 import com.atlassian.bamboo.utils.SystemProperty;
 import com.atlassian.bamboo.utils.error.ErrorCollection;
+import com.atlassian.bamboo.utils.fage.Result;
 import com.atlassian.bamboo.v2.build.BuildContext;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChanges;
 import com.atlassian.bamboo.v2.build.BuildRepositoryChangesImpl;
@@ -518,7 +519,32 @@ public class GitRepository extends AbstractStandaloneRepository implements Maven
     @Override
     public CommitContext getLastCommit() throws RepositoryException
     {
-        return null;
+
+        final BuildLogger buildLogger = new NullBuildLogger();
+        final GitRepositoryAccessData substitutedAccessData = getSubstitutedAccessData();
+        final GitOperationHelper helper = GitOperationHelperFactory.createGitOperationHelper(this, substitutedAccessData, sshProxyService, buildLogger, textProvider);
+
+        final String targetRevision = helper.obtainLatestRevision();
+
+        final File cacheDirectory = getCacheDirectory();
+        buildLogger.addBuildLogEntry(textProvider.getText("repository.git.messages.ccRepositoryNeverChecked", Arrays.asList(targetRevision)));
+        Result<RepositoryException, CommitContext> result = GitCacheDirectory.getCacheLock(cacheDirectory).withLock(new Supplier<Result<RepositoryException, CommitContext>>()
+        {
+            public Result<RepositoryException, CommitContext> get()
+            {
+                boolean doShallowFetch = USE_SHALLOW_CLONES && substitutedAccessData.useShallowClones && !cacheDirectory.isDirectory();
+                try
+                {
+                    helper.fetch(cacheDirectory, doShallowFetch);
+                    return Result.result(helper.getCommit(cacheDirectory, targetRevision));
+                }
+                catch (RepositoryException e)
+                {
+                    return Result.exception(e);
+                }
+            }
+        });
+        return result.getResultThrowException();
     }
 
     @Override

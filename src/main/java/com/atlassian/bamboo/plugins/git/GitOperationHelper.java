@@ -3,6 +3,7 @@ package com.atlassian.bamboo.plugins.git;
 import com.atlassian.bamboo.author.AuthorImpl;
 import com.atlassian.bamboo.build.logger.BuildLogger;
 import com.atlassian.bamboo.commit.Commit;
+import com.atlassian.bamboo.commit.CommitContext;
 import com.atlassian.bamboo.commit.CommitFileImpl;
 import com.atlassian.bamboo.commit.CommitImpl;
 import com.atlassian.bamboo.plan.branch.VcsBranch;
@@ -644,6 +645,36 @@ public abstract class GitOperationHelper
         {
             throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.failedToOpenTransport", Arrays.asList(accessData.repositoryUrl))), e);
         }
+    }
+
+    @Nullable
+    public CommitContext getCommit(final File directory, final String targetRevision) throws RepositoryException
+    {
+        FileRepository localRepository = null;
+        RevWalk revWalk = null;
+
+        try
+        {
+            File gitDirectory = new File(directory, Constants.DOT_GIT);
+            localRepository = new FileRepository(gitDirectory);
+            revWalk = new RevWalk(localRepository);
+
+            if (targetRevision != null)
+            {
+                RevCommit jgitCommit = revWalk.parseCommit(localRepository.resolve(targetRevision));
+                CommitImpl commit = new CommitImpl();
+                commit.setComment(jgitCommit.getFullMessage());
+                commit.setAuthor(getAuthor(jgitCommit));
+                commit.setDate(jgitCommit.getAuthorIdent().getWhen());
+                commit.setChangeSetId(jgitCommit.getName());
+                return commit;
+            }
+        }
+        catch (IOException e)
+        {
+            throw new RepositoryException(buildLogger.addErrorLogEntry(textProvider.getText("repository.git.messages.failedToOpenTransport", Arrays.asList(accessData.repositoryUrl))), e);
+        }
+        return null;
     }
 
     protected interface WithTransportCallback<E extends java.lang.Throwable, T>
