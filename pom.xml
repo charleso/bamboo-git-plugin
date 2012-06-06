@@ -190,7 +190,7 @@
   </build>
 
   <properties>
-    <bamboo.version>4.1-rc2</bamboo.version>
+    <bamboo.version>4.1</bamboo.version>
     <bamboo.data.version>3.2.2</bamboo.data.version>
   </properties>
 
